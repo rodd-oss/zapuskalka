@@ -35,10 +35,14 @@ var update_manager: Node
 var _current_tab: String = "home" # home | news | settings
 var _news_data: Array[Dictionary] = []
 var _last_played_iso: String = "" # could be persisted later
+var _sidebar_buttons: Array[Button] = []
+var _active_btn_style: StyleBox
+var _inactive_btn_style: StyleBox
 
 func _ready() -> void:
 	_init_update_manager()
 	_connect_ui()
+	_cache_sidebar_buttons()
 	_seed_news_data()
 	_rebuild_news_cards()
 	_switch_tab("home")
@@ -70,6 +74,14 @@ func _connect_ui() -> void:
 	# Additional sidebar buttons currently placeholders
 	play_button.pressed.connect(_on_play_pressed)
 	update_button.pressed.connect(_on_update_pressed)
+
+func _cache_sidebar_buttons() -> void:
+	_sidebar_buttons = [sidebar_home_btn, sidebar_news_btn, sidebar_settings_btn, sidebar_community_btn, sidebar_achievements_btn, sidebar_mods_btn]
+	if sidebar_home_btn.theme and sidebar_home_btn.theme.has_stylebox("focus", "Button"):
+		_active_btn_style = sidebar_home_btn.theme.get_stylebox("focus", "Button")
+	# Clone normal stylebox for inactive fallback
+	if sidebar_home_btn.theme and sidebar_home_btn.theme.has_stylebox("normal", "Button"):
+		_inactive_btn_style = sidebar_home_btn.theme.get_stylebox("normal", "Button").duplicate()
 
 func _seed_news_data() -> void:
 	# Placeholder data; replace later with API / JSON.
@@ -120,10 +132,28 @@ func _switch_tab(tab: String) -> void:
 	if news_panel: news_panel.visible = (tab in ["home", "news"])
 	if settings_panel: settings_panel.visible = (tab == "settings")
 	# Update sidebar highlight (optionally by adding a selected stylebox later)
+	_update_sidebar_highlight(tab)
 
 func _tint_background() -> void:
 	if background_image and background_image.texture:
 		background_image.modulate = Color(1,1,1,0.95)
+
+func _update_sidebar_highlight(tab: String) -> void:
+	var mapping := {
+		"home": sidebar_home_btn,
+		"news": sidebar_news_btn,
+		"settings": sidebar_settings_btn,
+		"community": sidebar_community_btn,
+		"achievements": sidebar_achievements_btn,
+		"mods": sidebar_mods_btn,
+	}
+	for b in _sidebar_buttons:
+		if b == null:
+			continue
+		if mapping.get(tab) == b and _active_btn_style:
+			b.add_theme_stylebox_override("normal", _active_btn_style)
+		elif _inactive_btn_style:
+			b.add_theme_stylebox_override("normal", _inactive_btn_style)
 
 ## Update Manager Signal Handlers ##
 

@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=7 format=3]
+[gd_resource type="Theme" load_steps=10 format=3 uid="uid://imw7iivb8eej"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yovim"]
 bg_color = Color(0.2, 0.22, 0.25, 1)
@@ -58,3 +58,29 @@ PanelContainer/styles/panel = SubResource("StyleBoxFlat_f8dxt")
 ProgressBar/styles/bg = SubResource("StyleBoxFlat_hcw6v")
 ProgressBar/styles/fg = SubResource("StyleBoxFlat_7b5ux")
 RichTextLabel/colors/font_color = Color(0.9, 0.9, 0.95, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_active_btn"]
+bg_color = Color(0.4, 0.55, 0.95, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card_bg"]
+bg_color = Color(0.11, 0.12, 0.14, 0.78)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sidebar_bg"]
+bg_color = Color(0.09, 0.1, 0.12, 0.96)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[resource]
+Button/styles/focus = SubResource("StyleBoxFlat_active_btn")
+Panel/styles/panel = SubResource("StyleBoxFlat_card_bg")
+VBoxContainer/styles/panel = SubResource("StyleBoxFlat_sidebar_bg")

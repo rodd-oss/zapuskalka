@@ -31,6 +31,7 @@ custom_minimum_size = Vector2(200, 0)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ContentHBox/Sidebar"]
 layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="HomeButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
 layout_mode = 2
@@ -161,9 +162,12 @@ text = "Статус"
 [node name="NewsPanel" type="ScrollContainer" parent="ContentHBox/MainArea"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/h_scroll = 0
+theme_override_constants/v_scroll = 0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="ContentHBox/MainArea/NewsPanel"]
 layout_mode = 2
+theme_override_constants/separation = 16
 
 [node name="ChangelogRichText" type="RichTextLabel" parent="ContentHBox/MainArea/NewsPanel/VBoxContainer"]
 layout_mode = 2
@@ -176,6 +180,7 @@ columns = 3
 
 [node name="NewsCardTemplate" type="Panel" parent="ContentHBox/MainArea/NewsPanel/VBoxContainer/NewsGrid"]
 layout_mode = 2
+visible = false
 size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_minimum_size = Vector2(0, 180)
