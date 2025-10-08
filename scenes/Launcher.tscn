@@ -1,92 +1,159 @@
-[gd_scene load_steps=3 format=3 uid="uid://c43dvqp66i4ax"]
+[gd_scene load_steps=3 format=3 uid="uid://c6pfapniam50x"]
 
-[ext_resource type="Script" uid="uid://dhp8gs18lbnso" path="res://scripts/launcher.gd" id="1_x8h2l"]
-[ext_resource type="Texture2D" uid="uid://c11m7su0igcua" path="res://icon.svg" id="2_icon"]
+[ext_resource type="Script" uid="uid://dcn1al4tqgvo7" path="res://scripts/launcher.gd" id="1_main"]
+[ext_resource type="Theme" uid="uid://imw7iivb8eej" path="res://themes/launcher_theme.tres" id="2_theme"]
 
-[node name="Launcher" type="Control"]
+[node name="MainLauncher" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_x8h2l")
+theme = ExtResource("2_theme")
+script = ExtResource("1_main")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="ContentHBox" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
 
-[node name="VBox" type="VBoxContainer" parent="Margin"]
+[node name="Sidebar" type="PanelContainer" parent="ContentHBox"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_vertical = 3
 
-[node name="Header" type="HBoxContainer" parent="Margin/VBox"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ContentHBox/Sidebar"]
 layout_mode = 2
-size_flags_horizontal = 3
+theme_override_constants/separation = 6
 
-[node name="Icon" type="TextureRect" parent="Margin/VBox/Header"]
-custom_minimum_size = Vector2(64, 64)
+[node name="HomeButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 0
-texture = ExtResource("2_icon")
+text = "Главная"
+
+[node name="NewsButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+text = "Новости"
+
+[node name="SettingsButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+text = "Настройки"
+
+[node name="CommunityButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+text = "Сообщество"
+
+[node name="AchievementsButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+text = "Достижения"
+
+[node name="ModsButton" type="Button" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+text = "Моды"
+
+[node name="UserProfile" type="HBoxContainer" parent="ContentHBox/Sidebar/VBoxContainer"]
+layout_mode = 2
+
+[node name="Avatar" type="TextureRect" parent="ContentHBox/Sidebar/VBoxContainer/UserProfile"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
 expand_mode = 1
 stretch_mode = 4
 
-[node name="TitleBox" type="VBoxContainer" parent="Margin/VBox/Header"]
+[node name="UserNameLabel" type="Label" parent="ContentHBox/Sidebar/VBoxContainer/UserProfile"]
+layout_mode = 2
+text = "Player"
+
+[node name="MainArea" type="VBoxContainer" parent="ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameHeader" type="PanelContainer" parent="ContentHBox/MainArea"]
+custom_minimum_size = Vector2(0, 320)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="Title" type="Label" parent="Margin/VBox/Header/TitleBox"]
+[node name="GradientOverlay" type="ColorRect" parent="ContentHBox/MainArea/GameHeader"]
 layout_mode = 2
-text = "Gigabah"
 
-[node name="LocalVersionLabel" type="Label" parent="Margin/VBox/Header/TitleBox"]
+[node name="OverlayVBox" type="MarginContainer" parent="ContentHBox/MainArea/GameHeader"]
 layout_mode = 2
-text = "Local Version: -"
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
 
-[node name="RemoteVersionLabel" type="Label" parent="Margin/VBox/Header/TitleBox"]
+[node name="VBoxContainer" type="VBoxContainer" parent="ContentHBox/MainArea/GameHeader/OverlayVBox"]
 layout_mode = 2
-text = "Remote Version: -"
 
-[node name="StatusLabel" type="Label" parent="Margin/VBox"]
+[node name="TagsHBox" type="HBoxContainer" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
 layout_mode = 2
-text = "Инициализация..."
 
-[node name="ProgressBar" type="ProgressBar" parent="Margin/VBox"]
+[node name="OpenSourceTag" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/TagsHBox"]
 layout_mode = 2
-size_flags_horizontal = 3
+text = "Open Source"
 
-[node name="Buttons" type="HBoxContainer" parent="Margin/VBox"]
+[node name="EngineTag" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/TagsHBox"]
 layout_mode = 2
-size_flags_horizontal = 3
+text = "Godot Engine"
 
-[node name="UpdateButton" type="Button" parent="Margin/VBox/Buttons"]
+[node name="GameTitle" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 3
+text = "Game Title"
+
+[node name="GameDescription" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
+layout_mode = 2
+text = "Description"
+autowrap_mode = 2
+
+[node name="ActionsHBox" type="HBoxContainer" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayButton" type="Button" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/ActionsHBox"]
+layout_mode = 2
+disabled = true
+text = "Играть"
+
+[node name="UpdateButton" type="Button" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/ActionsHBox"]
+layout_mode = 2
 disabled = true
 text = "Обновить"
 
-[node name="LaunchButton" type="Button" parent="Margin/VBox/Buttons"]
+[node name="ProgressBar" type="ProgressBar" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/ActionsHBox"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-size_flags_horizontal = 3
-disabled = true
-text = "Запустить игру"
 
-[node name="ChangelogLabel" type="Label" parent="Margin/VBox"]
+[node name="VersionInfoHBox" type="HBoxContainer" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
 layout_mode = 2
-text = "Changelog:"
 
-[node name="Changelog" type="RichTextLabel" parent="Margin/VBox"]
+[node name="CurrentVersionLabel" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/VersionInfoHBox"]
+layout_mode = 2
+text = "v-"
+
+[node name="LastPlayedLabel" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer/VersionInfoHBox"]
+layout_mode = 2
+text = "Последняя игра: -"
+
+[node name="StatusLabel" type="Label" parent="ContentHBox/MainArea/GameHeader/OverlayVBox/VBoxContainer"]
+layout_mode = 2
+text = "Статус"
+
+[node name="NewsPanel" type="ScrollContainer" parent="ContentHBox/MainArea"]
 layout_mode = 2
 size_flags_vertical = 3
-bbcode_enabled = true
 
-[node name="HTTPRequest" type="HTTPRequest" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="ContentHBox/MainArea/NewsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ChangelogRichText" type="RichTextLabel" parent="ContentHBox/MainArea/NewsPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 240)
+layout_mode = 2
+bbcode_enabled = true
+text = "[center][b]Changelog[/b][/center]
+"
+
+[node name="SettingsPanel" type="Control" parent="ContentHBox/MainArea"]
+visible = false
+layout_mode = 2
