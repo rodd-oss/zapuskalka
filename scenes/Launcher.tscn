@@ -1,9 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://c6pfapniam50x"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" uid="uid://dcn1al4tqgvo7" path="res://scripts/launcher.gd" id="1_main"]
-[ext_resource type="Theme" uid="uid://imw7iivb8eej" path="res://themes/launcher_theme.tres" id="2_theme"]
+[ext_resource type="Script" path="res://scripts/launcher.gd" id="1_main"]
+[ext_resource type="Theme" path="res://themes/launcher_theme_dark.tres" id="2_theme"]
 
-[node name="MainLauncher" type="Control"]
+[node name="Launcher" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,6 +18,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Sidebar" type="PanelContainer" parent="ContentHBox"]
 custom_minimum_size = Vector2(200, 0)
@@ -74,8 +76,19 @@ custom_minimum_size = Vector2(0, 320)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="GradientOverlay" type="ColorRect" parent="ContentHBox/MainArea/GameHeader"]
+[node name="GradientOverlay" type="Control" parent="ContentHBox/MainArea/GameHeader"]
 layout_mode = 2
+
+[node name="TopFade" type="ColorRect" parent="ContentHBox/MainArea/GameHeader/GradientOverlay"]
+layout_mode = 0
+anchor_right = 1.0
+
+[node name="BottomFade" type="ColorRect" parent="ContentHBox/MainArea/GameHeader/GradientOverlay"]
+layout_mode = 0
+anchor_top = 0.4
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 1, 1, 0)
 
 [node name="OverlayVBox" type="MarginContainer" parent="ContentHBox/MainArea/GameHeader"]
 layout_mode = 2
@@ -151,9 +164,12 @@ theme_override_constants/separation = 16
 custom_minimum_size = Vector2(0, 240)
 layout_mode = 2
 bbcode_enabled = true
-text = "[center][b]Changelog[/b][/center]
-"
+text = "[center][b]Changelog[/b][/center]\n"
 
 [node name="SettingsPanel" type="Control" parent="ContentHBox/MainArea"]
 visible = false
 layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="ContentHBox/MainArea/SettingsPanel"]
+layout_mode = 0
+theme_override_constants/separation = 12

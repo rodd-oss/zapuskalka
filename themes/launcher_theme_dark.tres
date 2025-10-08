@@ -1,0 +1,70 @@
+[gd_resource type="Theme" format=3]
+; Dark theme derived from v0_v2 CSS dark tokens
+[sub_resource type="StyleBoxFlat" id="btn_normal"]
+bg_color = Color(0.205, 0.205, 0.205, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="btn_hover"]
+bg_color = Color(0.269, 0.269, 0.269, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="btn_pressed"]
+bg_color = Color(0.15, 0.15, 0.15, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="btn_focus"]
+bg_color = Color(0.488, 0.243, 0.9, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="panel"]
+bg_color = Color(0.145, 0.145, 0.145, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="sidebar"]
+bg_color = Color(0.205, 0.205, 0.205, 1)
+
+[sub_resource type="StyleBoxFlat" id="progress_bg"]
+bg_color = Color(0.269, 0.269, 0.269, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="progress_fg"]
+bg_color = Color(0.985, 0.985, 0.985, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[resource]
+Button/colors/font_color = Color(0.985,0.985,0.985,1)
+Button/colors/font_disabled_color = Color(0.6,0.6,0.6,1)
+Button/styles/normal = SubResource("btn_normal")
+Button/styles/hover = SubResource("btn_hover")
+Button/styles/pressed = SubResource("btn_pressed")
+Button/styles/focus = SubResource("btn_focus")
+Panel/styles/panel = SubResource("panel")
+PanelContainer/styles/panel = SubResource("panel")
+VBoxContainer/styles/panel = SubResource("sidebar")
+Label/colors/font_color = Color(0.985,0.985,0.985,1)
+ProgressBar/styles/bg = SubResource("progress_bg")
+ProgressBar/styles/fg = SubResource("progress_fg")
+RichTextLabel/colors/font_color = Color(0.9,0.9,0.9,1)
+RichTextLabel/colors/link_color = Color(0.985,0.985,0.985,1)
+

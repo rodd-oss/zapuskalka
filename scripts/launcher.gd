@@ -28,14 +28,22 @@ extends Control
 @onready var settings_panel: Control = $ContentHBox/MainArea/SettingsPanel
 @onready var changelog_rich_text: RichTextLabel = $ContentHBox/MainArea/NewsPanel/VBoxContainer/ChangelogRichText
 
+const DARK_THEME_PATH := "res://themes/launcher_theme_dark.tres" # kept if needed for reload
+
 var update_manager: Node
 var _current_tab: String = "home" # home | news | settings
 var _last_played_iso: String = "" # could be persisted later
 var _sidebar_buttons: Array[Button] = []
 var _active_btn_style: StyleBox
 var _inactive_btn_style: StyleBox
+## Logging simplified: only console prints.
+func _log(msg: String) -> void:
+	print(msg)
 
 func _ready() -> void:
+	_log("=== Launcher start ===")
+	_log("Godot version: %s" % Engine.get_version_info())
+	_log("_ready begin")
 	_init_update_manager()
 	_connect_ui()
 	_cache_sidebar_buttons()
@@ -49,19 +57,36 @@ func _ready() -> void:
 	progress_bar.value = 0
 	update_button.disabled = true
 	play_button.disabled = true
+	_log("_ready end")
 
 func _init_update_manager() -> void:
-	update_manager = load("res://scripts/update_manager.gd").new()
+	_log("Init update manager")
+	var script_res = load("res://scripts/update_manager.gd")
+	if script_res == null:
+		_log("ERROR: update_manager.gd not found")
+		return
+	update_manager = script_res.new()
+	if update_manager == null:
+		_log("ERROR: cannot instance update_manager")
+		return
 	add_child(update_manager)
-	update_manager.status_changed.connect(_on_status_changed)
-	update_manager.progress_changed.connect(_on_progress_changed)
-	update_manager.versions_known.connect(_on_versions_known)
-	update_manager.update_available.connect(_on_update_available)
-	update_manager.update_finished.connect(_on_update_finished)
-	update_manager.changelog_received.connect(_on_changelog_received)
+	if update_manager.has_signal("status_changed"):
+		update_manager.status_changed.connect(_on_status_changed)
+	if update_manager.has_signal("progress_changed"):
+		update_manager.progress_changed.connect(_on_progress_changed)
+	if update_manager.has_signal("versions_known"):
+		update_manager.versions_known.connect(_on_versions_known)
+	if update_manager.has_signal("update_available"):
+		update_manager.update_available.connect(_on_update_available)
+	if update_manager.has_signal("update_finished"):
+		update_manager.update_finished.connect(_on_update_finished)
+	if update_manager.has_signal("changelog_received"):
+		update_manager.changelog_received.connect(_on_changelog_received)
 	update_manager.start_check()
+	_log("Update manager started")
 
 func _connect_ui() -> void:
+	_log("Connect UI")
 	sidebar_home_btn.pressed.connect(func(): _switch_tab("home"))
 	sidebar_news_btn.pressed.connect(func(): _switch_tab("news"))
 	sidebar_settings_btn.pressed.connect(func(): _switch_tab("settings"))
@@ -70,14 +95,20 @@ func _connect_ui() -> void:
 	update_button.pressed.connect(_on_update_pressed)
 
 func _cache_sidebar_buttons() -> void:
+	_log("Cache sidebar buttons")
 	_sidebar_buttons = [sidebar_home_btn, sidebar_news_btn, sidebar_settings_btn, sidebar_community_btn, sidebar_achievements_btn, sidebar_mods_btn]
-	if sidebar_home_btn.theme and sidebar_home_btn.theme.has_stylebox("focus", "Button"):
-		_active_btn_style = sidebar_home_btn.theme.get_stylebox("focus", "Button")
+	# Prefer a dedicated active stylebox named 'focus'; fallback to 'pressed' or duplicate normal with slight tint
+	if sidebar_home_btn.theme:
+		if sidebar_home_btn.theme.has_stylebox("focus", "Button"):
+			_active_btn_style = sidebar_home_btn.theme.get_stylebox("focus", "Button")
+		elif sidebar_home_btn.theme.has_stylebox("pressed", "Button"):
+			_active_btn_style = sidebar_home_btn.theme.get_stylebox("pressed", "Button")
 	# Clone normal stylebox for inactive fallback
 	if sidebar_home_btn.theme and sidebar_home_btn.theme.has_stylebox("normal", "Button"):
 		_inactive_btn_style = sidebar_home_btn.theme.get_stylebox("normal", "Button").duplicate()
 	# Force play button text color (white over dark primary) to avoid theme swaps losing contrast
 	play_button.add_theme_color_override("font_color", Color(0.98, 0.98, 0.99))
+	# Single dark theme configured in scene; no runtime switching
 
 func _seed_news_data() -> void:
 	pass # no-op currently (news disabled)
@@ -143,6 +174,7 @@ func _on_update_finished(success: bool, message: String) -> void:
 		_last_played_iso = Time.get_datetime_string_from_system()
 		last_played_label.text = "Обновлено: %s" % _last_played_iso
 	print("[Launcher] Update finished success=", success, " message=", message)
+	update_button.text = "Обновить"
 	progress_bar.visible = false
 
 func _on_changelog_received(text_bbcode: String) -> void:
@@ -180,3 +212,5 @@ func _on_play_pressed() -> void:
 
 func get_last_played_iso() -> String:
 	return _last_played_iso
+
+## Theme switching removed; launcher always uses dark theme.
