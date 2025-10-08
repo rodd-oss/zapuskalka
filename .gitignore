@@ -1,16 +1,35 @@
-# Godot 4+ specific ignores
+# Combined Godot + launcher ignores
 .godot/
 .nomedia
-
-# Godot-specific ignores
 .import/
 export.cfg
 export_credentials.cfg
-
-# Imported translations (automatically generated from CSV files)
+# Godot build presets backup
+export_presets.cfg~
+# Translations
 *.translation
-
-# Mono-specific ignores
+# Mono-specific
 .mono/
 data_*/
 mono_crash.*.json
+# Launcher runtime
+launcher_tmp/
+# Downloaded game content
+game/
+# Local version file
+game/version.json
+# Logs
+*.log
+# OS artifacts
+.DS_Store
+Thumbs.db
+# Archives
+*.zip
+*.7z
+*.rar
+# Editor temp
+*~
+# Virtual envs
+.venv/
+# Node deps
+node_modules/
