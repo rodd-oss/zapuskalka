@@ -71,47 +71,50 @@
                 </div>
             </section>
 
-            <!-- Settings Section -->
-            <section class="settings-section">
-                <h2 class="section-title">Настройки игры</h2>
-                <div class="settings-container">
-                    <div class="setting-group">
-                        <label for="graphicsQuality" class="setting-label">Качество графики</label>
-                        <select id="graphicsQuality" class="setting-select">
-                            <option value="low">Низкое</option>
-                            <option value="medium">Среднее</option>
-                            <option value="high" selected>Высокое</option>
-                            <option value="ultra">Ультра</option>
-                        </select>
-                    </div>
-                    <div class="setting-group">
-                        <label for="resolution" class="setting-label">Разрешение</label>
-                        <select id="resolution" class="setting-select">
-                            <option value="1280x720">1280x720</option>
-                            <option value="1920x1080" selected>1920x1080</option>
-                            <option value="2560x1440">2560x1440</option>
-                            <option value="3840x2160">3840x2160</option>
-                        </select>
-                    </div>
-                    <div class="setting-group">
-                        <label for="volumeSlider" class="setting-label">Общая громкость</label>
-                        <input type="range" id="volumeSlider" class="setting-slider" min="0" max="100" value="75">
-                        <span class="volume-value" id="volumeValue">75%</span>
-                    </div>
-                    <div class="setting-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="fullscreen" checked>
-                            <span>Полноэкранный режим</span>
-                        </label>
-                    </div>
-                    <div class="setting-group checkbox-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="vsync" checked>
-                            <span>Вертикальная синхронизация</span>
-                        </label>
+            <!-- Settings Modal (hidden by default) -->
+            <div id="settingsModal" class="settings-modal" style="display:none;">
+                <div class="settings-modal-content">
+                    <button class="settings-modal-close" id="closeSettingsModal">×</button>
+                    <h2 class="section-title">Настройки игры</h2>
+                    <div class="settings-container">
+                        <div class="setting-group">
+                            <label for="graphicsQuality" class="setting-label">Качество графики</label>
+                            <select id="graphicsQuality" class="setting-select">
+                                <option value="low">Низкое</option>
+                                <option value="medium">Среднее</option>
+                                <option value="high" selected>Высокое</option>
+                                <option value="ultra">Ультра</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label for="resolution" class="setting-label">Разрешение</label>
+                            <select id="resolution" class="setting-select">
+                                <option value="1280x720">1280x720</option>
+                                <option value="1920x1080" selected>1920x1080</option>
+                                <option value="2560x1440">2560x1440</option>
+                                <option value="3840x2160">3840x2160</option>
+                            </select>
+                        </div>
+                        <div class="setting-group">
+                            <label for="volumeSlider" class="setting-label">Общая громкость</label>
+                            <input type="range" id="volumeSlider" class="setting-slider" min="0" max="100" value="75">
+                            <span class="volume-value" id="volumeValue">75%</span>
+                        </div>
+                        <div class="setting-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="fullscreen" checked>
+                                <span>Полноэкранный режим</span>
+                            </label>
+                        </div>
+                        <div class="setting-group checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="vsync" checked>
+                                <span>Вертикальная синхронизация</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
         </main>
 
         <!-- Footer -->
@@ -128,5 +131,25 @@
     </div>
 
     <script src="script.js"></script>
+    <script>
+    // Settings modal logic
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = document.getElementById('settingsModal');
+    const closeSettingsModal = document.getElementById('closeSettingsModal');
+    if (settingsBtn && settingsModal && closeSettingsModal) {
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.style.display = 'flex';
+        });
+        closeSettingsModal.addEventListener('click', () => {
+            settingsModal.style.display = 'none';
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') settingsModal.style.display = 'none';
+        });
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.style.display = 'none';
+        });
+    }
+    </script>
 </body>
 </html>
