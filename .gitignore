@@ -33,3 +33,4 @@ Thumbs.db
 .venv/
 # Node deps
 node_modules/
+addons/

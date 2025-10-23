@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIGABUH - Game Launcher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="launcher-container">
+        <!-- Header -->
+        <header class="launcher-header">
+            <div class="logo">
+                <h1>GIGABUH</h1>
+                <span class="version">v2.4.1</span>
+            </div>
+            <div class="status-indicators">
+                <div class="status-item">
+                    <span class="status-label">Сервер:</span>
+                    <span class="status-value" id="serverStatus">
+                        <span class="status-dot online"></span>
+                        Онлайн
+                    </span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Версия:</span>
+                    <span class="status-value" id="versionStatus">
+                        <span class="status-dot updated"></span>
+                        Актуальна
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="launcher-main">
+            <!-- News Section -->
+            <section class="news-section">
+                <h2 class="section-title">Последние новости</h2>
+                <div class="news-container" id="newsContainer">
+                    <article class="news-item">
+                        <div class="news-image">
+                            <img src="public/epic-fantasy-game-landscape-with-mountains-and-cas.jpg" alt="Обновление 2.4" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231a1f2e%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%238b7355%22 font-family=%22Arial%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EПатч 2.4.1%3C/text%3E%3C/svg%3E'">
+                        </div>
+                        <div class="news-content">
+                            <span class="news-date">23 октября 2025</span>
+                            <h3 class="news-title">Патч 0.0.1 - инициализация</h3>
+                            <p class="news-description">Демо контент.</p>
+                        </div>
+                    </article>
+                    <article class="news-item">
+                        <div class="news-image">
+                            <img src="public/fantasy-game-new-location-with-magical-forest.jpg" alt="Новая локация" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231a1f2e%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%238b7355%22 font-family=%22Arial%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EМистический лес%3C/text%3E%3C/svg%3E'">
+                        </div>
+                        <div class="news-content">
+                            <span class="news-date">10 марта 2025</span>
+                            <h3 class="news-title">Новая локация: Мистический лес</h3>
+                            <p class="news-description">Исследуйте зачарованный лес с новыми квестами, врагами и сокровищами.</p>
+                        </div>
+                    </article>
+                    <article class="news-item">
+                        <div class="news-image">
+                            <img src="public/winter-festival-in-fantasy-game-with-snow.jpg" alt="Событие" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%231a1f2e%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%238b7355%22 font-family=%22Arial%22 font-size=%2216%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EЗимний фестиваль%3C/text%3E%3C/svg%3E'">
+                        </div>
+                        <div class="news-content">
+                            <span class="news-date">5 марта 2025</span>
+                            <h3 class="news-title">Событие: Зимний фестиваль</h3>
+                            <p class="news-description">Ограниченное по времени событие с эксклюзивными наградами и сезонным контентом.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section class="settings-section">
+                <h2 class="section-title">Настройки игры</h2>
+                <div class="settings-container">
+                    <div class="setting-group">
+                        <label for="graphicsQuality" class="setting-label">Качество графики</label>
+                        <select id="graphicsQuality" class="setting-select">
+                            <option value="low">Низкое</option>
+                            <option value="medium">Среднее</option>
+                            <option value="high" selected>Высокое</option>
+                            <option value="ultra">Ультра</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="resolution" class="setting-label">Разрешение</label>
+                        <select id="resolution" class="setting-select">
+                            <option value="1280x720">1280x720</option>
+                            <option value="1920x1080" selected>1920x1080</option>
+                            <option value="2560x1440">2560x1440</option>
+                            <option value="3840x2160">3840x2160</option>
+                        </select>
+                    </div>
+                    <div class="setting-group">
+                        <label for="volumeSlider" class="setting-label">Общая громкость</label>
+                        <input type="range" id="volumeSlider" class="setting-slider" min="0" max="100" value="75">
+                        <span class="volume-value" id="volumeValue">75%</span>
+                    </div>
+                    <div class="setting-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fullscreen" checked>
+                            <span>Полноэкранный режим</span>
+                        </label>
+                    </div>
+                    <div class="setting-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="vsync" checked>
+                            <span>Вертикальная синхронизация</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="launcher-footer">
+            <div class="footer-buttons">
+                <button class="btn btn-secondary" id="communityBtn">Сообщество</button>
+                <button class="btn btn-secondary" id="settingsBtn">Настройки</button>
+            </div>
+            <button class="btn btn-primary" id="playBtn">
+                <span class="play-icon">▶</span>
+                Играть
+            </button>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
