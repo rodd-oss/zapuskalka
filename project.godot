@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Gigabah Launcher"
-run/main_scene="res://scenes/Launcher.tscn"
+run/main_scene="res://scenes/LauncherNative.tscn"
 config/features=PackedStringArray("4.5")
 config/icon="res://icon.svg"
 
@@ -21,6 +21,10 @@ window/size/viewport_width=900
 window/size/viewport_height=600
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[gdextension]
+
+path="addons/godot_wry/WRY.gdextension"
 
 [general]
 
