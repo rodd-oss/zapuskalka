@@ -22,10 +22,6 @@ window/size/viewport_height=600
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
-[gdextension]
-
-path="addons/godot_wry/WRY.gdextension"
-
 [general]
 
 config_version=5
