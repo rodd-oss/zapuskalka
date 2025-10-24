@@ -23,8 +23,11 @@ func _ready() -> void:
 	play_btn.text = "Проверка обновления..."
 	add_child(http)
 	play_btn.pressed.connect(_on_play_btn_pressed)
+	community_btn.pressed.connect(_on_community_btn_pressed)
 	print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
 	_check_for_updates()
+func _on_community_btn_pressed() -> void:
+	OS.shell_open("https://t.me/milanrodd")
 
 func _on_play_btn_pressed() -> void:
 	if _downloading:
