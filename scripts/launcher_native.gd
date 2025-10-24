@@ -3,7 +3,6 @@ extends Control
 @onready var play_btn: Button = $PlayBtn
 @onready var community_btn: Button = $CommunityBtn
 @onready var settings_btn: Button = $SettingsBtn
-## status_indicators и version_label удалены из сцены
 @onready var actual_version_label: Label = $Header/ActualVersionLabel
 @onready var installed_version_label: Label = $Header/InstalledVersionLabel
 @onready var http: HTTPRequest = HTTPRequest.new()
