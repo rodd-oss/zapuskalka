@@ -5,6 +5,7 @@ extends Control
 @onready var settings_btn: Button = $SettingsBtn
 @onready var status_indicators: HBoxContainer = $Header/StatusIndicators
 @onready var version_label: Label = $Header/Logo/Version
+@onready var http: HTTPRequest = HTTPRequest.new()
 
 const GITHUB_OWNER := "rodd-oss"
 const GITHUB_REPO := "gigabah"
@@ -15,8 +16,6 @@ var remote_version := ""
 var download_url := ""
 var is_update_available := false
 var _downloading := false
-
-@onready var http: HTTPRequest = HTTPRequest.new()
 
 func _ready() -> void:
 	play_btn.disabled = true
@@ -44,6 +43,13 @@ func _check_for_updates() -> void:
 	var err = http.request(GITHUB_RELEASE_LATEST_API, ["User-Agent: GigabahLauncher"])
 	if err != OK:
 		_set_status("Ошибка подключения к серверу")
+	# Disconnect all previous connections to avoid duplicates
+	if http.request_completed.is_connected(_on_http_request_completed):
+		http.request_completed.disconnect(_on_http_request_completed)
+	# Also disconnect possible download handler
+	for c in http.request_completed.get_connections():
+		if c.target == self and c.method == "_on_download_complete":
+			http.request_completed.disconnect(_on_download_complete)
 	http.request_completed.connect(_on_http_request_completed)
 
 func _scan_local_game() -> void:
@@ -55,7 +61,7 @@ func _scan_local_game() -> void:
 	else:
 		print("[LOG] Файл игры не найден в директории лаунчера.")
 		local_version = ""
-		version_label.text = "v-"
+		version_label.text = "Version"
 
 func _find_local_exe() -> String:
 	var dir = DirAccess.open(OS.get_executable_path().get_base_dir())
@@ -128,14 +134,20 @@ func _download_game() -> void:
 				var old_path = exe_dir.path_join(f)
 				if FileAccess.file_exists(old_path):
 					print("[LOG] Удаляю старую версию:", old_path)
-					dir.remove(f)
+					var err = dir.remove(f)
+					if err != OK:
+						print("[ERROR] Не удалось удалить файл:", old_path, "Код ошибки:", err)
 	_downloading = true
 	play_btn.text = "Скачивание..."
 	play_btn.disabled = true
 	_set_status("Загрузка файла игры...")
 	var exe_name = "gigabah_%s.exe" % remote_version
-	if http.request_completed.is_connected(_on_download_complete):
-		http.request_completed.disconnect(_on_download_complete)
+	# Disconnect all previous connections to avoid duplicates
+	if http.request_completed.is_connected(_on_http_request_completed):
+		http.request_completed.disconnect(_on_http_request_completed)
+	for c in http.request_completed.get_connections():
+		if c.target == self and c.method == "_on_download_complete":
+			http.request_completed.disconnect(_on_download_complete)
 	http.request_completed.connect(_on_download_complete.bind(exe_name))
 	var err = http.request(download_url)
 	if err != OK:
@@ -148,9 +160,10 @@ func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 		play_btn.disabled = false
 		_downloading = false
 		return
-	var save_path = ProjectSettings.globalize_path("res://" + exe_name)
+	var exe_dir = OS.get_executable_path().get_base_dir()
+	var save_path = exe_dir.path_join(exe_name)
 	print("[LOG] Сохраняю файл игры по пути:", save_path)
-	var f = FileAccess.open(exe_name, FileAccess.WRITE)
+	var f = FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_buffer(body)
 		f.close()
