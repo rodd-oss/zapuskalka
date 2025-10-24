@@ -3,8 +3,9 @@ extends Control
 @onready var play_btn: Button = $PlayBtn
 @onready var community_btn: Button = $CommunityBtn
 @onready var settings_btn: Button = $SettingsBtn
-@onready var status_indicators: HBoxContainer = $Header/StatusIndicators
-@onready var version_label: Label = $Header/Logo/Version
+## status_indicators и version_label удалены из сцены
+@onready var actual_version_label: Label = $Header/ActualVersionLabel
+@onready var installed_version_label: Label = $Header/InstalledVersionLabel
 @onready var http: HTTPRequest = HTTPRequest.new()
 
 const GITHUB_OWNER := "rodd-oss"
@@ -18,13 +19,13 @@ var is_update_available := false
 var _downloading := false
 
 func _ready() -> void:
-	play_btn.disabled = true
-	play_btn.text = "Проверка обновления..."
-	add_child(http)
-	play_btn.pressed.connect(_on_play_btn_pressed)
-	community_btn.pressed.connect(_on_community_btn_pressed)
-	print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
-	_check_for_updates()
+		play_btn.disabled = true
+		play_btn.text = "Проверка обновления..."
+		add_child(http)
+		play_btn.pressed.connect(_on_play_btn_pressed)
+		community_btn.pressed.connect(_on_community_btn_pressed)
+		print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
+		_check_for_updates()
 func _on_community_btn_pressed() -> void:
 	OS.shell_open("https://t.me/milanrodd")
 
@@ -57,11 +58,11 @@ func _scan_local_game() -> void:
 	if exe_path != "":
 		print("[LOG] Найден файл игры:", exe_path)
 		local_version = exe_path.get_file().replace("gigabah_", "").replace(".exe", "")
-		version_label.text = "v" + local_version
+		installed_version_label.text = "Установленная версия - " + local_version
 	else:
 		print("[LOG] Файл игры не найден в директории лаунчера.")
 		local_version = ""
-		version_label.text = "Version"
+		installed_version_label.text = "Установленная версия - Не установлено"
 
 func _find_local_exe() -> String:
 	var dir = DirAccess.open(OS.get_executable_path().get_base_dir())
@@ -94,6 +95,7 @@ func _on_http_request_completed(result, code, _headers, body) -> void:
 		remote_version = data["tag_name"].lstrip("v")
 	else:
 		remote_version = ""
+	actual_version_label.text = "Актуальная версия - " + (remote_version if remote_version != "" else "Не удалось получить")
 	download_url = ""
 	var exe_name = ""
 	for asset in assets:
@@ -134,9 +136,9 @@ func _download_game() -> void:
 				var old_path = exe_dir.path_join(f)
 				if FileAccess.file_exists(old_path):
 					print("[LOG] Удаляю старую версию:", old_path)
-					var err = dir.remove(f)
-					if err != OK:
-						print("[ERROR] Не удалось удалить файл:", old_path, "Код ошибки:", err)
+					var remove_err = dir.remove(f)
+					if remove_err != OK:
+						print("[ERROR] Не удалось удалить файл:", old_path, "Код ошибки:", remove_err)
 	_downloading = true
 	play_btn.text = "Скачивание..."
 	play_btn.disabled = true
@@ -190,9 +192,4 @@ func _launch_game() -> void:
 		_set_status("Ошибка при запуске игры")
 
 func _set_status(text: String) -> void:
-	for child in status_indicators.get_children():
-		status_indicators.remove_child(child)
-		child.queue_free()
-	var label = Label.new()
-	label.text = text
-	status_indicators.add_child(label)
+	print("[STATUS] ", text)
