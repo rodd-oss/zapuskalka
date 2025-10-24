@@ -22,8 +22,11 @@ func _ready() -> void:
 	play_btn.text = "Проверка обновления..."
 	add_child(http)
 	play_btn.pressed.connect(_on_play_btn_pressed)
+	settings_btn.pressed.connect(_on_settings_btn_pressed)
 	print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
 	_check_for_updates()
+func _on_settings_btn_pressed() -> void:
+	get_tree().change_scene_to_file("res://scenes/Settings.tscn")
 
 func _on_play_btn_pressed() -> void:
 	if _downloading:
