@@ -20,6 +20,7 @@ var _downloading := false
 func _ready() -> void:
 	play_btn.disabled = true
 	play_btn.text = "Проверка обновления..."
+	play_btn.set_meta("action", "checking")
 	add_child(http)
 	play_btn.pressed.connect(_on_play_btn_pressed)
 	settings_btn.pressed.connect(_on_settings_btn_pressed)
@@ -31,13 +32,15 @@ func _on_settings_btn_pressed() -> void:
 func _on_play_btn_pressed() -> void:
 	if _downloading:
 		return
-	if play_btn.text == "Скачать" or play_btn.text == "Обновить":
+	var action = play_btn.get_meta("action")
+	if action == "download" or action == "update":
 		_download_game()
-	elif play_btn.text == "Играть":
+	elif action == "play":
 		_launch_game()
 
 func _check_for_updates() -> void:
 	play_btn.text = "Проверка обновления..."
+	play_btn.set_meta("action", "checking")
 	play_btn.disabled = true
 	_scan_local_game()
 	var err = http.request(GITHUB_RELEASE_LATEST_API, ["User-Agent: GigabahLauncher"])
@@ -104,16 +107,19 @@ func _compare_versions() -> void:
 	if local_version == "":
 		print("[LOG] Статус: игра не найдена, требуется скачивание.")
 		play_btn.text = "Скачать"
+		play_btn.set_meta("action", "download")
 		play_btn.disabled = false
 		is_update_available = true
 	elif local_version != remote_version:
 		print("[LOG] Статус: доступно обновление, требуется обновить.")
 		play_btn.text = "Обновить"
+		play_btn.set_meta("action", "update")
 		play_btn.disabled = false
 		is_update_available = true
 	else:
 		print("[LOG] Статус: игра актуальна, можно запускать.")
 		play_btn.text = "Играть"
+		play_btn.set_meta("action", "play")
 		play_btn.disabled = false
 		is_update_available = false
 
@@ -130,6 +136,7 @@ func _download_game() -> void:
 					dir.remove(f)
 	_downloading = true
 	play_btn.text = "Скачивание..."
+	play_btn.set_meta("action", "downloading")
 	play_btn.disabled = true
 	_set_status("Загрузка файла игры...")
 	var exe_name = "gigabah_%s.exe" % remote_version
@@ -145,6 +152,7 @@ func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		_set_status("Ошибка при загрузке файла")
 		play_btn.text = "Повторить"
+		play_btn.set_meta("action", "retry")
 		play_btn.disabled = false
 		_downloading = false
 		return
