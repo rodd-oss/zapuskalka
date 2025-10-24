@@ -16,6 +16,8 @@ var remote_version := ""
 var download_url := ""
 var is_update_available := false
 var _downloading := false
+# Флаг для отложенного запуска игры после проверки актуальности
+var _pending_play := false
 
 func _ready() -> void:
 	play_btn.disabled = true
@@ -36,17 +38,23 @@ func _on_play_btn_pressed() -> void:
 	if action == "download" or action == "update":
 		_download_game()
 	elif action == "play":
-		_launch_game()
+		print("[LOG] Повторная проверка версии перед запуском по кнопке 'Играть'")
+		# Повторная проверка актуальности версии перед запуском
+		_pending_play = true
+		_check_for_updates()
 
 func _check_for_updates() -> void:
 	play_btn.text = "Проверка обновления..."
 	play_btn.set_meta("action", "checking")
 	play_btn.disabled = true
 	_scan_local_game()
+	# Отключаем старый сигнал, чтобы не было дублирующихся вызовов
+	if http.request_completed.is_connected(_on_http_request_completed):
+		http.request_completed.disconnect(_on_http_request_completed)
+	http.request_completed.connect(_on_http_request_completed)
 	var err = http.request(GITHUB_RELEASE_LATEST_API, ["User-Agent: GigabahLauncher"])
 	if err != OK:
 		_set_status("Ошибка подключения к серверу")
-	http.request_completed.connect(_on_http_request_completed)
 
 func _scan_local_game() -> void:
 	var exe_path = _find_local_exe()
@@ -71,16 +79,19 @@ func _on_http_request_completed(result, code, _headers, body) -> void:
 	print("[LOG] Ответ сервера о релизе: result=", result, ", code=", code)
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		_set_status("Ошибка при проверке обновлений")
+		_pending_play = false
 		return
 	var body_str = body.get_string_from_utf8()
 	# Проверяем, что это действительно JSON, а не бинарный файл
 	if body_str.length() > 1 and body_str[0] == 'M' and body_str[1] == 'Z':
 		print("[ERROR] Получен бинарный файл вместо JSON, пропускаем парсинг.")
+		_pending_play = false
 		return
 	var json = JSON.new()
 	if json.parse(body_str) != OK:
 		print("[ERROR] Ошибка парсинга JSON: ", json.get_error_line(), json.get_error_message())
 		_set_status("Ошибка обработки данных")
+		_pending_play = false
 		return
 	var data = json.data
 	var assets = []
@@ -99,9 +110,18 @@ func _on_http_request_completed(result, code, _headers, body) -> void:
 			break
 	if download_url == "":
 		_set_status("Не найден .exe файл в релизе")
+		_pending_play = false
 		return
 	print("[LOG] Найден .exe файл:", exe_name, "URL:", download_url)
 	_compare_versions()
+	# Если был запрошен запуск после проверки и версия актуальна, запускаем игру
+	if _pending_play:
+		_pending_play = false
+		if not is_update_available and play_btn.get_meta("action") == "play":
+			print("[LOG] Версия актуальна, запускаю игру после повторной проверки.")
+			_launch_game()
+		else:
+			print("[LOG] После повторной проверки обнаружено обновление, запуск отменён.")
 
 func _compare_versions() -> void:
 	if local_version == "":
