@@ -17,6 +17,7 @@ func _ready() -> void:
 	reset_button.pressed.connect(_on_reset_pressed)
 	back_button.pressed.connect(_on_back_pressed)
 	dir_path.text = game_dir
+	dir_path.placeholder_text = default_game_dir
 
 func _on_select_dir_pressed() -> void:
 	var dialog := FileDialog.new()

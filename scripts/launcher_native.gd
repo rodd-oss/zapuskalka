@@ -18,6 +18,8 @@ var is_update_available := false
 var _downloading := false
 # Флаг для отложенного запуска игры после проверки актуальности
 var _pending_play := false
+# Путь к папке для игры (будет загружен из настроек)
+var game_dir := ""
 
 func _ready() -> void:
 	play_btn.disabled = true
@@ -26,8 +28,21 @@ func _ready() -> void:
 	add_child(http)
 	play_btn.pressed.connect(_on_play_btn_pressed)
 	settings_btn.pressed.connect(_on_settings_btn_pressed)
-	print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
+	# Загружаем путь к папке игры из настроек
+	_load_game_dir_from_settings()
+	print("[LOG] Сканирование директории для игры:", game_dir)
 	_check_for_updates()
+
+# Загрузка пути к папке игры из user://settings.cfg
+func _load_game_dir_from_settings() -> void:
+	var config := ConfigFile.new()
+	var settings_file := "user://settings.cfg"
+	var default_game_dir := ProjectSettings.globalize_path("res://")
+	var err = config.load(settings_file)
+	if err == OK:
+		game_dir = config.get_value("launcher", "game_dir", default_game_dir)
+	else:
+		game_dir = default_game_dir
 func _on_settings_btn_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/Settings.tscn")
 
@@ -63,12 +78,12 @@ func _scan_local_game() -> void:
 		local_version = exe_path.get_file().replace("gigabah_", "").replace(".exe", "")
 		installed_version_label.text = "Установленная версия - " + local_version
 	else:
-		print("[LOG] Файл игры не найден в директории лаунчера.")
+		print("[LOG] Файл игры не найден в папке для игры:", game_dir)
 		local_version = ""
 		installed_version_label.text = "Установленная версия - -"
 
 func _find_local_exe() -> String:
-	var dir = DirAccess.open(OS.get_executable_path().get_base_dir())
+	var dir = DirAccess.open(game_dir)
 	if dir:
 		for f in dir.get_files():
 			if f.begins_with("gigabah_") and f.ends_with(".exe"):
@@ -145,12 +160,11 @@ func _compare_versions() -> void:
 
 func _download_game() -> void:
 	# Удаляем старые версии gigabah_*.exe перед скачиванием новой
-	var exe_dir = OS.get_executable_path().get_base_dir()
-	var dir = DirAccess.open(exe_dir)
+	var dir = DirAccess.open(game_dir)
 	if dir:
 		for f in dir.get_files():
 			if f.begins_with("gigabah_") and f.ends_with(".exe"):
-				var old_path = exe_dir.path_join(f)
+				var old_path = game_dir.path_join(f)
 				if FileAccess.file_exists(old_path):
 					print("[LOG] Удаляю старую версию:", old_path)
 					dir.remove(f)
@@ -176,9 +190,9 @@ func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 		play_btn.disabled = false
 		_downloading = false
 		return
-	var save_path = ProjectSettings.globalize_path("res://" + exe_name)
+	var save_path = game_dir.path_join(exe_name)
 	print("[LOG] Сохраняю файл игры по пути:", save_path)
-	var f = FileAccess.open(exe_name, FileAccess.WRITE)
+	var f = FileAccess.open(save_path, FileAccess.WRITE)
 	if f:
 		f.store_buffer(body)
 		f.close()
