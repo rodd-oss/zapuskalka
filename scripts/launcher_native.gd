@@ -3,9 +3,11 @@ extends Control
 @onready var play_btn: Button = $PlayBtn
 @onready var community_btn: Button = $CommunityBtn
 @onready var settings_btn: Button = $SettingsBtn
-@onready var actual_version_label: Label = $Header/ActualVersionLabel
-@onready var installed_version_label: Label = $Header/InstalledVersionLabel
-@onready var http: HTTPRequest = HTTPRequest.new()
+@onready var status_indicators: HBoxContainer = $Header/StatusIndicators
+@onready var version_label: Label = $Header/Logo/Version
+
+# Прогресс-бар для скачивания
+@onready var download_progress: ProgressBar = $DownloadProgress
 
 const GITHUB_OWNER := "rodd-oss"
 const GITHUB_REPO := "gigabah"
@@ -17,16 +19,23 @@ var download_url := ""
 var is_update_available := false
 var _downloading := false
 
+# Для отслеживания прогресса скачивания
+var _download_total: int = 0
+var _downloaded: int = 0
+
+@onready var http: HTTPRequest = HTTPRequest.new()
+
 func _ready() -> void:
-		play_btn.disabled = true
-		play_btn.text = "Проверка обновления..."
-		add_child(http)
-		play_btn.pressed.connect(_on_play_btn_pressed)
-		community_btn.pressed.connect(_on_community_btn_pressed)
-		print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
-		_check_for_updates()
-func _on_community_btn_pressed() -> void:
-	OS.shell_open("https://t.me/milanrodd")
+	play_btn.disabled = true
+	play_btn.text = "Проверка обновления..."
+	add_child(http)
+	play_btn.pressed.connect(_on_play_btn_pressed)
+	print("[LOG] Сканирование директории лаунчера на наличие файла игры...")
+	_check_for_updates()
+
+	# Скрываем прогресс-бар по умолчанию
+	download_progress.visible = false
+	download_progress.value = 0
 
 func _on_play_btn_pressed() -> void:
 	if _downloading:
@@ -43,13 +52,6 @@ func _check_for_updates() -> void:
 	var err = http.request(GITHUB_RELEASE_LATEST_API, ["User-Agent: GigabahLauncher"])
 	if err != OK:
 		_set_status("Ошибка подключения к серверу")
-	# Disconnect all previous connections to avoid duplicates
-	if http.request_completed.is_connected(_on_http_request_completed):
-		http.request_completed.disconnect(_on_http_request_completed)
-	# Also disconnect possible download handler
-	for c in http.request_completed.get_connections():
-		if c.target == self and c.method == "_on_download_complete":
-			http.request_completed.disconnect(_on_download_complete)
 	http.request_completed.connect(_on_http_request_completed)
 
 func _scan_local_game() -> void:
@@ -57,11 +59,11 @@ func _scan_local_game() -> void:
 	if exe_path != "":
 		print("[LOG] Найден файл игры:", exe_path)
 		local_version = exe_path.get_file().replace("gigabah_", "").replace(".exe", "")
-		installed_version_label.text = "Установленная версия - " + local_version
+		version_label.text = "v" + local_version
 	else:
 		print("[LOG] Файл игры не найден в директории лаунчера.")
 		local_version = ""
-		installed_version_label.text = "Установленная версия - Не установлено"
+		version_label.text = "v-"
 
 func _find_local_exe() -> String:
 	var dir = DirAccess.open(OS.get_executable_path().get_base_dir())
@@ -94,7 +96,6 @@ func _on_http_request_completed(result, code, _headers, body) -> void:
 		remote_version = data["tag_name"].lstrip("v")
 	else:
 		remote_version = ""
-	actual_version_label.text = "Актуальная версия - " + (remote_version if remote_version != "" else "Не удалось получить")
 	download_url = ""
 	var exe_name = ""
 	for asset in assets:
@@ -135,24 +136,24 @@ func _download_game() -> void:
 				var old_path = exe_dir.path_join(f)
 				if FileAccess.file_exists(old_path):
 					print("[LOG] Удаляю старую версию:", old_path)
-					var remove_err = dir.remove(f)
-					if remove_err != OK:
-						print("[ERROR] Не удалось удалить файл:", old_path, "Код ошибки:", remove_err)
+					dir.remove(f)
 	_downloading = true
 	play_btn.text = "Скачивание..."
 	play_btn.disabled = true
 	_set_status("Загрузка файла игры...")
 	var exe_name = "gigabah_%s.exe" % remote_version
-	# Disconnect all previous connections to avoid duplicates
-	if http.request_completed.is_connected(_on_http_request_completed):
-		http.request_completed.disconnect(_on_http_request_completed)
-	for c in http.request_completed.get_connections():
-		if c.target == self and c.method == "_on_download_complete":
-			http.request_completed.disconnect(_on_download_complete)
+	if http.request_completed.is_connected(_on_download_complete):
+		http.request_completed.disconnect(_on_download_complete)
 	http.request_completed.connect(_on_download_complete.bind(exe_name))
 	var err = http.request(download_url)
 	if err != OK:
 		_set_status("Ошибка при запуске загрузки")
+
+	# Показываем прогресс-бар и сбрасываем значение
+	download_progress.visible = true
+	download_progress.value = 0
+	_download_total = 0
+	_downloaded = 0
 
 func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
@@ -160,11 +161,11 @@ func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 		play_btn.text = "Повторить"
 		play_btn.disabled = false
 		_downloading = false
+		download_progress.visible = false
 		return
-	var exe_dir = OS.get_executable_path().get_base_dir()
-	var save_path = exe_dir.path_join(exe_name)
+	var save_path = ProjectSettings.globalize_path("res://" + exe_name)
 	print("[LOG] Сохраняю файл игры по пути:", save_path)
-	var f = FileAccess.open(save_path, FileAccess.WRITE)
+	var f = FileAccess.open(exe_name, FileAccess.WRITE)
 	if f:
 		f.store_buffer(body)
 		f.close()
@@ -172,10 +173,13 @@ func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 		# После скачивания перепроверяем наличие файла и обновляем статус кнопки
 		_scan_local_game()
 		_compare_versions()
+		download_progress.visible = false
 	else:
 		_set_status("Ошибка: файл не найден после установки")
 	play_btn.disabled = false
 	_downloading = false
+	download_progress.visible = false
+	download_progress.value = 0
 
 func _launch_game() -> void:
 	var exe_path = _find_local_exe()
@@ -191,4 +195,9 @@ func _launch_game() -> void:
 		_set_status("Ошибка при запуске игры")
 
 func _set_status(text: String) -> void:
-	print("[STATUS] ", text)
+	for child in status_indicators.get_children():
+		status_indicators.remove_child(child)
+		child.queue_free()
+	var label = Label.new()
+	label.text = text
+	status_indicators.add_child(label)
