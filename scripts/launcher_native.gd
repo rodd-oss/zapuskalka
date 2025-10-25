@@ -96,12 +96,12 @@ func _on_http_request_completed(result, code, _headers, body) -> void:
 		_set_status("Ошибка при проверке обновлений")
 		_pending_play = false
 		return
-	var body_str = body.get_string_from_utf8()
 	# Проверяем, что это действительно JSON, а не бинарный файл
-	if body_str.length() > 1 and body_str[0] == 'M' and body_str[1] == 'Z':
+	if body.size() > 1 and body[0] == 77 and body[1] == 90:
 		print("[ERROR] Получен бинарный файл вместо JSON, пропускаем парсинг.")
 		_pending_play = false
 		return
+	var body_str = body.get_string_from_utf8()
 	var json = JSON.new()
 	if json.parse(body_str) != OK:
 		print("[ERROR] Ошибка парсинга JSON: ", json.get_error_line(), json.get_error_message())
@@ -185,6 +185,15 @@ func _download_game() -> void:
 func _on_download_complete(result, code, _headers, body, exe_name) -> void:
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		_set_status("Ошибка при загрузке файла")
+		play_btn.text = "Повторить"
+		play_btn.set_meta("action", "retry")
+		play_btn.disabled = false
+		_downloading = false
+		return
+	# Проверяем, что это действительно exe-файл, а не JSON или ошибка
+	if body.size() <= 1 or body[0] != 77 or body[1] != 90:
+		print("[ERROR] Получен не бинарный файл вместо exe, пропускаем сохранение.")
+		_set_status("Ошибка: получен некорректный файл")
 		play_btn.text = "Повторить"
 		play_btn.set_meta("action", "retry")
 		play_btn.disabled = false
