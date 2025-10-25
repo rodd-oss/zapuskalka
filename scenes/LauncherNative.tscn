@@ -56,10 +56,16 @@ size_flags_horizontal = 8
 text = "▶ Играть"
 
 [node name="CommunityBtn" type="Button" parent="."]
-layout_mode = 0
-offset_top = 511.0
-offset_right = 152.0
-offset_bottom = 600.0
+custom_minimum_size = Vector2(152, 48)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 728.0
+offset_top = -584.0
+offset_right = 880.0
+offset_bottom = -512.0
+grow_vertical = 0
 text = "Сообщество"
 
 [node name="SettingsBtn" type="Button" parent="."]
@@ -69,9 +75,10 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -272.5
-offset_top = -91.0
-offset_right = -81.5
+offset_left = -442.0
+offset_top = -96.0
+offset_right = -251.0
+offset_bottom = -5.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "Настройки"
@@ -107,3 +114,26 @@ offset_left = 272.0
 offset_top = 16.0
 offset_right = 392.0
 offset_bottom = 40.0
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+custom_minimum_size = Vector2(400, 25)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -242.0
+offset_top = 544.0
+offset_right = 158.0
+offset_bottom = 571.0
+grow_horizontal = 2
+theme = ExtResource("1_a500b")
+value = 50.0
+
+[node name="ProgressLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 216.0
+offset_top = 544.0
+offset_right = 360.0
+offset_bottom = 571.0
+theme = ExtResource("1_a500b")
+text = "0%"
