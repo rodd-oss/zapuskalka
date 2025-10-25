@@ -1,5 +1,6 @@
 extends Control
 
+
 # --[ ENUM ]--
 enum LauncherStatus {
 	CHECKING,
@@ -10,6 +11,7 @@ enum LauncherStatus {
 	RETRY
 }
 
+
 # --[ NODE REFERENCES ]--
 @onready var play_btn: Button = $PlayBtn
 @onready var community_btn: Button = $CommunityBtn
@@ -18,14 +20,17 @@ enum LauncherStatus {
 @onready var installed_version_label: Label = $Header/InstalledVersionLabel
 @onready var progress_bar: ProgressBar = $ProgressBar
 @onready var progress_label: Label = $ProgressLabel
+@onready var speed_label: Label = $SpeedLabel
+@onready var news_container: VBoxContainer = $NewsPanel/LastNewsPanel/ScrollContainer/VBoxContainer
 @onready var http: HTTPRequest = HTTPRequest.new()
+
 
 # --[ CONSTANTS ]--
 const GITHUB_OWNER := "rodd-oss"
 const GITHUB_REPO := "gigabah"
 const TELEGRAM_CHANNEL := "https://t.me/milanrodd"
-const AVERAGE_DOWNLOAD_SPEED_MBPS := 30.0  # Средняя скорость интернета (30 Мб/с)
 var GITHUB_RELEASE_LATEST_API := "https://api.github.com/repos/%s/%s/releases/latest" % [GITHUB_OWNER, GITHUB_REPO]
+
 
 # --[ STATE ]--
 var local_version := ""
@@ -38,11 +43,11 @@ var game_dir := ""
 var status : LauncherStatus = LauncherStatus.CHECKING
 var last_exe_name := ""
 var _is_checking_version := false
-var _download_progress_timer: Timer = null
-var _download_start_time := 0
-var _last_logged_progress := 0
-var _expected_download_time := 15.0  # Дефолтное время в секундах
-var _file_size_bytes := 0  # Размер файла из Content-Length
+var _download_start_time := 0.0
+
+# --[ MODULES ]--
+var news_parser: NewsParser = null
+
 
 func _ready() -> void:
 	play_btn.disabled = true
@@ -53,16 +58,154 @@ func _ready() -> void:
 	# Инициализация прогресс-бара
 	_init_progress_bar()
 	
-	# Создание таймера для мониторинга прогресса скачивания
-	_create_progress_timer()
+	# Инициализация парсера новостей
+	_init_news_parser()
 	
 	play_btn.pressed.connect(_on_play_btn_pressed)
 	settings_btn.pressed.connect(_on_settings_btn_pressed)
 	community_btn.pressed.connect(_on_community_btn_pressed)
+	
 	# Загружаем путь к папке игры с настройками
 	_load_game_dir_from_settings()
 	print("[LOG] Сканирование директории для игры:", game_dir)
+	
+	# Загружаем обновления и новости
 	_check_for_updates()
+	_load_news()
+
+
+# --- Обновление UI прогресса в _process (достоверные данные с HTTPRequest) ---
+func _process(_delta: float) -> void:
+	if _downloading and http:
+		var total_bytes = http.get_body_size()
+		var downloaded_bytes = http.get_downloaded_bytes()
+		
+		# Обновляем UI только если известен размер файла
+		if total_bytes > 0:
+			var percent = float(downloaded_bytes) / total_bytes
+			progress_bar.value = percent * 100
+			
+			# Рассчитываем скорость загрузки
+			var elapsed_time = Time.get_unix_time_from_system() - _download_start_time
+			var speed_kbps = 0.0
+			var speed_mbps = 0.0
+			
+			if elapsed_time > 0:
+				speed_kbps = (float(downloaded_bytes) / elapsed_time) / 1024.0  # KB/s
+				speed_mbps = speed_kbps / 1024.0  # MB/s
+			
+			# Форматируем размеры в MB
+			var downloaded_mb = float(downloaded_bytes) / (1024.0 * 1024.0)
+			var total_mb = float(total_bytes) / (1024.0 * 1024.0)
+			
+			# Форматируем скорость (выбираем единицу автоматически)
+			var speed_str = ""
+			if speed_mbps > 0.1:
+				speed_str = "%.2f MB/s" % speed_mbps
+			else:
+				speed_str = "%.2f KB/s" % speed_kbps
+			
+			progress_label.text = "Загрузка: %d%%\n%.2f MB / %.2f MB" % [int(percent * 100), downloaded_mb, total_mb]
+			speed_label.text = "Скорость: %s" % speed_str
+		else:
+			# Если сервер не предоставил размер файла
+			progress_label.text = "Загрузка..."
+			speed_label.text = "Скорость: определяется..."
+
+
+# --- Инициализация парсера новостей ---
+func _init_news_parser() -> void:
+	news_parser = NewsParser.new()
+	add_child(news_parser)
+	
+	news_parser.releases_loaded.connect(_on_releases_loaded)
+	news_parser.news_item_added.connect(_on_news_item_added)
+	news_parser.loading_error.connect(_on_news_loading_error)
+	
+	print("[LOG] NewsParser инициализирован")
+
+
+# --- Загрузка новостей ---
+func _load_news() -> void:
+	if news_parser:
+		print("[LOG] Загрузка новостей с GitHub...")
+		news_parser.load_releases(5)
+
+
+# --- Обработчик загрузки релизов ---
+func _on_releases_loaded(releases: Array) -> void:
+	print("[LOG] Обработано %d релизов" % releases.size())
+
+
+# --- Обработчик добавления новости ---
+func _on_news_item_added(version: String, changes: String, published: String) -> void:
+	var release_info = news_parser.format_release_for_display(version, changes, published)
+	_display_news_item(release_info)
+
+
+# --- Обработчик ошибки загрузки новостей ---
+func _on_news_loading_error(error_message: String) -> void:
+	print("[NEWS ERROR] %s" % error_message)
+
+
+# --- Отображение блока новости в UI ---
+func _display_news_item(release_info: Dictionary) -> void:
+	var panel = PanelContainer.new()
+	var vbox = VBoxContainer.new()
+	
+	var title = Label.new()
+	title.text = release_info.get("title", "Unknown")
+	title.add_theme_font_size_override("font_size", 16)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	vbox.add_child(title)
+	
+	var separator = HSeparator.new()
+	vbox.add_child(separator)
+	
+	var changes_label = RichTextLabel.new()
+	changes_label.bbcode_enabled = true
+	changes_label.fit_content = true
+	changes_label.scroll_active = false
+	changes_label.mouse_filter = Control.MOUSE_FILTER_STOP
+	changes_label.add_theme_color_override("font_color", Color.WHITE)
+	changes_label.add_theme_color_override("font_focus_color", Color.YELLOW)
+	changes_label.meta_clicked.connect(_on_meta_clicked)
+	
+	var formatted_changes = _convert_markdown_to_bbcode(release_info.get("changes", ""))
+	changes_label.text = formatted_changes
+	
+	vbox.add_child(changes_label)
+	panel.add_child(vbox)
+	news_container.add_child(panel)
+	
+	print("[LOG] Добавлена новость: %s" % release_info.get("title", "Unknown"))
+
+
+# --- Обработчик клика на ссылку ---
+func _on_meta_clicked(meta: Variant) -> void:
+	var url = str(meta)
+	print("[LOG] Клик на ссылку: %s" % url)
+	OS.shell_open(url)
+
+
+# --- Преобразование Markdown ссылок в BBCode для RichTextLabel ---
+func _convert_markdown_to_bbcode(text: String) -> String:
+	var result = text
+	var regex = RegEx.new()
+	regex.compile("\\[([^\\]]+)\\]\\(([^)]+)\\)")
+	
+	var matches = regex.search_all(result)
+	for i in range(matches.size() - 1, -1, -1):
+		var match = matches[i]
+		var link_text = match.get_string(1)
+		var link_url = match.get_string(2)
+		var full_match = match.get_string(0)
+		
+		var bbcode_link = "[meta=%s]%s[/meta]" % [link_url, link_text]
+		result = result.replace(full_match, bbcode_link)
+	
+	return result
+
 
 # --- Инициализация прогресс-бара ---
 func _init_progress_bar() -> void:
@@ -71,35 +214,9 @@ func _init_progress_bar() -> void:
 	progress_bar.value = 0
 	progress_bar.visible = false
 	progress_label.visible = false
+	speed_label.visible = false
 	print("[LOG] Прогресс-бар инициализирован")
 
-# --- Создание таймера для мониторинга прогресса ---
-func _create_progress_timer() -> void:
-	_download_progress_timer = Timer.new()
-	_download_progress_timer.timeout.connect(_on_progress_timer_timeout)
-	_download_progress_timer.wait_time = 0.5
-	add_child(_download_progress_timer)
-
-# --- Обработчик таймера для отслеживания прогресса ---
-func _on_progress_timer_timeout() -> void:
-	if not _downloading or not http:
-		return
-	
-	# Рассчитываем прогресс на основе прошедшего времени и ожидаемого времени скачивания
-	var current_time = Time.get_ticks_msec()
-	var elapsed = (current_time - _download_start_time) / 1000.0
-	var estimated_progress = min(elapsed / _expected_download_time, 0.95)
-	
-	progress_bar.value = int(estimated_progress * 100)
-	progress_label.text = "Загрузка... %d%%" % int(estimated_progress * 100)
-	
-	# Логируем только при изменении на 5%+
-	if int(estimated_progress * 100) - _last_logged_progress >= 5 or int(estimated_progress * 100) == 95:
-		var status_text = "[DOWNLOAD] Прогресс: %d%%" % int(estimated_progress * 100)
-		if _file_size_bytes > 0:
-			status_text += " (%s)" % _format_bytes(_file_size_bytes)
-		print(status_text)
-		_last_logged_progress = int(estimated_progress * 100)
 
 # --- Управление статусом кнопки ---
 func _set_btn_status(s: LauncherStatus):
@@ -124,6 +241,7 @@ func _set_btn_status(s: LauncherStatus):
 			play_btn.text = "Повторить"
 			play_btn.disabled = false
 
+
 # --- Загрузка пути к папке игры из user://settings.cfg ---
 func _load_game_dir_from_settings() -> void:
 	var config := ConfigFile.new()
@@ -136,15 +254,18 @@ func _load_game_dir_from_settings() -> void:
 		game_dir = default_game_dir
 	print("[LOG] Путь к папке игры:", game_dir)
 
+
 func _on_settings_btn_pressed() -> void:
 	if _downloading:
 		_set_status("Нельзя переходить в настройки во время скачивания!")
 		return
 	get_tree().change_scene_to_file("res://scenes/Settings.tscn")
 
+
 func _on_community_btn_pressed() -> void:
 	OS.shell_open(TELEGRAM_CHANNEL)
 	print("[LOG] Открытие Telegram канала:", TELEGRAM_CHANNEL)
+
 
 func _on_play_btn_pressed() -> void:
 	if _downloading:
@@ -159,6 +280,7 @@ func _on_play_btn_pressed() -> void:
 			_check_for_updates()
 		_:
 			pass
+
 
 func _check_for_updates() -> void:
 	_set_btn_status(LauncherStatus.CHECKING)
@@ -175,6 +297,7 @@ func _check_for_updates() -> void:
 	if err != OK:
 		_set_status("Ошибка подключения к серверу")
 
+
 func _scan_local_game() -> void:
 	var exe_path = _find_local_exe()
 	if exe_path != "":
@@ -186,6 +309,7 @@ func _scan_local_game() -> void:
 		installed_version_label.text = "Установленная версия - -"
 		print("[LOG] Файл игры не найден в папке:", game_dir)
 
+
 func _find_local_exe() -> String:
 	var dir = DirAccess.open(game_dir)
 	if dir:
@@ -194,8 +318,8 @@ func _find_local_exe() -> String:
 				return dir.get_current_dir().path_join(f)
 	return ""
 
+
 func _on_http_request_completed(result, code, headers, body) -> void:
-	# Проверяем, что это запрос проверки версии, а не скачивание
 	if not _is_checking_version:
 		return
 	_is_checking_version = false
@@ -211,7 +335,6 @@ func _on_http_request_completed(result, code, headers, body) -> void:
 			content_type = h.split(":")[1].strip_edges().to_lower()
 			break
 	
-	# Проверяем, что это JSON ответ (для API запроса версии)
 	if content_type.find("application/json") == -1:
 		_set_status("Ошибка: сервер вернул не JSON, возможно, проблема с API!")
 		_pending_play = false
@@ -264,6 +387,7 @@ func _on_http_request_completed(result, code, headers, body) -> void:
 		else:
 			_set_status("После повторной проверки обнаружено обновление, запуск отменён.")
 
+
 func _compare_versions() -> void:
 	if local_version == "":
 		_set_btn_status(LauncherStatus.DOWNLOAD)
@@ -278,10 +402,10 @@ func _compare_versions() -> void:
 		is_update_available = false
 		print("[LOG] Игра актуальна, версия:", local_version)
 
+
 func _download_game() -> void:
 	if _downloading:
 		return
-	# Удаляем старые gigabah_*.exe
 	var dir = DirAccess.open(game_dir)
 	if dir:
 		for f in dir.get_files():
@@ -307,18 +431,15 @@ func _download_game() -> void:
 	
 	http.request_completed.connect(_on_download_complete.bind(exe_name))
 	
-	# Показываем прогресс-бар и запускаем таймер мониторинга
 	progress_bar.visible = true
 	progress_label.visible = true
+	speed_label.visible = true
 	progress_bar.value = 0
 	progress_label.text = "Начало загрузки..."
-	_last_logged_progress = 0
+	speed_label.text = "Скорость: определяется..."
 	
-	# Сохраняем время начала скачивания
-	_download_start_time = Time.get_ticks_msec()
-	
-	if _download_progress_timer:
-		_download_progress_timer.start()
+	# Сохраняем время начала в unix timestamp для точного расчета
+	_download_start_time = Time.get_unix_time_from_system()
 	
 	var err = http.request(download_url, ["User-Agent: GigabahLauncher"])
 	if err != OK:
@@ -326,32 +447,9 @@ func _download_game() -> void:
 		_downloading = false
 		progress_bar.visible = false
 		progress_label.visible = false
-		if _download_progress_timer:
-			_download_progress_timer.stop()
+		speed_label.visible = false
 
-# --- Расчет ожидаемого времени скачивания на основе размера файла ---
-func _calculate_expected_download_time(file_size_bytes: int) -> float:
-	if file_size_bytes <= 0:
-		return 15.0  # Дефолтное значение
-	
-	# Конвертируем в мегабайты
-	var file_size_mb = float(file_size_bytes) / (1024.0 * 1024.0)
-	
-	# Рассчитываем время: размер файла / скорость интернета
-	# Формула: время (сек) = размер_mb / скорость_mbps
-	var expected_time = file_size_mb / AVERAGE_DOWNLOAD_SPEED_MBPS
-	
-	# Добавляем 20% буфера на задержки сетевого взаимодействия
-	expected_time *= 1.2
-	
-	# Минимум 5 секунд, максимум 120 секунд
-	expected_time = clamp(expected_time, 5.0, 120.0)
-	
-	print("[LOG] Ожидаемое время скачивания: %.1f сек (размер: %s, скорость: %.1f Мб/с)" % [expected_time, _format_bytes(file_size_bytes), AVERAGE_DOWNLOAD_SPEED_MBPS])
-	
-	return expected_time
 
-# --- Форматирование размера файла в читаемый вид ---
 func _format_bytes(bytes: int) -> String:
 	var file_size = float(bytes)
 	var units = ["B", "KB", "MB", "GB"]
@@ -361,33 +459,21 @@ func _format_bytes(bytes: int) -> String:
 		unit_index += 1
 	return "%.2f %s" % [file_size, units[unit_index]]
 
-# --- Получение размера файла из заголовков ответа ---
-func _extract_file_size_from_headers(headers: PackedStringArray) -> int:
-	for h in headers:
-		if h.to_lower().begins_with("content-length:"):
-			var size_str = h.split(":")[1].strip_edges()
-			var file_size = int(size_str)
-			if file_size > 0:
-				print("[LOG] Размер файла из Content-Length: %s" % _format_bytes(file_size))
-				return file_size
-	return 0
 
 func _on_download_complete(result, code, headers, body, exe_name) -> void:
 	_downloading = false
 	
-	# Останавливаем таймер мониторинга
-	if _download_progress_timer:
-		_download_progress_timer.stop()
-	
-	# Устанавливаем прогресс-бар на 100% при завершении скачивания
 	progress_bar.value = 100
-	progress_label.text = "Загрузка... 100%"
+	var downloaded_mb = float(body.size()) / (1024.0 * 1024.0)
+	progress_label.text = "Загрузка: 100%%\n%.2f MB" % downloaded_mb
+	speed_label.text = "Загрузка завершена!"
 	
 	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
 		_set_status("Ошибка при загрузке файла")
 		_set_btn_status(LauncherStatus.RETRY)
 		progress_bar.visible = false
 		progress_label.visible = false
+		speed_label.visible = false
 		return
 	
 	var content_type = ""
@@ -396,7 +482,6 @@ func _on_download_complete(result, code, headers, body, exe_name) -> void:
 			content_type = h.split(":")[1].strip_edges().to_lower()
 			break
 	
-	# Для скачивания бинарного файла ожидаем octet-stream или application/x-msdownload
 	if content_type.find("application/octet-stream") == -1 and content_type.find("application/x-msdownload") == -1 and content_type.find("application/x-msdos-program") == -1:
 		print("[WARNING] Content-Type:", content_type, "- может быть не бинарным файлом")
 	
@@ -405,9 +490,9 @@ func _on_download_complete(result, code, headers, body, exe_name) -> void:
 		_set_btn_status(LauncherStatus.RETRY)
 		progress_bar.visible = false
 		progress_label.visible = false
+		speed_label.visible = false
 		return
 	
-	# Проверка сигнатуры MZ
 	if body.size() > 1 and body[0] == 77 and body[1] == 90:
 		var save_path = game_dir.path_join(exe_name)
 		print("[LOG] Сохранение игры по пути:", save_path)
@@ -419,7 +504,7 @@ func _on_download_complete(result, code, headers, body, exe_name) -> void:
 			print("[LOG] Игра успешно сохранена, размер:", _format_bytes(body.size()))
 			progress_bar.visible = false
 			progress_label.visible = false
-			# Автоматическая перепроверка после скачивания
+			speed_label.visible = false
 			_scan_local_game()
 			_compare_versions()
 		else:
@@ -427,11 +512,14 @@ func _on_download_complete(result, code, headers, body, exe_name) -> void:
 			_set_btn_status(LauncherStatus.RETRY)
 			progress_bar.visible = false
 			progress_label.visible = false
+			speed_label.visible = false
 	else:
 		_set_status("Ошибка: получен некорректный файл")
 		_set_btn_status(LauncherStatus.RETRY)
 		progress_bar.visible = false
 		progress_label.visible = false
+		speed_label.visible = false
+
 
 func _launch_game() -> void:
 	var exe_path = _find_local_exe()
@@ -447,6 +535,7 @@ func _launch_game() -> void:
 		get_tree().quit()
 	else:
 		_set_status("Ошибка при запуске игры")
+
 
 func _set_status(text: String) -> void:
 	print("[STATUS] ", text)
