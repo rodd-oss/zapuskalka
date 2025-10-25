@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://dmvw3w6d3ctna"]
+[gd_scene load_steps=5 format=3 uid="uid://dmvw3w6d3ctna"]
 
 [ext_resource type="Script" uid="uid://be72xmjfuwxk3" path="res://scripts/launcher_native.gd" id="1"]
 [ext_resource type="Theme" uid="uid://bmo5j8vjuv0y8" path="res://scenes/launcher_theme.tres" id="1_a500b"]
+[ext_resource type="Script" uid="uid://caaslo8v8dovx" path="res://scripts/ServerStatusIndicator.gd" id="3_amy6x"]
 
 [sub_resource type="Theme" id="Theme_dgevr"]
 
@@ -68,9 +69,9 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 728.0
-offset_top = -584.0
+offset_top = -684.0
 offset_right = 880.0
-offset_bottom = -512.0
+offset_bottom = -620.0
 grow_vertical = 0
 text = "Сообщество"
 
@@ -168,3 +169,16 @@ grow_horizontal = 2
 grow_vertical = 0
 theme = ExtResource("1_a500b")
 text = "Скорость: -"
+
+[node name="ServerStatusIndicator" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 768.0
+offset_top = 560.0
+offset_right = -68.0
+offset_bottom = 592.0
+grow_horizontal = 2
+tooltip_text = "Статус игрового сервера"
+color = Color(0, 1, 0, 1)
+script = ExtResource("3_amy6x")

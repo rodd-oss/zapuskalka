@@ -22,6 +22,7 @@ enum LauncherStatus {
 @onready var progress_label: Label = $ProgressLabel
 @onready var speed_label: Label = $SpeedLabel
 @onready var news_container: VBoxContainer = $NewsPanel/LastNewsPanel/ScrollContainer/VBoxContainer
+@onready var server_indicator: ColorRect = $ServerStatusIndicator
 @onready var http: HTTPRequest = HTTPRequest.new()
 
 
@@ -40,19 +41,20 @@ var is_update_available := false
 var _downloading := false
 var _pending_play := false
 var game_dir := ""
-var status : LauncherStatus = LauncherStatus.CHECKING
+var launcher_status : LauncherStatus = LauncherStatus.CHECKING
 var last_exe_name := ""
 var _is_checking_version := false
 var _download_start_time := 0.0
 
 # --[ MODULES ]--
 var news_parser: NewsParser = null
+var server_monitor: ServerMonitor = null
 
 
 func _ready() -> void:
 	play_btn.disabled = true
 	play_btn.text = "Проверка обновления..."
-	status = LauncherStatus.CHECKING
+	launcher_status = LauncherStatus.CHECKING
 	add_child(http)
 	
 	# Инициализация прогресс-бара
@@ -60,6 +62,9 @@ func _ready() -> void:
 	
 	# Инициализация парсера новостей
 	_init_news_parser()
+	
+	# Инициализация монитора сервера
+	_init_server_monitor()
 	
 	play_btn.pressed.connect(_on_play_btn_pressed)
 	settings_btn.pressed.connect(_on_settings_btn_pressed)
@@ -74,7 +79,53 @@ func _ready() -> void:
 	_load_news()
 
 
-# --- Обновление UI прогресса в _process (достоверные данные с HTTPRequest) ---
+# --- Инициализация монитора сервера ---
+func _init_server_monitor() -> void:
+	server_monitor = ServerMonitor.new()
+	add_child(server_monitor)
+	server_monitor.status_changed.connect(_on_server_status_changed)
+	
+	# Проверяем статус каждые 30 секунд
+	var timer = Timer.new()
+	timer.wait_time = 30.0
+	timer.timeout.connect(func(): _check_server_sync())
+	add_child(timer)
+	timer.start()
+	
+	# Первая проверка сразу (синхронно)
+	_check_server_sync()
+	print("[LOG] ServerMonitor инициализирован")
+
+
+# --- Синхронная проверка сервера ---
+func _check_server_sync() -> void:
+	server_monitor.check_server_status()
+
+
+func _on_server_status_changed(new_status: String) -> void:
+	print("[LOG] Статус сервера изменился: %s" % new_status)
+	_update_server_indicator_visual(new_status)
+
+
+func _update_server_indicator_visual(server_state: String) -> void:
+	if not is_instance_valid(server_indicator):
+		return
+	
+	server_indicator.set_status(server_state)
+	
+	match server_state:
+		"online":
+			print("[ServerIndicator] Сервер онлайн - зелёный индикатор")
+		"offline":
+			print("[ServerIndicator] Сервер офлайн - красный индикатор")
+		"error":
+			print("[ServerIndicator] Ошибка проверки - жёлтый индикатор")
+		_:
+			print("[ServerIndicator] Проверка статуса - серый индикатор (пульсирует)")
+
+
+
+# Обновление UI прогресса в _process 
 func _process(_delta: float) -> void:
 	if _downloading and http:
 		var total_bytes = http.get_body_size()
@@ -220,7 +271,7 @@ func _init_progress_bar() -> void:
 
 # --- Управление статусом кнопки ---
 func _set_btn_status(s: LauncherStatus):
-	status = s
+	launcher_status = s
 	match s:
 		LauncherStatus.CHECKING:
 			play_btn.text = "Проверка обновления..."
@@ -270,7 +321,7 @@ func _on_community_btn_pressed() -> void:
 func _on_play_btn_pressed() -> void:
 	if _downloading:
 		return
-	match status:
+	match launcher_status:
 		LauncherStatus.DOWNLOAD, LauncherStatus.UPDATE:
 			_download_game()
 		LauncherStatus.PLAY:
@@ -382,7 +433,7 @@ func _on_http_request_completed(result, code, headers, body) -> void:
 	
 	if _pending_play:
 		_pending_play = false
-		if not is_update_available and status == LauncherStatus.PLAY:
+		if not is_update_available and launcher_status == LauncherStatus.PLAY:
 			_launch_game()
 		else:
 			_set_status("После повторной проверки обнаружено обновление, запуск отменён.")
