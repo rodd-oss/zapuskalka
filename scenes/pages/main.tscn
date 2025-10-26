@@ -1,0 +1,177 @@
+[gd_scene load_steps=9 format=3 uid="uid://bbk0auw63a1on"]
+
+[ext_resource type="PackedScene" uid="uid://covjyh2ilu4p0" path="res://scenes/elements/button.tscn" id="1_plq1a"]
+[ext_resource type="Texture2D" uid="uid://inv4802ld2q4" path="res://icons/google_material_icons/check_circle.svg" id="2_2dm1e"]
+[ext_resource type="PackedScene" uid="uid://jteb00qdd3xo" path="res://scenes/elements/vseparator.tscn" id="3_016op"]
+[ext_resource type="PackedScene" uid="uid://dye0d10i40nxl" path="res://scenes/elements/news_card.tscn" id="4_7boqb"]
+[ext_resource type="Texture2D" uid="uid://bbr22bxwg2tbe" path="res://images/news_4.png" id="5_7boqb"]
+[ext_resource type="Texture2D" uid="uid://vo5eqfykufn7" path="res://images/news_1.jpg" id="6_mwnk0"]
+[ext_resource type="Texture2D" uid="uid://cem45gwcomqec" path="res://images/news_2.jpg" id="7_20kij"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yrab4"]
+content_margin_left = 12.0
+content_margin_top = 3.0
+content_margin_right = 12.0
+content_margin_bottom = 3.0
+bg_color = Color(0, 0, 0, 0.1254902)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 0, 0, 0.2509804)
+border_blend = true
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Main" type="MarginContainer"]
+offset_right = 1220.0
+offset_bottom = 730.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 125
+theme_override_constants/margin_right = 30
+
+[node name="Main" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Labels" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="OpenSource" type="Label" parent="Main/Labels"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 9
+theme_override_styles/normal = SubResource("StyleBoxFlat_yrab4")
+text = "Open Source"
+
+[node name="Title" type="Label" parent="Main"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 36
+text = "Эпические приключения ждут"
+
+[node name="MarginContainer" type="MarginContainer" parent="Main"]
+layout_mode = 2
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Text" type="Label" parent="Main/MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 13
+text = "Отправляйтесь в невероятные путишествия через фантастические миры.
+Исследуйте, сражайтесь и создавайте свою легенду."
+
+[node name="ActionsContainer" type="HBoxContainer" parent="Main"]
+layout_mode = 2
+
+[node name="PlayButton" parent="Main/ActionsContainer" instance=ExtResource("1_plq1a")]
+layout_mode = 2
+text = "Играть"
+
+[node name="MarginContainer2" type="MarginContainer" parent="Main"]
+layout_mode = 2
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="StatusesContainer" type="HBoxContainer" parent="Main/MarginContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ActualGameVersion" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="ActualityIcon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
+modulate = Color(0.49139997, 0.91, 0.5402368, 1)
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+texture = ExtResource("2_2dm1e")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="ActualVersionLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
+text = "Актуальная версия v1.2.3"
+
+[node name="VSeparator" parent="Main/MarginContainer2/StatusesContainer" instance=ExtResource("3_016op")]
+layout_mode = 2
+
+[node name="LastPlayTime" type="Label" parent="Main/MarginContainer2/StatusesContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
+text = "Последняя игра: 2 часа назад"
+
+[node name="MarginContainer3" type="MarginContainer" parent="Main"]
+layout_mode = 2
+theme_override_constants/margin_left = 110
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 110
+theme_override_constants/margin_bottom = 10
+
+[node name="LatestNewsContainer" type="HBoxContainer" parent="Main/MarginContainer3"]
+layout_mode = 2
+
+[node name="News1" parent="Main/MarginContainer3/LatestNewsContainer" instance=ExtResource("4_7boqb")]
+layout_mode = 2
+
+[node name="NewsImage" parent="Main/MarginContainer3/LatestNewsContainer/News1/MarginContainer/VBoxContainer" index="0"]
+texture = ExtResource("5_7boqb")
+
+[node name="Title" parent="Main/MarginContainer3/LatestNewsContainer/News1/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2" index="1"]
+text = "Игровой тест 26.10.2025"
+
+[node name="Text" parent="Main/MarginContainer3/LatestNewsContainer/News1/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/Control" index="0"]
+text = "Массовая стрельба, гороховые наросты и дуэли. Никто не ушёл без победы или поражения."
+
+[node name="News2" parent="Main/MarginContainer3/LatestNewsContainer" instance=ExtResource("4_7boqb")]
+layout_mode = 2
+
+[node name="NewsImage" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer" index="0"]
+texture = ExtResource("6_mwnk0")
+
+[node name="ActualVersionLabel" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/HBoxContainer" index="1"]
+text = "5 дня назад"
+
+[node name="Title" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2" index="1"]
+text = "Новая арена"
+
+[node name="Text" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/Control" index="0"]
+text = "Один из активных участников представил первую карту-арену для сражения игроков."
+
+[node name="LikesCounter" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/UGCContainer/HBoxContainer" index="1"]
+text = "521"
+
+[node name="CommentsCounter" parent="Main/MarginContainer3/LatestNewsContainer/News2/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/UGCContainer/HBoxContainer2" index="1"]
+text = "96"
+
+[node name="News3" parent="Main/MarginContainer3/LatestNewsContainer" instance=ExtResource("4_7boqb")]
+layout_mode = 2
+
+[node name="NewsImage" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer" index="0"]
+texture = ExtResource("7_20kij")
+
+[node name="ActualVersionLabel" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/HBoxContainer" index="1"]
+text = "6 дня назад"
+
+[node name="Title" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2" index="1"]
+text = "Новый скрытый персонаж"
+
+[node name="Text" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/Control" index="0"]
+text = "Сегодня был представлен новый концепт игрового персонажа которого смогут встретить только самые проворные исследователи."
+
+[node name="LikesCounter" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/UGCContainer/HBoxContainer" index="1"]
+text = "3114"
+
+[node name="CommentsCounter" parent="Main/MarginContainer3/LatestNewsContainer/News3/MarginContainer/VBoxContainer/MarginContainer/VBoxContainer2/UGCContainer/HBoxContainer2" index="1"]
+text = "794"
+
+[editable path="Main/MarginContainer3/LatestNewsContainer/News1"]
+[editable path="Main/MarginContainer3/LatestNewsContainer/News2"]
+[editable path="Main/MarginContainer3/LatestNewsContainer/News3"]

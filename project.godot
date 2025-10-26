@@ -11,14 +11,14 @@ config_version=5
 [application]
 
 config/name="Gigabah Launcher"
-run/main_scene="res://scenes/LauncherNative.tscn"
+run/main_scene="uid://cfgnin0yn4knj"
 config/features=PackedStringArray("4.5")
 config/icon="res://icon.svg"
 
 [display]
 
-window/size/viewport_width=900
-window/size/viewport_height=700
+window/size/viewport_width=1280
+window/size/viewport_height=850
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 

@@ -1,0 +1,300 @@
+[gd_scene load_steps=27 format=3 uid="uid://cfgnin0yn4knj"]
+
+[ext_resource type="PackedScene" uid="uid://2cr8dijntsi0" path="res://scenes/elements/stat.tscn" id="1_gvmgh"]
+[ext_resource type="PackedScene" uid="uid://4m0pd8jno3j3" path="res://scenes/elements/sidebar_button.tscn" id="1_pghvl"]
+[ext_resource type="Texture2D" uid="uid://dt2ehkqulnolg" path="res://icons/google_material_icons/news.svg" id="2_4bwne"]
+[ext_resource type="Texture2D" uid="uid://b5re5ikpy4aq0" path="res://icons/google_material_icons/display.svg" id="2_s2ncj"]
+[ext_resource type="Texture2D" uid="uid://ckxfv26ka0j67" path="res://icons/google_material_icons/settings.svg" id="3_iirm5"]
+[ext_resource type="Texture2D" uid="uid://1m8uuhejrusd" path="res://icons/google_material_icons/hard_drive.svg" id="3_pghvl"]
+[ext_resource type="PackedScene" uid="uid://b58iihsxhuk31" path="res://scenes/elements/hseparator.tscn" id="4_iirm5"]
+[ext_resource type="Texture2D" uid="uid://cbpbqd5wfbl0f" path="res://icons/google_material_icons/wifi.svg" id="4_tq1ts"]
+[ext_resource type="Texture2D" uid="uid://beihi470xts6j" path="res://icons/google_material_icons/group.svg" id="5_feydi"]
+[ext_resource type="PackedScene" uid="uid://jteb00qdd3xo" path="res://scenes/elements/vseparator.tscn" id="5_hkdii"]
+[ext_resource type="Texture2D" uid="uid://dms04yktvyrlw" path="res://icons/google_material_icons/trophy.svg" id="6_6knbn"]
+[ext_resource type="Texture2D" uid="uid://byqk22wqaxenr" path="res://icons/google_material_icons/download.svg" id="7_64quv"]
+[ext_resource type="Texture2D" uid="uid://c11m7su0igcua" path="res://icon.svg" id="8_6knbn"]
+[ext_resource type="Script" uid="uid://bhmex8xwtofng" path="res://scripts/buttons_switch_tabs.gd" id="10_64quv"]
+[ext_resource type="Texture2D" uid="uid://crtm5065g5mns" path="res://images/background.png" id="10_qeav1"]
+[ext_resource type="PackedScene" uid="uid://bbk0auw63a1on" path="res://scenes/pages/main.tscn" id="12_3m605"]
+[ext_resource type="PackedScene" uid="uid://deydadcdoqt2q" path="res://scenes/pages/news.tscn" id="13_nl0xa"]
+[ext_resource type="PackedScene" uid="uid://bntnj2utnmqdh" path="res://scenes/pages/preferences.tscn" id="14_c1jam"]
+[ext_resource type="PackedScene" uid="uid://bqp2lqlyaouh6" path="res://scenes/pages/community.tscn" id="15_u0x2c"]
+[ext_resource type="PackedScene" uid="uid://onaeyykwwpnu" path="res://scenes/pages/achievments.tscn" id="16_82kcp"]
+[ext_resource type="PackedScene" uid="uid://d4ljegx81d5t6" path="res://scenes/pages/mods.tscn" id="17_18lnw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_crk35"]
+bg_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_tq1ts"]
+color = Color(0, 0, 0, 0.05490196)
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_lu8va"]
+resource_local_to_scene = false
+resource_name = "SidebarTabButtons"
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_y0rlk"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_6knbn"]
+
+[node name="PanelContainer" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_crk35")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Sidebar" type="VBoxContainer" parent="HBoxContainer/MarginContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="GameHeader" type="HBoxContainer" parent="HBoxContainer/MarginContainer/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GameIcon" type="TextureRect" parent="HBoxContainer/MarginContainer/Sidebar/GameHeader"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+texture = ExtResource("8_6knbn")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/MarginContainer/Sidebar/GameHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="GameTitle" type="Label" parent="HBoxContainer/MarginContainer/Sidebar/GameHeader/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 16
+text = "Gigabah"
+
+[node name="GameSubtitle" type="Label" parent="HBoxContainer/MarginContainer/Sidebar/GameHeader/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 12
+text = "Open Source"
+
+[node name="HSeparator" type="HSeparator" parent="HBoxContainer/MarginContainer/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 25
+theme_override_styles/separator = SubResource("StyleBoxLine_tq1ts")
+
+[node name="GotoMain" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+metadata/tab_index = 0
+
+[node name="GotoNews" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+text = "Новости"
+icon = ExtResource("2_4bwne")
+metadata/tab_index = 1
+
+[node name="GotoPreferences" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+text = "Настройки"
+icon = ExtResource("3_iirm5")
+metadata/tab_index = 2
+
+[node name="HSeparator2" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("4_iirm5")]
+layout_mode = 2
+
+[node name="GotoCommunity" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+text = "Сообщество"
+icon = ExtResource("5_feydi")
+metadata/tab_index = 3
+
+[node name="GotoAchievments" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+text = "Достижения"
+icon = ExtResource("6_6knbn")
+metadata/tab_index = 4
+
+[node name="GotoMods" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("1_pghvl")]
+layout_mode = 2
+button_group = SubResource("ButtonGroup_lu8va")
+text = "Моды"
+icon = ExtResource("7_64quv")
+metadata/tab_index = 5
+
+[node name="Filler" type="Control" parent="HBoxContainer/MarginContainer/Sidebar"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HSeparator3" parent="HBoxContainer/MarginContainer/Sidebar" instance=ExtResource("4_iirm5")]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/MarginContainer/Sidebar"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="AccountContainer" type="HBoxContainer" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/AccountContainer"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+texture = ExtResource("8_6knbn")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/AccountContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="AccountName" type="Label" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/AccountContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "Geekster"
+
+[node name="AccountLevel" type="Label" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/AccountContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 10
+text = "Уровень 15"
+
+[node name="VSeparator" parent="HBoxContainer" instance=ExtResource("5_hkdii")]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PanelContainer" type="PanelContainer" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_y0rlk")
+
+[node name="TextureRect" type="TextureRect" parent="HBoxContainer/VBoxContainer/PanelContainer"]
+layout_mode = 2
+texture = ExtResource("10_qeav1")
+expand_mode = 2
+stretch_mode = 4
+
+[node name="PagesTabContainer" type="TabContainer" parent="HBoxContainer/VBoxContainer/PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxEmpty_6knbn")
+current_tab = 0
+tabs_visible = false
+script = ExtResource("10_64quv")
+buttons_group = SubResource("ButtonGroup_lu8va")
+
+[node name="Main" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("12_3m605")]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="News" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("13_nl0xa")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Preferences" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("14_c1jam")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="Community" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("15_u0x2c")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="Achievments" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("16_82kcp")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 4
+
+[node name="Mods" parent="HBoxContainer/VBoxContainer/PanelContainer/PagesTabContainer" instance=ExtResource("17_18lnw")]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 5
+
+[node name="HSeparator" parent="HBoxContainer/VBoxContainer" instance=ExtResource("4_iirm5")]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 3
+theme_override_constants/margin_bottom = 3
+
+[node name="StatsContainer" type="HBoxContainer" parent="HBoxContainer/VBoxContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="CPU" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer" instance=ExtResource("1_gvmgh")]
+layout_mode = 2
+
+[node name="Name" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/CPU/HBoxContainer/VBoxContainer" index="0"]
+text = "CPU"
+
+[node name="Value" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/CPU/HBoxContainer/VBoxContainer" index="1"]
+text = "45%"
+
+[node name="GPU" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer" instance=ExtResource("1_gvmgh")]
+layout_mode = 2
+
+[node name="Icon" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/GPU/HBoxContainer/Panel/MarginContainer" index="0"]
+texture = ExtResource("2_s2ncj")
+
+[node name="Name" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/GPU/HBoxContainer/VBoxContainer" index="0"]
+text = "GPU"
+
+[node name="Value" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/GPU/HBoxContainer/VBoxContainer" index="1"]
+text = "62%"
+
+[node name="Disk" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer" instance=ExtResource("1_gvmgh")]
+layout_mode = 2
+
+[node name="Icon" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Disk/HBoxContainer/Panel/MarginContainer" index="0"]
+texture = ExtResource("3_pghvl")
+
+[node name="Name" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Disk/HBoxContainer/VBoxContainer" index="0"]
+text = "Диск"
+
+[node name="Value" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Disk/HBoxContainer/VBoxContainer" index="1"]
+text = "234 ГБ"
+
+[node name="Ping" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer" instance=ExtResource("1_gvmgh")]
+layout_mode = 2
+
+[node name="Icon" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Ping/HBoxContainer/Panel/MarginContainer" index="0"]
+texture = ExtResource("4_tq1ts")
+
+[node name="Name" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Ping/HBoxContainer/VBoxContainer" index="0"]
+text = "Сеть"
+
+[node name="Value" parent="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Ping/HBoxContainer/VBoxContainer" index="1"]
+text = "25 мс"
+
+[editable path="HBoxContainer/MarginContainer/Sidebar/GotoMain"]
+[editable path="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/CPU"]
+[editable path="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/GPU"]
+[editable path="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Disk"]
+[editable path="HBoxContainer/VBoxContainer/MarginContainer/StatsContainer/Ping"]
