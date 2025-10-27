@@ -16,7 +16,7 @@ func _on_group_button_pressed(button: BaseButton) -> void:
 		current_tab = new_tab_index
 
 
-func _on_tab_changed(tab_index: int) -> void:
+func _on_tab_changed(_tab_index: int) -> void:
 	_update_pressed_button()
 
 
