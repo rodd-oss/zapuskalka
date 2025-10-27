@@ -1,3 +1,4 @@
+class_name LauncherModelView
 extends PanelContainer
 
 @onready var game_status_tab_container: TabContainer = %GameStatusesTabs
