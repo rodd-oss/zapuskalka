@@ -1,9 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://bbk0auw63a1on"]
+[gd_scene load_steps=10 format=3 uid="uid://bbk0auw63a1on"]
 
 [ext_resource type="PackedScene" uid="uid://covjyh2ilu4p0" path="res://scenes/elements/button.tscn" id="1_plq1a"]
 [ext_resource type="Texture2D" uid="uid://inv4802ld2q4" path="res://icons/google_material_icons/check_circle.svg" id="2_2dm1e"]
 [ext_resource type="PackedScene" uid="uid://jteb00qdd3xo" path="res://scenes/elements/vseparator.tscn" id="3_016op"]
 [ext_resource type="PackedScene" uid="uid://dye0d10i40nxl" path="res://scenes/elements/news_card.tscn" id="4_7boqb"]
+[ext_resource type="Texture2D" uid="uid://dibk3qbm7g36d" path="res://icons/google_material_icons/schedule.svg" id="4_llo3u"]
 [ext_resource type="Texture2D" uid="uid://bbr22bxwg2tbe" path="res://images/news_4.png" id="5_7boqb"]
 [ext_resource type="Texture2D" uid="uid://vo5eqfykufn7" path="res://images/news_1.jpg" id="6_mwnk0"]
 [ext_resource type="Texture2D" uid="uid://cem45gwcomqec" path="res://images/news_2.jpg" id="7_20kij"]
@@ -26,10 +27,8 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [node name="Main" type="MarginContainer"]
-offset_right = 1220.0
+offset_right = 1126.0
 offset_bottom = 730.0
-grow_horizontal = 2
-grow_vertical = 2
 theme_override_constants/margin_left = 30
 theme_override_constants/margin_top = 125
 theme_override_constants/margin_right = 30
@@ -69,6 +68,7 @@ text = "Отправляйтесь в невероятные путишеств�
 layout_mode = 2
 
 [node name="PlayButton" parent="Main/ActionsContainer" instance=ExtResource("1_plq1a")]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Играть"
 
@@ -86,37 +86,71 @@ layout_mode = 2
 alignment = 1
 
 [node name="ActualityIcon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
-modulate = Color(0.49139997, 0.91, 0.5402368, 1)
+modulate = Color(0.49019608, 0.9098039, 0.5411765, 1)
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 texture = ExtResource("2_2dm1e")
 expand_mode = 3
 stretch_mode = 4
 
-[node name="ActualVersionLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="ActualVersionLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
 theme_override_font_sizes/font_size = 9
-text = "Актуальная версия v1.2.3"
+text = "Актуальная версия: "
+
+[node name="ActualVersion" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
+text = "v1.2.3"
 
 [node name="VSeparator" parent="Main/MarginContainer2/StatusesContainer" instance=ExtResource("3_016op")]
 layout_mode = 2
 
-[node name="LastPlayTime" type="Label" parent="Main/MarginContainer2/StatusesContainer"]
+[node name="HBoxContainer2" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer"]
+layout_mode = 2
+
+[node name="ActualityIcon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer2"]
+modulate = Color(0.5019608, 0.5019608, 0.5019608, 1)
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+texture = ExtResource("4_llo3u")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer2"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="LastPlayTimeLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer2/HBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
 theme_override_font_sizes/font_size = 9
-text = "Последняя игра: 2 часа назад"
+text = "Последняя игра: "
+
+[node name="LastPlayTime" type="Label" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer2/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
+text = "никогда"
 
 [node name="MarginContainer3" type="MarginContainer" parent="Main"]
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/margin_left = 110
 theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 110
 theme_override_constants/margin_bottom = 10
 
 [node name="LatestNewsContainer" type="HBoxContainer" parent="Main/MarginContainer3"]
 layout_mode = 2
+theme_override_constants/separation = 18
 
 [node name="News1" parent="Main/MarginContainer3/LatestNewsContainer" instance=ExtResource("4_7boqb")]
 layout_mode = 2
