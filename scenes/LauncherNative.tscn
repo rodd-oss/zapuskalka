@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://be72xmjfuwxk3" path="res://scripts/launcher_native.gd" id="1"]
 [ext_resource type="Theme" uid="uid://bmo5j8vjuv0y8" path="res://scenes/launcher_theme.tres" id="1_a500b"]
-[ext_resource type="Script" uid="uid://caaslo8v8dovx" path="res://scripts/ServerStatusIndicator.gd" id="3_amy6x"]
+[ext_resource type="Script" path="res://scripts/ServerStatusIndicator.gd" id="3_amy6x"]
 
 [sub_resource type="Theme" id="Theme_dgevr"]
 

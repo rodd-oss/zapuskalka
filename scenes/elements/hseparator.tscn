@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b58iihsxhuk31"]
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_tq1ts"]
+color = Color(0, 0, 0, 0.05490196)
+
+[node name="HSeparator" type="HSeparator"]
+offset_right = 43.12
+offset_bottom = 1.0
+theme_override_constants/separation = 1
+theme_override_styles/separator = SubResource("StyleBoxLine_tq1ts")
