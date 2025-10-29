@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://2cr8dijntsi0" path="res://scenes/elements/stat.tscn" id="1_gvmgh"]
 [ext_resource type="PackedScene" uid="uid://4m0pd8jno3j3" path="res://scenes/elements/sidebar_button.tscn" id="1_pghvl"]
-[ext_resource type="Script" uid="uid://0beyu7qrjo73" path="res://scripts/main_frame.gd" id="1_ymw4i"]
+[ext_resource type="Script" uid="uid://cxgurjsuheesr" path="res://scripts/launcher_controller.gd" id="1_ymw4i"]
 [ext_resource type="Texture2D" uid="uid://dt2ehkqulnolg" path="res://icons/google_material_icons/news.svg" id="2_4bwne"]
 [ext_resource type="Texture2D" uid="uid://b5re5ikpy4aq0" path="res://icons/google_material_icons/display.svg" id="2_s2ncj"]
 [ext_resource type="Texture2D" uid="uid://ckxfv26ka0j67" path="res://icons/google_material_icons/settings.svg" id="3_iirm5"]
@@ -55,6 +55,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_crk35")
 script = ExtResource("1_ymw4i")
+metadata/_custom_type_script = "uid://cxgurjsuheesr"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
@@ -68,7 +69,7 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
 [node name="Sidebar" type="VBoxContainer" parent="HBoxContainer/MarginContainer"]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
 [node name="GameHeader" type="HBoxContainer" parent="HBoxContainer/MarginContainer/Sidebar"]
@@ -166,11 +167,10 @@ theme_override_constants/margin_bottom = 10
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_nl0xa")
-current_tab = 2
+current_tab = 0
 tabs_visible = false
 
 [node name="Checking" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
-visible = false
 layout_mode = 2
 metadata/_tab_index = 0
 
@@ -197,9 +197,23 @@ text = "Устарело"
 [node name="SubText" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedUpdate/VBoxContainer" index="1"]
 text = "есть обновление"
 
-[node name="Updating" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
+[node name="NeedDownload" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
+visible = false
 layout_mode = 2
 metadata/_tab_index = 2
+
+[node name="Icon" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedDownload" index="0"]
+texture = ExtResource("11_18lnw")
+
+[node name="Text" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedDownload/VBoxContainer" index="0"]
+text = "Не загружено"
+
+[node name="SubText" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedDownload/VBoxContainer" index="1"]
+text = ""
+
+[node name="Updating" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
+visible = false
+layout_mode = 2
 
 [node name="Icon" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Updating" index="0"]
 modulate = Color(0.97, 0.9625634, 0.52379996, 1)
@@ -214,6 +228,7 @@ text = "87%"
 [node name="Ready" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
 visible = false
 layout_mode = 2
+metadata/_tab_index = 4
 
 [node name="Icon" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Ready" index="0"]
 modulate = Color(0.49019608, 0.9098039, 0.5411765, 1)
@@ -228,7 +243,7 @@ text = "к запуску"
 [node name="Error" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs" instance=ExtResource("11_82kcp")]
 visible = false
 layout_mode = 2
-metadata/_tab_index = 4
+metadata/_tab_index = 5
 
 [node name="Icon" parent="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Error" index="0"]
 modulate = Color(0.91, 0.49139997, 0.49139997, 1)
@@ -272,31 +287,37 @@ tabs_visible = false
 script = ExtResource("10_64quv")
 buttons_group = SubResource("ButtonGroup_lu8va")
 
-[node name="Main" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("12_3m605")]
+[node name="PageMain" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("12_3m605")]
+unique_name_in_owner = true
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="News" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("13_nl0xa")]
+[node name="PageNews" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("13_nl0xa")]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="Preferences" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("14_c1jam")]
+[node name="PagePreferences" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("14_c1jam")]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="Community" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("15_u0x2c")]
+[node name="PageCommunity" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("15_u0x2c")]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 3
 
-[node name="Achievments" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("16_82kcp")]
+[node name="PageAchievments" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("16_82kcp")]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 4
 
-[node name="Mods" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("17_18lnw")]
+[node name="PageMods" parent="HBoxContainer/VBoxContainer/PanelContainer/ScrollContainer/PagesTabContainer" instance=ExtResource("17_18lnw")]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
 metadata/_tab_index = 5
@@ -360,8 +381,10 @@ text = "Сеть"
 text = "25 мс"
 
 [editable path="HBoxContainer/MarginContainer/Sidebar/GotoMain"]
+[editable path="HBoxContainer/MarginContainer/Sidebar/GotoCommunity"]
 [editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Checking"]
 [editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedUpdate"]
+[editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/NeedDownload"]
 [editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Updating"]
 [editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Ready"]
 [editable path="HBoxContainer/MarginContainer/Sidebar/MarginContainer/GameStatusesTabs/Error"]

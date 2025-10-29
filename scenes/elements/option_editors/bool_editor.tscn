@@ -1,0 +1,49 @@
+[gd_scene load_steps=4 format=3 uid="uid://clb2d2tiwpabb"]
+
+[ext_resource type="Script" uid="uid://ltqeweopa3av" path="res://scripts/elements/option_editors/bool_editor.gd" id="1_l2ina"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_l2ina"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l2ina"]
+draw_center = false
+border_width_bottom = 1
+border_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="BoolEditor" type="HBoxContainer"]
+offset_right = 762.0
+offset_bottom = 71.0
+script = ExtResource("1_l2ina")
+
+[node name="Name" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "Property name"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 10
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_l2ina")
+
+[node name="Value" type="CheckBox" parent="MarginContainer/PanelContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_styles/focus = SubResource("StyleBoxFlat_l2ina")
+
+[node name="Timer" type="Timer" parent="."]

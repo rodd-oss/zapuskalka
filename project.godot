@@ -13,7 +13,13 @@ config_version=5
 config/name="Gigabah Launcher"
 run/main_scene="uid://cfgnin0yn4knj"
 config/features=PackedStringArray("4.5")
+run/low_processor_mode=true
+boot_splash/image="uid://crtm5065g5mns"
 config/icon="res://icon.svg"
+
+[autoload]
+
+Utils="*res://scripts/utils.gd"
 
 [display]
 
@@ -26,3 +32,7 @@ window/stretch/aspect="expand"
 [general]
 
 config_version=5
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://translations/launcher.ru.translation")

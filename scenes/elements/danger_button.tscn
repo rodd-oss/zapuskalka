@@ -1,0 +1,75 @@
+[gd_scene load_steps=7 format=3 uid="uid://23cj0b27iq4y"]
+
+[ext_resource type="PackedScene" uid="uid://covjyh2ilu4p0" path="res://scenes/elements/button.tscn" id="1_bnppv"]
+[ext_resource type="Texture2D" uid="uid://bc64fdyhwna2r" path="res://icons/google_material_icons/chat_bubble.svg" id="2_hf1vy"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ne6bp"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.66, 0.18479998, 0.19271989, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lnkxc"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.5349708, 0.13953969, 0.14700398, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_if8oe"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.65882355, 0.18431373, 0.19215687, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aoehu"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.65882355, 0.18431373, 0.19215687, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.6052743, 0.6052743, 0.6052743, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+
+[node name="Button" instance=ExtResource("1_bnppv")]
+theme_override_colors/font_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/font_focus_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.36, 0.36, 1)
+theme_override_colors/font_hover_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/font_hover_pressed_color = Color(1, 0.36, 0.36, 1)
+theme_override_colors/icon_normal_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/icon_focus_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/icon_pressed_color = Color(1, 0.36, 0.36, 1)
+theme_override_colors/icon_hover_color = Color(1, 0.8392157, 0.8392157, 1)
+theme_override_colors/icon_hover_pressed_color = Color(1, 0.36, 0.36, 1)
+theme_override_styles/normal = SubResource("StyleBoxFlat_ne6bp")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_lnkxc")
+theme_override_styles/hover = SubResource("StyleBoxFlat_if8oe")
+theme_override_styles/focus = SubResource("StyleBoxFlat_aoehu")
+text = "Не жми ёкрн бабай"
+icon = ExtResource("2_hf1vy")

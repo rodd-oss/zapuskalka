@@ -1,0 +1,17 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bxqt7c06tobe6"
+
+[deps]
+
+files=["res://translations/launcher.ru.translation"]
+
+source_file="res://translations/launcher.csv"
+dest_files=["res://translations/launcher.ru.translation"]
+
+[params]
+
+compress=true
+delimiter=0

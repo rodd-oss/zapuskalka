@@ -1,12 +1,16 @@
-[gd_scene load_steps=10 format=3 uid="uid://bbk0auw63a1on"]
+[gd_scene load_steps=14 format=3 uid="uid://bbk0auw63a1on"]
 
 [ext_resource type="PackedScene" uid="uid://covjyh2ilu4p0" path="res://scenes/elements/button.tscn" id="1_plq1a"]
-[ext_resource type="Texture2D" uid="uid://inv4802ld2q4" path="res://icons/google_material_icons/check_circle.svg" id="2_2dm1e"]
+[ext_resource type="PackedScene" uid="uid://23cj0b27iq4y" path="res://scenes/elements/danger_button.tscn" id="2_mwnk0"]
 [ext_resource type="PackedScene" uid="uid://jteb00qdd3xo" path="res://scenes/elements/vseparator.tscn" id="3_016op"]
+[ext_resource type="Texture2D" uid="uid://jrd327tuol6t" path="res://icons/google_material_icons/mode_off_on.svg" id="3_20kij"]
+[ext_resource type="Texture2D" uid="uid://bdm35s85ici2m" path="res://icons/google_material_icons/autorenew.svg" id="4_2a1io"]
 [ext_resource type="PackedScene" uid="uid://dye0d10i40nxl" path="res://scenes/elements/news_card.tscn" id="4_7boqb"]
 [ext_resource type="Texture2D" uid="uid://dibk3qbm7g36d" path="res://icons/google_material_icons/schedule.svg" id="4_llo3u"]
+[ext_resource type="Texture2D" uid="uid://byqk22wqaxenr" path="res://icons/google_material_icons/download.svg" id="5_3ytup"]
 [ext_resource type="Texture2D" uid="uid://bbr22bxwg2tbe" path="res://images/news_4.png" id="5_7boqb"]
 [ext_resource type="Texture2D" uid="uid://vo5eqfykufn7" path="res://images/news_1.jpg" id="6_mwnk0"]
+[ext_resource type="Texture2D" uid="uid://bkbl2hortmgo5" path="res://icons/google_material_icons/calendar_today.svg" id="7_3ytup"]
 [ext_resource type="Texture2D" uid="uid://cem45gwcomqec" path="res://images/news_2.jpg" id="7_20kij"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yrab4"]
@@ -67,10 +71,42 @@ text = "Отправляйтесь в невероятные путишеств�
 [node name="ActionsContainer" type="HBoxContainer" parent="Main"]
 layout_mode = 2
 
-[node name="PlayButton" parent="Main/ActionsContainer" instance=ExtResource("1_plq1a")]
+[node name="PrimaryActionTabs" type="TabContainer" parent="Main/ActionsContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(125, 0)
+layout_mode = 2
+current_tab = 0
+tabs_visible = false
+
+[node name="PlayButton" parent="Main/ActionsContainer/PrimaryActionTabs" instance=ExtResource("1_plq1a")]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Играть"
+metadata/_tab_index = 0
+
+[node name="StopButton" parent="Main/ActionsContainer/PrimaryActionTabs" instance=ExtResource("2_mwnk0")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Завершить"
+icon = ExtResource("3_20kij")
+metadata/_tab_index = 1
+
+[node name="UpdateButton" parent="Main/ActionsContainer/PrimaryActionTabs" instance=ExtResource("1_plq1a")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Обновить"
+icon = ExtResource("4_2a1io")
+metadata/_tab_index = 2
+
+[node name="DownloadButton" parent="Main/ActionsContainer/PrimaryActionTabs" instance=ExtResource("1_plq1a")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+text = "Скачать"
+icon = ExtResource("5_3ytup")
+metadata/_tab_index = 3
 
 [node name="MarginContainer2" type="MarginContainer" parent="Main"]
 layout_mode = 2
@@ -85,11 +121,11 @@ theme_override_constants/separation = 20
 layout_mode = 2
 alignment = 1
 
-[node name="ActualityIcon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
-modulate = Color(0.49019608, 0.9098039, 0.5411765, 1)
+[node name="Icon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion"]
+modulate = Color(0.5019608, 0.5019608, 0.5019608, 1)
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
-texture = ExtResource("2_2dm1e")
+texture = ExtResource("5_3ytup")
 expand_mode = 3
 stretch_mode = 4
 
@@ -97,13 +133,13 @@ stretch_mode = 4
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="ActualVersionLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
+[node name="InstalledVersionLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
 theme_override_font_sizes/font_size = 9
-text = "Актуальная версия: "
+text = "Установлена версия: "
 
-[node name="ActualVersion" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
+[node name="InstalledVersion" type="Label" parent="Main/MarginContainer2/StatusesContainer/ActualGameVersion/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
@@ -120,7 +156,7 @@ layout_mode = 2
 modulate = Color(0.5019608, 0.5019608, 0.5019608, 1)
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
-texture = ExtResource("4_llo3u")
+texture = ExtResource("7_3ytup")
 expand_mode = 3
 stretch_mode = 4
 
@@ -140,6 +176,36 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
 theme_override_font_sizes/font_size = 9
 text = "никогда"
+
+[node name="VSeparator2" parent="Main/MarginContainer2/StatusesContainer" instance=ExtResource("3_016op")]
+layout_mode = 2
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer"]
+layout_mode = 2
+
+[node name="ActualityIcon" type="TextureRect" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer3"]
+modulate = Color(0.5019608, 0.5019608, 0.5019608, 1)
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+texture = ExtResource("4_llo3u")
+expand_mode = 3
+stretch_mode = 4
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer3"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TotalPlayTimeLabel" type="Label" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer3/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
+text = "Проведено времени в игре: "
+
+[node name="TotalPlayTime" type="Label" parent="Main/MarginContainer2/StatusesContainer/HBoxContainer3/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5019608, 0.5019608, 0.5019608, 1)
+theme_override_font_sizes/font_size = 9
 
 [node name="MarginContainer3" type="MarginContainer" parent="Main"]
 layout_mode = 2
