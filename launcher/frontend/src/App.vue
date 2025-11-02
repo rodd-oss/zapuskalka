@@ -1,18 +1,14 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue';
+import { ref } from 'vue';
+import Auth from './pages/Auth.vue';
+import Home from './pages/Home.vue';
 
+const isAuthenticated = ref(false);
 </script>
 
 <template>
-  <header>
-    <div class="wrapper">
-      HEADER
-    </div>
-  </header>
-  
-  <main>
-    <HelloWorld msg="You did it!" />
-  </main>
+  <Auth v-if="!isAuthenticated" />
+  <Home v-else />
 </template>
 
 <style scoped>
