@@ -1,0 +1,24 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  dev-backend:
+    desc: Run backend server
+    dir: ./backend
+    cmds:
+      - go run . serve
+
+  dev-launcher:
+    desc: Run launcher (Wails dev)
+    dir: ./launcher
+    cmds:
+      - wails dev
+  dev:
+    desc: Run backend and launcher together
+    deps:
+      - task: dev-backend
+      - task: dev-launcher

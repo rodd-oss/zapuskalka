@@ -17,9 +17,11 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
+    "@vueuse/core": "^14.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-vue-next": "^0.552.0",
+    "pocketbase": "^0.26.3",
     "reka-ui": "^2.6.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.16",
