@@ -3,26 +3,29 @@ import { computed, onUnmounted, reactive, ref, readonly } from 'vue'
 
 const pbClient = new PocketBase('http://localhost:8090')
 
+const authStore = reactive({
+  isSuperuser: pbClient.authStore.isSuperuser,
+  isValid: pbClient.authStore.isValid,
+  record: pbClient.authStore.record,
+  token: pbClient.authStore.token,
+})
+
+const unsub = pbClient.authStore.onChange((newToken, newRecord) => {
+  authStore.isSuperuser = pbClient.authStore.isSuperuser
+  authStore.isValid = pbClient.authStore.isValid
+  authStore.record = newRecord
+  authStore.token = newToken
+})
+
+onUnmounted(unsub)
+
 export const usePocketBase = () => pbClient
 
 export const useAuth = () => {
   const pb = usePocketBase()
 
-  const isSuperuser = ref(pb.authStore.isSuperuser)
-  const isValid = ref(pb.authStore.isValid)
-  const record = ref(pb.authStore.record)
-  const token = ref(pb.authStore.token)
   const loading = ref(false)
   const error = ref<string | null>(null)
-
-  const unsub = pb.authStore.onChange((newToken, newRecord) => {
-    isSuperuser.value = pb.authStore.isSuperuser
-    isValid.value = pb.authStore.isValid
-    record.value = newRecord
-    token.value = newToken
-  })
-
-  onUnmounted(unsub)
 
   const logout = async () => {
     pb.authStore.clear()
@@ -55,10 +58,10 @@ export const useAuth = () => {
   }
 
   return {
-    isSuperuser: readonly(isSuperuser),
-    isValid: readonly(isValid),
-    record: readonly(record),
-    token: readonly(token),
+    isSuperuser: computed(() => authStore.isSuperuser),
+    isValid: computed(() => authStore.isValid),
+    record: computed(() => authStore.record),
+    token: computed(() => authStore.token),
     logout,
     authUserWithPassword,
     authWithOAuth2,
