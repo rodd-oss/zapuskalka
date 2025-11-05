@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Auth from './pages/Auth.vue';
-import Home from './pages/Home.vue';
+import Auth from './pages/AuthPage.vue';
+import Home from './pages/HomePage.vue';
 
 const isAuthenticated = ref(false);
 </script>
