@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import Button from '@/components/ui/button/Button.vue';
+import Button from '@/components/ui/button/Button.vue'
+import { useAuth, useAuthenticated } from '@/lib/usePocketbase'
+import { useRouter } from 'vue-router'
 
+useAuthenticated()
 
+const router = useRouter()
+const auth = useAuth()
+const onLogout = async () => {
+  await auth.logout()
+  router.push('/auth')
+}
 </script>
 <template>
-    <div>
-        Welcome Home
-        <Button></Button>
-    </div>
+  <div>
+    Welcome {{ auth.record.value?.name }} email {{ auth.record.value?.email }}
+    <Button @click="onLogout">Logout</Button>
+  </div>
 </template>
-<style scoped>
-</style>
+<style scoped></style>

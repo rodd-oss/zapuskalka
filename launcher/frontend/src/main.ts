@@ -2,5 +2,25 @@ import './assets/main.css'
 
 import { createApp } from 'vue'
 import App from './App.vue'
+import AuthPage from './pages/AuthPage.vue'
+import HomePage from './pages/HomePage.vue'
 
-createApp(App).mount('#app')
+import { createMemoryHistory, createRouter } from 'vue-router'
+import { useAuth } from './lib/usePocketbase'
+
+export const router = createRouter({
+  history: createMemoryHistory(),
+  routes: [
+    { path: '/', component: HomePage },
+    { path: '/auth', component: AuthPage },
+  ],
+})
+
+router.beforeEach(async (to, from) => {
+  const auth = useAuth()
+  if (!auth.isValid.value && to.path !== '/auth') {
+    return { path: '/auth' }
+  }
+})
+
+createApp(App).use(router).mount('#app')

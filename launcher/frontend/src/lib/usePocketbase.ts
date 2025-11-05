@@ -1,5 +1,6 @@
 import PocketBase from 'pocketbase'
-import { computed, onUnmounted, reactive, ref, readonly } from 'vue'
+import { computed, onUnmounted, reactive, ref, readonly, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
 const pbClient = new PocketBase('http://localhost:8090')
 
@@ -20,6 +21,19 @@ const unsub = pbClient.authStore.onChange((newToken, newRecord) => {
 onUnmounted(unsub)
 
 export const usePocketBase = () => pbClient
+
+export const useAuthenticated = () => {
+  const auth = useAuth()
+  const router = useRouter()
+
+  watch(auth.isValid, () => {
+    if (auth.isValid.value) {
+      return
+    }
+
+    router.push('/auth')
+  })
+}
 
 export const useAuth = () => {
   const pb = usePocketBase()
@@ -57,6 +71,12 @@ export const useAuth = () => {
     }
   }
 
+  const listAuthMethods = async () => {
+    const pb = usePocketBase()
+
+    return pb.collection('users').listAuthMethods()
+  }
+
   return {
     isSuperuser: computed(() => authStore.isSuperuser),
     isValid: computed(() => authStore.isValid),
@@ -65,5 +85,8 @@ export const useAuth = () => {
     logout,
     authUserWithPassword,
     authWithOAuth2,
+    listAuthMethods,
+    loading,
+    error,
   }
 }
