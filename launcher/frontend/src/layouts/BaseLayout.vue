@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Avatar from '@/components/ui/avatar/Avatar.vue'
+import AvatarFallback from '@/components/ui/avatar/AvatarFallback.vue'
+import AvatarImage from '@/components/ui/avatar/AvatarImage.vue'
 import { useAuth } from '@/lib/usePocketbase'
 
 const links = [
@@ -33,9 +36,15 @@ const auth = useAuth()
           <div class="flex items-center justify-end">
             <RouterLink
               to="/profile"
-              class="text-md p-3 text-gray-700 transition-colors hover:text-gray-900"
+              class="text-md flex flex-row items-center gap-2 p-3 text-gray-700 transition-colors hover:text-gray-900"
             >
-              {{ auth.record.value?.name }}
+              <div>
+                {{ auth.record.value?.name }}
+              </div>
+              <Avatar>
+                <AvatarImage src="https://github.com/unovue.png" alt="@unovue" />
+                <AvatarFallback>M</AvatarFallback>
+              </Avatar>
             </RouterLink>
           </div>
         </div>
