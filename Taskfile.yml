@@ -6,6 +6,17 @@ vars:
   GREETING: Hello, World!
 
 tasks:
+  build:
+    dir: ./launcher
+    cmds:
+      - wails build
+
+  dev:
+    desc: Run backend and launcher together
+    deps:
+      - task: dev-backend
+      - task: dev-launcher
+
   dev-backend:
     desc: Run backend server
     dir: ./backend
@@ -17,8 +28,3 @@ tasks:
     dir: ./launcher
     cmds:
       - wails dev
-  dev:
-    desc: Run backend and launcher together
-    deps:
-      - task: dev-backend
-      - task: dev-launcher

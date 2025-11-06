@@ -32,7 +32,7 @@ const onLoginWithOAuth = async (provider: string) => {
 
 <template>
   <div class="flex h-screen w-full items-center justify-center px-4">
-    <div :class="cn('flex flex-col gap-6 min-w-80')">
+    <div :class="cn('flex min-w-80 flex-col gap-6')">
       <Card class="min-h-80">
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>

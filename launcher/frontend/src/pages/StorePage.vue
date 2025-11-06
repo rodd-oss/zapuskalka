@@ -15,10 +15,7 @@ const onLogout = async () => {
 </script>
 <template>
   <BaseLayout>
-    <div>
-      Welcome {{ auth.record.value?.name }} email {{ auth.record.value?.email }}
-      <Button @click="onLogout">Logout</Button>
-    </div>
+    <div>STORE</div>
   </BaseLayout>
 </template>
 <style scoped></style>

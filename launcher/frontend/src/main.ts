@@ -7,12 +7,16 @@ import HomePage from './pages/HomePage.vue'
 
 import { createMemoryHistory, createRouter } from 'vue-router'
 import { useAuth } from './lib/usePocketbase'
+import StorePage from './pages/StorePage.vue'
+import LibraryPage from './pages/LibraryPage.vue'
 
 export const router = createRouter({
   history: createMemoryHistory(),
   routes: [
     { path: '/', component: HomePage },
     { path: '/auth', component: AuthPage },
+    { path: '/store', component: StorePage },
+    { path: '/library', component: LibraryPage },
   ],
 })
 
