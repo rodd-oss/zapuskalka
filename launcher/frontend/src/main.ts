@@ -5,14 +5,14 @@ import App from './App.vue'
 import AuthPage from './pages/AuthPage.vue'
 import HomePage from './pages/HomePage.vue'
 
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createWebHashHistory, createRouter } from 'vue-router'
 import { useAuth } from './lib/usePocketbase'
 import StorePage from './pages/StorePage.vue'
 import LibraryPage from './pages/LibraryPage.vue'
 import LibraryGamePage from './pages/LibraryGamePage.vue'
 
 export const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHashHistory(),
   routes: [
     { path: '/', component: HomePage },
     { path: '/auth', component: AuthPage },
