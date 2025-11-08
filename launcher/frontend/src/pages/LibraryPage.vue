@@ -16,7 +16,7 @@ onMounted(async () => {
     const res = await pb.collection('games').getFullList()
     games.value = res
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 })
 
