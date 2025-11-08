@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/lib/usePocketbase'
 import { useRouter } from 'vue-router'
 import type { AuthMethodsList } from 'pocketbase'
-import { Spinner } from '@/components/ui/spinner'
 
 const auth = useAuth()
 const router = useRouter()
@@ -72,18 +71,19 @@ const onLoginWithOAuth = async (provider: string) => {
               </div>
               <div class="flex flex-col gap-3">
                 <Button type="submit" class="w-full" :disabled="auth.loading.value"> Login </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  class="w-full"
-                  v-if="authMethods && authMethods.oauth2.enabled"
-                  v-for="provider in authMethods.oauth2.providers"
-                  :key="provider.name"
-                  :disabled="auth.loading.value"
-                  @click="onLoginWithOAuth(provider.name)"
-                >
-                  Login with {{ provider.displayName }}
-                </Button>
+                <template v-if="authMethods && authMethods.oauth2.enabled">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class="w-full"
+                    v-for="provider in authMethods.oauth2.providers"
+                    :key="provider.name"
+                    :disabled="auth.loading.value"
+                    @click="onLoginWithOAuth(provider.name)"
+                  >
+                    Login with {{ provider.displayName }}
+                  </Button>
+                </template>
               </div>
             </div>
             <div class="mt-4 text-center text-sm">

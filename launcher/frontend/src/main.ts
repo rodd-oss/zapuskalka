@@ -25,7 +25,7 @@ export const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const auth = useAuth()
   if (!auth.isValid.value && to.path !== '/auth') {
     return { path: '/auth' }
