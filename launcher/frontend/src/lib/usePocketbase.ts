@@ -1,8 +1,9 @@
 import PocketBase from 'pocketbase'
-import { computed, onUnmounted, reactive, ref, readonly, watch } from 'vue'
+import { type TypedPocketBase } from './pocketbase-types'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-const pbClient = new PocketBase('http://localhost:8090')
+const pbClient = new PocketBase('http://localhost:8090') as TypedPocketBase
 
 const authStore = reactive({
   isSuperuser: pbClient.authStore.isSuperuser,

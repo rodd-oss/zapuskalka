@@ -1,5 +1,5 @@
 # https://taskfile.dev
-
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
 
 vars:
@@ -16,15 +16,21 @@ tasks:
     deps:
       - task: dev-backend
       - task: dev-launcher
+      - task: dev-typegen
 
   dev-backend:
     desc: Run backend server
     dir: ./backend
     cmds:
-      - go run . serve
+      - go run -tags automigrate . serve
 
   dev-launcher:
     desc: Run launcher (Wails dev)
     dir: ./launcher
     cmds:
       - wails dev
+
+  dev-typegen:
+    cmds:
+      - bun run typegen
+      - bun run typegen-watcher.ts
