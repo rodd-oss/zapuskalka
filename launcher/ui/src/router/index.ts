@@ -1,15 +1,10 @@
-import './assets/main.css'
-
-import { createApp } from 'vue'
-import App from './App.vue'
-import AuthPage from './pages/AuthPage.vue'
-import HomePage from './pages/HomePage.vue'
-
-import { createWebHashHistory, createRouter } from 'vue-router'
-import { useAuth } from './lib/usePocketbase'
-import StorePage from './pages/StorePage.vue'
-import LibraryPage from './pages/LibraryPage.vue'
-import LibraryGamePage from './pages/LibraryGamePage.vue'
+import { createRouter, createWebHashHistory } from 'vue-router'
+import { useAuth } from '@/lib/usePocketbase'
+import HomePage from '@/pages/HomePage.vue'
+import AuthPage from '@/pages/AuthPage.vue'
+import StorePage from '@/pages/StorePage.vue'
+import LibraryPage from '@/pages/LibraryPage.vue'
+import LibraryGamePage from '@/pages/LibraryGamePage.vue'
 
 export const router = createRouter({
   history: createWebHashHistory(),
@@ -32,4 +27,4 @@ router.beforeEach(async (to) => {
   }
 })
 
-createApp(App).use(router).mount('#app')
+export default router

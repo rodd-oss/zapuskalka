@@ -1,14 +1,22 @@
 {
-  "$schema": "https://wails.io/schemas/config.v2.json",
+  "$schema": "wails.schema.json",
   "name": "Zapuskalka",
   "outputfilename": "Zapuskalka",
-  "frontend:install": "npm install",
-  "frontend:build": "npm run build",
-  "frontend:dev:watcher": "npm run dev",
+  "frontend:dir": "ui",
+  "frontend:install": "bun install",
+  "frontend:build": "bun run build",
+  "frontend:dev:watcher": "bun run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "milanjrodd",
     "email": "milanrodd@gmail.com"
   },
-  "wailsjsdir": "/frontend/src"
+  "wailsjsdir": "/ui/src",
+  "Info": {
+    "companyName": "rodd-oss",
+    "productName": "Zapuskalka",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright.........",
+    "comments": "Built using Wails (https://wails.io)"
+  }
 }

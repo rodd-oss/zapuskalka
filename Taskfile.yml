@@ -9,7 +9,7 @@ tasks:
   build:
     dir: ./launcher
     cmds:
-      - wails build
+      - wails build -nsis
 
   dev:
     desc: Run backend and launcher together
@@ -33,4 +33,4 @@ tasks:
   dev-typegen:
     cmds:
       - bun run typegen
-      - bun run typegen-watcher.ts
+      - bun run scripts/typegen-watcher.ts
