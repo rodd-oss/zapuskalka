@@ -27,9 +27,7 @@ func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
-func (a *App) RunGame(gameId string) func () {
+func (a *App) RunGame(gameId string) {
 	log.Println("EXECUTING GAME: " + gameId)
-	return func() {
-		log.Println("EXECUTING GAME: " + gameId)
-	}
+	return
 }

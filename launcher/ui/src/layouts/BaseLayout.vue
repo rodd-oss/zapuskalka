@@ -5,7 +5,7 @@ import AvatarImage from '@/components/ui/avatar/AvatarImage.vue'
 import { useAuth } from '@/lib/usePocketbase'
 
 const links = [
-  { to: '/store', title: 'Store' },
+  { to: '/', title: 'Home' },
   { to: '/library', title: 'Library' },
 ]
 
