@@ -9,7 +9,8 @@
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 ```
 
-Now install all node_modules by running command in the project root folder
+## Install dependencies
+Run this command in the project root
 ```bash
 bun install
 ```
