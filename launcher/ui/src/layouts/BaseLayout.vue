@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/usePocketbase'
 const links = [
   { to: '/', title: 'Home' },
   { to: '/library', title: 'Library' },
+  { to: '/settings', title: 'Settings' },
 ]
 
 const auth = useAuth()

@@ -4,12 +4,24 @@ import HomePage from '@/pages/HomePage.vue'
 import AuthPage from '@/pages/AuthPage.vue'
 import LibraryPage from '@/pages/LibraryPage.vue'
 import LibraryGamePage from '@/pages/LibraryGamePage.vue'
+import SettingsPage from '@/pages/SettingsPage.vue'
+import SettingsAccountPage from '@/pages/SettingsAccountPage.vue'
+import SettingsStoragePage from '@/pages/SettingsStoragePage.vue'
 
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', component: HomePage },
     { path: '/auth', component: AuthPage },
+    {
+      path: '/settings',
+      component: SettingsPage,
+      children: [
+        { path: '', redirect: '/settings/account' },
+        { path: 'account', component: SettingsAccountPage },
+        { path: 'storage', component: SettingsStoragePage },
+      ],
+    },
     {
       path: '/library',
       component: LibraryPage,
