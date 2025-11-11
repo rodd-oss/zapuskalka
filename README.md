@@ -40,6 +40,14 @@ task dev
 
 ### Build
 
+Windows
+
 ```bash
-task build
+task build-win
+```
+
+or MacOS
+
+```bash
+task build-osx
 ```

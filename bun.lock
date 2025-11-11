@@ -13,7 +13,7 @@
       },
     },
     "launcher/ui": {
-      "name": "zapuskalka-frontend",
+      "name": "zapuskalka-ui",
       "version": "0.0.0",
       "dependencies": {
         "@primeuix/themes": "^1.2.5",
@@ -1089,7 +1089,7 @@
 
     "yocto-queue": ["yocto-queue@0.1.0", "", {}, "sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q=="],
 
-    "zapuskalka-frontend": ["zapuskalka-frontend@workspace:launcher/ui"],
+    "zapuskalka-ui": ["zapuskalka-ui@workspace:launcher/ui"],
 
     "@babel/core/semver": ["semver@6.3.1", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA=="],
 

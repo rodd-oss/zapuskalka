@@ -6,10 +6,15 @@ vars:
   GREETING: Hello, World!
 
 tasks:
-  build:
+  build-win:
     dir: ./launcher
     cmds:
       - wails build -nsis
+
+  build-osx:
+    dir: ./launcher
+    cmds:
+      - wails build
 
   dev:
     desc: Run backend and launcher together
