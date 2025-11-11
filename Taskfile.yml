@@ -32,5 +32,4 @@ tasks:
 
   dev-typegen:
     cmds:
-      - bun run typegen
       - bun run scripts/typegen-watcher.ts

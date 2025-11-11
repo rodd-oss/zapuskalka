@@ -1,6 +1,12 @@
 import { watch } from "fs";
 import { $ } from "bun";
 
+try {
+  await $`bun run typegen`
+} catch (error) {
+  console.log("Error generating initial types.")
+}
+
 const watcher = watch("backend/migrations", (event, filename) => {
   $`bun run typegen`.then();
 });

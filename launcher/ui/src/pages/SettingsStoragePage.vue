@@ -21,8 +21,8 @@ onMounted(() => {
 })
 
 const createStorageHandler = async () => {
-  const path: string = await osOpenFolder()
-  storageList.value.push({ path, title: `Storage_${storageList.value.length + 1}` })
+  // const path: string = await osOpenFolder()
+  // storageList.value.push({ path, title: `Storage_${storageList.value.length + 1}` })
   // await saveStorageList(storages.value)  - go binding
 }
 </script>
