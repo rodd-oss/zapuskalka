@@ -5,6 +5,7 @@
 ### Requirments
 
 - install bun - https://bun.com/docs/installation
+- install Node.js 20.19+ or 22.12+ - https://nodejs.org/en/download
 - install go - https://go.dev/dl/
 - install taskfile - https://taskfile.dev/docs/installation#get-the-binary
 - install wails by running command:
@@ -12,14 +13,6 @@
 ```bash
 go install github.com/wailsapp/wails/v2/cmd/wails@latest
 ```
-
-- Vite requires Node.js version 20.19+ or 22.12+. Check your node version by running command
-
-```bash
-node -v
-```
-
-Upgrade your nodejs - https://nodejs.org/en/download
 
 ### Install dependencies
 
