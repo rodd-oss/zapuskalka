@@ -11,7 +11,7 @@
     "name": "milanjrodd",
     "email": "milanrodd@gmail.com"
   },
-  "wailsjsdir": "/ui/src",
+  "wailsjsdir": "ui/src",
   "Info": {
     "companyName": "rodd-oss",
     "productName": "Zapuskalka",
