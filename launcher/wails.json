@@ -17,5 +17,12 @@
     "productVersion": "1.0.0",
     "copyright": "Copyright.........",
     "comments": "Built using Wails (https://wails.io)"
+  },
+  "bindings": {
+    "ts_generation": {
+      "prefix": "",
+      "suffix": "",
+      "outputType": "interfaces"
+    }
   }
 }

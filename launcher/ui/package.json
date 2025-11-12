@@ -24,6 +24,7 @@
     "lucide-vue-next": "^0.552.0",
     "pinia": "^3.0.3",
     "pocketbase": "^0.26.3",
+    "primeicons": "^7.0.0",
     "primevue": "^4.4.1",
     "reka-ui": "^2.6.0",
     "tailwind-merge": "^3.3.1",

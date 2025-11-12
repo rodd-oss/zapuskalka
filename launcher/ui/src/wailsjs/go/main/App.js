@@ -6,6 +6,18 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function LoadStorageList() {
+  return window['go']['main']['App']['LoadStorageList']();
+}
+
+export function OsOpenFolder() {
+  return window['go']['main']['App']['OsOpenFolder']();
+}
+
 export function RunGame(arg1) {
   return window['go']['main']['App']['RunGame'](arg1);
+}
+
+export function SaveStorageList(arg1) {
+  return window['go']['main']['App']['SaveStorageList'](arg1);
 }
