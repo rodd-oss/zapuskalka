@@ -8,7 +8,7 @@
 - install Node.js 20.19+ or 22.12+ - https://nodejs.org/en/download
 - install go - https://go.dev/dl/
 - install taskfile - https://taskfile.dev/docs/installation#get-the-binary
-- install wails - https://wails.io/docs/gettingstarted/installation
+- install wails cli (make sure it matches with the `/launcher/go.mod` required wails version) - https://wails.io/docs/gettingstarted/installation
 
 ### Install dependencies
 
