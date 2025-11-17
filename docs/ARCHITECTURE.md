@@ -1,136 +1,140 @@
-# Architecture Overview
+# Обзор архитектуры
 
-This document captures how Zapuskalka is structured today and which architectural decisions drive the current MVP scope outlined in `docs/PRODUCT.md`. Keep it up to date as the launcher, backend and distribution model evolve.
+Этот документ описывает текущее состояние Zapuskalka и ключевые архитектурные решения, которые обеспечивают MVP, определённый в `docs/PRODUCT.md`. Обновляйте файл по мере развития лаунчера, бэкенда и модели дистрибуции.
 
-## 1. Project Structure
+## 1. Структура проекта
 
 ```
 /
-├── backend/              # PocketBase-powered API, migrations, binaries
-│   ├── main.go           # PocketBase bootstrap & plugin hooks
-│   ├── migrate-*.go      # Dev/prod helpers to toggle automigrate
-│   └── migrations/       # PocketBase schema definitions (e.g., games)
-├── launcher/             # Wails desktop client (Go + Vue 3 + Vite)
-│   ├── main.go           # Wails bootstrap and runtime bindings
-│   ├── app.go            # Application entry, window config
-│   └── ui/               # SPA assets bundled into the desktop shell
-├── docs/                 # PRD, TRD, etc.
-├── scripts/              # Tooling such as `typegen-watcher.ts`
-├── Taskfile.yml          # Canonical dev/build tasks (task dev, build-*)
-├── package.json          # Root-level tooling dependencies (bun, linting)
-└── README.md             # Dev environment setup & workflow
+├── backend/              # API на базе PocketBase, миграции, бинарные файлы
+│   ├── main.go           # Инициализация PocketBase и подключения плагинов
+│   ├── migrate-*.go      # Хелперы для dev/prod для переключения automigrate
+│   └── migrations/       # Файлы с миграциями для PocketBase (например, games)
+├── launcher/             # Десктопный клиент Wails (Go + Vue 3 + Vite)
+│   ├── main.go           # Инициализация Wails и runtime bindings
+│   ├── app.go            # Точка входа приложения, конфигурация окна
+│   └── ui/               # SPA ассеты, бандлящиеся в десктопную оболочку
+├── docs/                 # PRD, TRD и т.д.
+├── scripts/              # Инструменты, такие как `typegen-watcher.ts`
+├── Taskfile.yml          # Канонические задачи для dev/build (task dev, build-*)
+├── package.json          # Зависимости инструментов на корневом уровне (bun, линтинг)
+└── README.md             # Настройка окружения разработки и рабочего процесса
 ```
 
-## 2. High-Level System Diagram
+## 2. High-Level системная диаграмма
 
 ```
-[Player / Developer]
+[Игрок / Разработчик]
         |
         v
-[Wails Desktop Launcher (Vue SPA)]
+[Vue SPA]
+        |
+        v
+[Wails Desktop Launcher]
         |
         v
 [PocketBase Backend API] ----> [SQLite (PocketBase data)]
         |
-        +----> [S3-compatible Object Storage]  (game builds, media)
+        +----> [S3-совместимое Object Storage]  (сборки игр, медиа)
         |
-        +----> [OAuth Providers: GitHub, Twitch] (planned)
+        +----> [OAuth Провайдеры: GitHub, Twitch]
+
 ```
 
-- The launcher bundles the Vue SPA inside a Wails desktop shell and talks to PocketBase via the generated `wailsjs` bindings or HTTPS when running outside the shell.
-- PocketBase hosts the REST API, authentication, and real-time subscriptions while persisting structured data in SQLite and storing binaries in the configured S3 bucket.
-- Future proprietary payment service (Release 3.0) will sit alongside PocketBase and expose a limited API surface once introduced.
+- Лаунчер упаковывает Vue SPA внутрь оболочки Wails. Vue общается с wails через сгенерированные биндинги `wailsjs` и общается с PocketBase через PocketBase js-sdk.
+- PocketBase предоставляет REST API, аутентификацию и real-time подписки, сохраняя структурированные данные в SQLite и бинарники в настроенном S3-бакете.
+- Будущий проприетарный платёжный сервис (Release 3.0) будет работать рядом с PocketBase и откроет ограниченный API после появления.
 
-## 3. Core Components
+## 3. Ключевые компоненты
 
 ### 3.1 Frontend
 
-- **Name:** Zapuskalka Launcher (Wails desktop client)
-- **Description:** Cross-platform desktop UI that covers the MVP loop defined in the PRD: account auth, browsing the store, managing the personal library, configuring install locations, monitoring downloads, launching/updating games, and exposing a lightweight developer console for pushing builds.
-- **Technologies:** Go (Wails runtime), Vue 3 + Vite + TypeScript, PrimeVue-based??? design system, Tailwind-style utility CSS (via `ui/assets/main.css`), Bun-powered toolchain, PocketBase JS SDK, (generated `wailsjs` bindings).
-- **Deployment:** Wails produces native Bundles (`launcher/build/bin/Zapuskalka.*` for macOS and NSIS installer or executable for Windows). Artifacts are distributed to testers along with the PocketBase backend endpoint configuration???.
+- **Название:** Zapuskalka Launcher (Wails desktop client)
+- **Описание:** Кроссплатформенный десктопный UI, покрывающий MVP-цикл из PRD: аутентификация, просмотр магазина, управление библиотекой, настройка путей установки, мониторинг загрузок, запуск/обновление игр и лёгкая консоль для загрузки билдов разработчиками.
+- **Технологии:** Go (Wails runtime), Vue 3 + Vite + TypeScript, PrimeVue-based дизайн‑система???, Tailwind‑подобный utility CSS (`ui/assets/main.css`), Bun‑инструментарий, PocketBase JS SDK и сгенерированные `wailsjs` биндинги.
+- **Деплой:** Wails собирает нативные бандлы (`launcher/build/bin/Zapuskalka.*` для macOS и NSIS‑инсталлер/EXE для Windows). Артефакты распространяются тестерам вместе с конфигурацией эндпоинта PocketBase бэкенда???.
 
 ### 3.2 Backend Services
 
 #### 3.2.1 PocketBase Core API
 
-- **Description:** Single binary service that powers all backend capabilities—auth (email/password, GitHub/Twitch OAuth), collections (games, users, libraries, etc.), file uploads, and real-time updates used by the launcher. Custom logic can be added via PocketBase hooks/plugins.
-- **Technologies:** Go 1.22+, PocketBase framework, SQLite (primary DB), S3-compatible storage (in prod, in dev you dont need S3), Taskfile workflows for dev/prod, Docker-ready binary.
-- **Deployment:** Packaged PocketBase binary (or Docker image) behind HTTPS (e.g., Caddy or Nginx). `AutoMigrate` is enabled via the build tags (`-tags automigrate`) to protect production data and simplify developer workflow.
+- **Описание:** Монолитный бинарник, реализующий весь backend: аутентификация (email/password, GitHub/Twitch OAuth), коллекции (games, users, libraries и т.д.), загрузка файлов, real-time обновления, используемые лаунчером. Кастомная логика может быть добавлена через PocketBase hooks/plugins.
+- **Технологии:** Go 1.22+, PocketBase framework, SQLite (primary DB), S3-compatible storage (в проде, в dev можно без S3), Taskfile‑воркфлоу для dev/prod, Docker-ready бинарник.
+- **Деплой:** Собранный PocketBase-бинарник (или Docker image) за HTTPS-прокси (Caddy, Nginx). `AutoMigrate` включается через build tags (`-tags automigrate`), что защищает production-данные и упрощает создание миграций на этапе разработки.
 
-#### 3.2.2 Payment / Monetization Service (Planned)
+#### 3.2.2 Payment / Monetization Service (Запланирован)
 
-- **Description:** Proprietary microservice responsible for checkout flows (one-off purchases, pay-what-you-want, key distribution) referenced in Release 3.0 of the PRD.
-- **Technologies:** TBD (service will expose an API PocketBase can call); isolated repo for licensing reasons.
-- **Deployment:** Separate closed-source infrastructure; integrates with PocketBase via REST callbacks/webhooks.
+- **Описание:** Проприетарный микросервис, ответственный за процессы оформления заказа (разовые покупки, pay-what-you-want, дистрибуция ключей), упомянутый в Release 3.0 PRD.
+- **Технологии:** TBD (сервис будет предоставлять API, который может вызывать PocketBase); изолированный репозиторий по причинам лицензирования.
+- **Деплой:** Отдельная closed-source инфраструктура; интегрируется с PocketBase через REST callbacks/webhooks.
 
-## 4. Data Stores
+## 4. Хранилища данных
 
 ### 4.1 PocketBase SQLite Database
 
-- **Type:** Embedded SQLite (managed by PocketBase).
-- **Purpose:** Primary metadata store for users, authentication tokens, games catalog, library records, storage locations, download jobs, and developer uploads.
-- **Key Collections (current MVP):**
-  - `_pb_users_auth_` (built-in) — player & developer accounts, hashed passwords, OAuth profiles.
-  - `users` - main colection stores user data and info???
-  - `games` — lightweight collection that currently tracks title + timestamps; will evolve with additional schema fields (system requirements, media, pricing).
-  - Future collections: downloads, storage libraries, purchases, developer organizations (see PRD).
+- **Тип:** Встроенный SQLite (управляется PocketBase).
+- **Назначение:** Основное мета‑хранилище: пользователи, токены, каталог игр, библиотеки, пути хранения, загрузки, билды разработчиков.
+- **Ключевые коллекции (MVP):**
+  - `_pb_users_auth_` (built-in) — игроки и разработчики, хешированные пароли, OAuth-профили.
+  - `users` — основная коллекция с публичными/приватными полями профилей.
+  - `games` — лёгкая коллекция с title + timestamps; далее расширится системными требованиями, медиа, прайсингом.
+  - Будущие коллекции: downloads, storage libraries, purchases, developer organizations (см. PRD).
 
 ### 4.2 Object Storage
 
-- **Type:** S3-compatible bucket (PocketBase file adapter).
-- **Purpose:** Stores uploaded game builds, cover art, screenshots, and launcher assets. In dev, PocketBase keeps files under `backend/pb_data/storage/`; production will swap to S3 by configuring the PocketBase storage adapter.
-- **Key Buckets/Prefixes:** `_pb_users_auth_` for avatars (already generated), `games` for binaries/media (to be created).
+- **Тип:** S3-совместимый bucket (адаптер файлов PocketBase).
+- **Назначение:** Хранит загруженные сборки игр, обложки, скриншоты и ассеты лаунчера. В dev PocketBase хранит файлы в `backend/pb_data/storage/`; production переключится на S3 путем настройки адаптера хранилища PocketBase.
+- **Ключевые Buckets/Префиксы:** `_pb_users_auth_` для аватарок (уже сгенерировано), `games` для бинарных файлов/медиа (будет создано).
 
 ### 4.3 Local Cache (Launcher)
 
-- **Type:** File-system directories selected by the user ("Libraries").
-- **Purpose:** Stores installed game binaries, delta patches, and download caches. Managed entirely by the launcher with metadata.
+- **Тип:** Директории в файловой системе, выбранные пользователем ("Библиотеки").
+- **Назначение:** Хранит установленные бинарные файлы игр, delta патчи и кэши загрузок. Управляется полностью лаунчером с метаданными.
 
-## 5. External Integrations / APIs
+## 5. Внешние интеграции / API
 
-- **S3 / Object Storage:** aws s3 compatiable storage.
-- **OAuth Providers:** GitHub & Twitch (planned) for smoother onboarding of developers/players; implemented through PocketBase OAuth provider configuration.
-- **Payment Provider:** Proprietary service planned for Release 3.0, accessed over REST from PocketBase.
-- **WebView2 (Windows) / System WebView (macOS/Linux):** Pulled by Wails installer to render the Vue app.
+- **S3 / Object Storage:** AWS S3 совместимое хранилище.
+- **OAuth Провайдеры:** GitHub & Twitch для более гладкого онбординга разработчиков/игроков; реализуются через конфигурацию OAuth провайдера в PocketBase.
+- **Платежный Провайдер:** Проприетарный сервис, запланированный для Release 3.0, доступный через REST из PocketBase.
+- **WebView2 (Windows) / System WebView (macOS/Linux):** Устанавливается инсталлером Wails для рендеринга Vue приложения.
 
-## 6. Deployment & Infrastructure
+## 6. Деплой и инфраструктура
 
-- **Cloud / Hosting:** PocketBase is expected to run on a single VM or container (e.g., Fly.io, Render, or bare-metal VPS). Object storage relies on S3-compatible services (AWS S3, Cloudflare R2, Yandex Cloud, etc.). Launcher is distributed as signed binaries per OS.
-- **Key Services:** PocketBase API, S3 bucket, reverse proxy (Caddy/Nginx/Traefik etc.) terminating TLS.
-- **CI/CD:** Not yet configured. Local automation provided via `Taskfile.yml` (`task dev`, `task dev-backend`, `task build-osx`, `task build-win`). Future CI should cover linting, type generation (`scripts/typegen-watcher.ts`), launcher builds.
-- **Monitoring & Logging:** PocketBase logs to stdout; plan to ship logs to a central collector when deployed.
+- **Облако / Хостинг:** Ожидается, что PocketBase будет работать на одной VM или контейнере (например, Fly.io, Render, или bare-metal VPS). Хранилище объектов полагается на S3-совместимые сервисы (AWS S3, Cloudflare R2, Yandex Cloud и т.д.). Лаунчер распространяется в виде подписанных бинарных файлов для каждой ОС.
+- **Ключевые Сервисы:** PocketBase API, S3 bucket, reverse proxy (Caddy/Nginx/Traefik и т.д.), завершающий TLS.
+- **CI/CD:** Пока не настроен. Локальная автоматизация предоставляется через `Taskfile.yml` (`task dev`, `task dev-backend`, `task build-osx`, `task build-win`). Будущий CI должен покрывать линтинг, генерацию типов (`scripts/typegen-watcher.ts`), сборки лаунчера.
+- **Мониторинг & Логирование:** PocketBase пишет логи в stdout.
 
-## 7. Security Considerations
+## 7. Безопасность
 
-- **Authentication:** PocketBase email/password auth (bcrypt hashes) with GitHub/Twitch OAuth. Launcher stores session tokens securely via Pocketbase-js-sdk utilities.
-- **Authorization:** PocketBase collection rules enforce who can read/write games, libraries, and downloads. Admin-only routes remain behind the PocketBase dashboard.
-- **Data Encryption:** HTTPS/TLS termination is mandatory for the public API. At rest, SQLite sits on encrypted storage volumes (infrastructure responsibility). S3 buckets should enforce encryption and signed URLs for downloads.
-- **Other Practices:** Enabling `AutoMigrate` in dev to auto generate migrations in Pocketbase, input validation in the launcher before sending payloads.
+- **Аутентификация:** Аутентификация PocketBase по email/паролю (bcrypt хэши) с GitHub/Twitch OAuth. Лаунчер хранит токены сессии безопасно через утилиты Pocketbase-js-sdk.
+- **Авторизация:** Правила коллекций PocketBase обеспечивают контроль, кто может читать/писать игры, библиотеки и загрузки. Admin-only пути остаются за панелью управления PocketBase.
+- **Шифрование данных:** Обязательный HTTPS/TLS для публичного API. SQLite должен лежать на зашифрованных томах, S3 — с включённым at-rest шифрованием и signed URLs.
+- **Другие Практики:** Включение `AutoMigrate` в dev для автоматической генерации миграций в Pocketbase, валидация ввода в лаунчере перед отправкой payload.
 
-## 8. Development & Testing Environment
+## 8. Среда разработки и тестирования
 
-- **Local Setup:** Follow `/README.md`.
-- **Testing Frameworks:** Not yet established. Frontend can leverage Vitest/Jest + Playwright; backend relies on PocketBase integration tests/migrations. Add linting/formatting via ESLint (`launcher/ui/eslint.config.ts`) and Go fmt/vet.
-- **Code Quality Tools:** ESLint for the Vue codebase, TypeScript strict mode, PocketBase migration validation. No automated Go linters configured yet.
-- **Environment Parity:** `.env` handling currently manual; Wails ships config via `wails.json`. For backend, environment variables (PORT, storage config) to be wired before production launch.
+- **Локальная Настройка:** Следуйте `/README.md`.
+- **Фреймворки для Тестирования:** Пока не установлены. Frontend может использовать Vitest/Jest + Playwright; бэкенд полагается на интеграционные тесты/миграции PocketBase. Добавление линтинга/форматирования через ESLint (`launcher/ui/eslint.config.ts`) и Go fmt/vet.
+- **Инструменты Качества Кода:** ESLint для Vue кодовой базы, TypeScript strict mode, валидация миграций PocketBase. Автоматические Go линтеры пока не настроены.
+- **Параллельность Окружений:** Обработка `.env` сейчас ручная; Wails доставляет конфиг через `wails.json`. Для бэкенда, переменные окружения (PORT, конфигурация хранилища) должны быть подключены перед запуском в production.
 
-## 9. Future Considerations / Roadmap
+## 9. Дальнейшие шаги / Roadmap
 
-- Release 2.0 per PRD: friends list, chat, advanced download scheduling, file-integrity verification.
-- Release 3.0: proprietary payment microservice, developer analytics dashboards, news feeds, flexible pricing (one-off, PWYW) and key management.
-- Potential architectural shifts: extract download manager into a separate service for scalability, introduce event-driven messaging for live updates, migrate from single PocketBase instance to managed Postgres + custom Go services once data/traffic demands exceed MVP constraints.
+- Release 2.0 по PRD: список друзей, чат, продвинутое планирование загрузок, проверка целостности файлов.
+- Release 3.0: проприетарный платежный микросервис, аналитические дашборды для разработчиков, лента новостей, гибкое ценообразование (разовое, PWYW) и управление ключами.
+- Потенциальные архитектурные изменения: выделение менеджера загрузок в отдельный сервис для масштабируемости, внедрение event-driven messaging для live обновлений, миграция с единичного экземпляра PocketBase на управляемую Postgres + кастомные Go сервисы, когда требования к данным/трафику превысят ограничения MVP.
 
-## 10. Project Identification
+## 10. Идентификация проекта
 
-- **Project Name:** Zapuskalka
-- **Repository URL:** https://github.com/rodd-oss/zapuskalka
-- **Primary Contact / Team:** Core maintainers @rodd-oss (Milan Rodd) and contributors listed in GitHub.
+- **Название Проекта:** Zapuskalka
+- **URL Репозитория:** https://github.com/rodd-oss/zapuskalka
+- **Основной Контакт / Команда:** Основные maintainers @rodd-oss (Milan Rodd) и контрибьюторы, указанные в GitHub.
 
-## 11. Glossary / Acronyms
+## 11. Глоссарий / Аббревиатуры
 
-- **PocketBase:** Embedded Go backend framework that bundles auth, file storage, and real-time APIs on top of SQLite.
-- **Wails:** Go framework that embeds a modern web frontend inside native desktop shells for Windows, macOS, and Linux.
-- **S3:** Simple Storage Service (or compatible providers) used for storing large game binaries and media assets.
-- **PB:** Abbreviation used within the repo for PocketBase artifacts (e.g., `pb_data`, `_pb_users_auth_`).
-- **MVP:** Minimum Viable Product as defined in `docs/PRODUCT.md`.
+- **PocketBase:** Встроенный Go бэкенд фреймворк, который объединяет аутентификацию, файловое хранилище и real-time API поверх SQLite.
+- **Wails:** Go фреймворк, который встраивает современный web frontend в нативные десктопные оболочки для Windows, macOS и Linux.
+- **S3:** Simple Storage Service (или совместимые провайдеры), используемые для хранения больших бинарных файлов игр и медиа ассетов.
+- **PB:** Аббревиатура, используемая внутри репозитория для артефактов PocketBase (например, `pb_data`, `_pb_users_auth_`).
+- **MVP:** Minimum Viable Product, как определено в `docs/PRODUCT.md`.
