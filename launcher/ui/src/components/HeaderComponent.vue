@@ -7,22 +7,28 @@ const route = useRoute()
 
 const items = computed<NavigationMenuItem[]>(() => [
   {
-    label: 'Home',
-    to: '/',
-    active: route.path == '/',
+    label: 'Docs',
+    to: '/docs/getting-started',
+    active: route.path.startsWith('/docs/getting-started'),
   },
   {
-    label: 'Library',
-    to: '/library',
-    active: route.path.startsWith('/library'),
+    label: 'Components',
+    to: '/docs/components',
+    active: route.path.startsWith('/docs/components'),
   },
   {
-    label: 'Settings',
-    to: '/settings',
-    active: route.path.startsWith('/settings'),
+    label: 'Figma',
+    to: 'https://go.nuxt.com/figma-ui',
+    target: '_blank',
+  },
+  {
+    label: 'Releases',
+    to: 'https://github.com/nuxt/ui/releases',
+    target: '_blank',
   },
 ])
 </script>
+
 <template>
   <UHeader>
     <template #title>
@@ -46,8 +52,4 @@ const items = computed<NavigationMenuItem[]>(() => [
       </UTooltip>
     </template>
   </UHeader>
-
-  <UMain>
-    <slot />
-  </UMain>
 </template>

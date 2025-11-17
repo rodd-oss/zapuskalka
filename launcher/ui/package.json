@@ -16,6 +16,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@nuxt/ui": "^4.1.0",
     "@primeuix/themes": "^1.2.5",
     "@tailwindcss/vite": "^4.1.16",
     "@vueuse/core": "^14.0.0",

@@ -1,14 +1,60 @@
 <script setup lang="ts">
 import BaseLayout from '@/layouts/BaseLayout.vue'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { onMounted, ref } from 'vue'
 import type { GamesResponse } from '@/lib/pocketbase-types'
-import { Search } from 'lucide-vue-next'
-import Input from '@/components/ui/input/Input.vue'
 import { computed } from 'vue'
+import type { NavigationMenuItem } from '@nuxt/ui'
+
+const items: NavigationMenuItem[][] = [
+  [
+    {
+      label: 'Home',
+      icon: 'i-lucide-house',
+      active: true,
+    },
+    {
+      label: 'Inbox',
+      icon: 'i-lucide-inbox',
+      badge: '4',
+    },
+    {
+      label: 'Contacts',
+      icon: 'i-lucide-users',
+    },
+    {
+      label: 'Settings',
+      icon: 'i-lucide-settings',
+      defaultOpen: true,
+      children: [
+        {
+          label: 'General',
+        },
+        {
+          label: 'Members',
+        },
+        {
+          label: 'Notifications',
+        },
+      ],
+    },
+  ],
+  [
+    {
+      label: 'Feedback',
+      icon: 'i-lucide-message-circle',
+      to: 'https://github.com/nuxt-ui-templates/dashboard',
+      target: '_blank',
+    },
+    {
+      label: 'Help & Support',
+      icon: 'i-lucide-info',
+      to: 'https://github.com/nuxt/ui',
+      target: '_blank',
+    },
+  ],
+]
 
 const games = ref<GamesResponse[]>([])
 
@@ -41,37 +87,12 @@ useAuthenticated()
 </script>
 <template>
   <BaseLayout>
-    <ResizablePanelGroup direction="horizontal">
-      <ResizablePanel class="max-w-1/2 min-w-60" :default-size="25">
-        <div class="relative w-full items-center p-2">
-          <Input
-            id="search"
-            v-model="searchFilter"
-            type="text"
-            placeholder="Search..."
-            class="w-full pl-10"
-          />
-          <span class="absolute inset-y-0 start-0 flex items-center justify-center px-4">
-            <Search class="text-muted-foreground size-6" />
-          </span>
-        </div>
-        <ScrollArea class="h-full">
-          <div class="flex flex-col">
-            <RouterLink
-              v-for="game in filteredGames"
-              :key="game.id"
-              :to="'/library/' + game.id"
-              class="max-w-[99%] px-4 py-0.5 font-medium text-gray-700 transition-colors hover:text-gray-900"
-              active-class="text-gray-900 bg-blue-300"
-            >
-              {{ game.title }}
-            </RouterLink>
-          </div>
-        </ScrollArea>
-      </ResizablePanel>
-      <ResizableHandle />
-      <ResizablePanel :default-size="75"><RouterView /></ResizablePanel>
-    </ResizablePanelGroup>
+    <UDashboardGroup unit="%">
+      <div class="flex flex-1">
+        <UDashboardPanel id="inbox-1" resizable> jksdjfkd </UDashboardPanel>
+      </div>
+      <RouterView />
+    </UDashboardGroup>
   </BaseLayout>
 </template>
 <style scoped></style>
