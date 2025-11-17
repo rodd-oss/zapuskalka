@@ -13,7 +13,17 @@
 ├── launcher/             # Десктопный клиент Wails (Go + Vue 3 + Vite)
 │   ├── main.go           # Инициализация Wails и runtime bindings
 │   ├── app.go            # Точка входа приложения, конфигурация окна
-│   └── ui/               # SPA ассеты, бандлящиеся в десктопную оболочку
+│   └── ui/               # Vue-проект, который бандлится в лаунчер
+│       ├── public/       # Статические ассеты (favicon, иконки)
+│       ├── src/          # Исходники фронтенда
+│       │   ├── assets/   # Глобальные стили, логотипы
+│       │   ├── components/# UI-компоненты (Header, UI primitives)
+│       │   ├── layouts/  # Общие layout-компоненты
+│       │   ├── pages/    # Маршрутизируемые страницы (Store, Library, Settings)
+│       │   ├── router/   # Настройка маршрутизации Vue
+│       │   ├── stores/   # Pinia хранилище (состояние клиента)
+│       │   └── lib/      # Хелперы, PocketBase SDK утилиты, типы
+│       └── dist/         # Сборка Vite, внедряемая в Wails
 ├── docs/                 # PRD, TRD и т.д.
 ├── scripts/              # Инструменты, такие как `typegen-watcher.ts`
 ├── Taskfile.yml          # Канонические задачи для dev/build (task dev, build-*)
