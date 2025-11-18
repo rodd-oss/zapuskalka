@@ -1,60 +1,12 @@
 <script setup lang="ts">
+import { Splitter } from '@ark-ui/vue/splitter'
 import BaseLayout from '@/layouts/BaseLayout.vue'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 
 import { onMounted, ref } from 'vue'
 import type { GamesResponse } from '@/lib/pocketbase-types'
 import { computed } from 'vue'
-import type { NavigationMenuItem } from '@nuxt/ui'
-
-const items: NavigationMenuItem[][] = [
-  [
-    {
-      label: 'Home',
-      icon: 'i-lucide-house',
-      active: true,
-    },
-    {
-      label: 'Inbox',
-      icon: 'i-lucide-inbox',
-      badge: '4',
-    },
-    {
-      label: 'Contacts',
-      icon: 'i-lucide-users',
-    },
-    {
-      label: 'Settings',
-      icon: 'i-lucide-settings',
-      defaultOpen: true,
-      children: [
-        {
-          label: 'General',
-        },
-        {
-          label: 'Members',
-        },
-        {
-          label: 'Notifications',
-        },
-      ],
-    },
-  ],
-  [
-    {
-      label: 'Feedback',
-      icon: 'i-lucide-message-circle',
-      to: 'https://github.com/nuxt-ui-templates/dashboard',
-      target: '_blank',
-    },
-    {
-      label: 'Help & Support',
-      icon: 'i-lucide-info',
-      to: 'https://github.com/nuxt/ui',
-      target: '_blank',
-    },
-  ],
-]
+import { ScrollArea } from '@ark-ui/vue'
 
 const games = ref<GamesResponse[]>([])
 
@@ -87,12 +39,45 @@ useAuthenticated()
 </script>
 <template>
   <BaseLayout>
-    <UDashboardGroup unit="%">
-      <div class="flex flex-1">
-        <UDashboardPanel id="inbox-1" resizable> jksdjfkd </UDashboardPanel>
+    <div class="px py flex h-full w-full items-center justify-center bg-white dark:bg-gray-800">
+      <div class="h-full w-full">
+        <Splitter.Root
+          :panels="[{ id: 'a', minSize: 30, maxSize: 50 }, { id: 'b' }]"
+          :default-size="[30, 70]"
+          class="flex h-full gap-1"
+        >
+          <Splitter.Panel
+            id="a"
+            class="flex items-start justify-start border border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+          >
+            <ScrollArea.Root class="h-full">
+              <ScrollArea.Viewport class="h-full">
+                <ScrollArea.Content class="h-full p-1">
+                  <p v-for="game in filteredGames" :key="game.id">
+                    {{ game.title }}
+                  </p>
+                </ScrollArea.Content>
+              </ScrollArea.Viewport>
+              <ScrollArea.Scrollbar>
+                <ScrollArea.Thumb />
+              </ScrollArea.Scrollbar>
+              <ScrollArea.Corner />
+            </ScrollArea.Root>
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger
+            id="a:b"
+            aria-label="Resize"
+            class="min-w-1.5 bg-gray-300 transition-colors duration-200 outline-none hover:bg-gray-400 active:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 dark:active:bg-gray-500"
+          />
+          <Splitter.Panel
+            id="b"
+            class="flex items-center justify-center border border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+          >
+            <RouterView />
+          </Splitter.Panel>
+        </Splitter.Root>
       </div>
-      <RouterView />
-    </UDashboardGroup>
+    </div>
   </BaseLayout>
 </template>
 <style scoped></style>

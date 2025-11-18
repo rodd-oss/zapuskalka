@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import BaseLayout from '@/layouts/BaseLayout.vue'
 import { useAuthenticated } from '@/lib/usePocketbase'
-import Menu from 'primevue/menu'
-import type { MenuItem } from 'primevue/menuitem'
 import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 
 useAuthenticated()
 
-const items = ref<MenuItem[]>([
+const items = ref([
   {
     label: 'Account',
     route: '/settings/account',
