@@ -20,7 +20,7 @@ tasks:
     desc: Run backend and launcher together
     deps:
       - task: dev-backend
-      - task: dev-launcher
+      - task: dev-launcher-rust
       - task: dev-typegen
 
   dev-backend:
@@ -30,10 +30,16 @@ tasks:
       - go run -tags automigrate . serve
 
   dev-launcher:
-    desc: Run launcher (Wails dev)
+    desc: Run launcher
     dir: ./launcher
     cmds:
       - wails dev
+
+  dev-launcher-rust:
+    desc: Run rust launcher
+    dir: ./launcher-rust
+    cmds:
+      - bun run tauri dev
 
   dev-typegen:
     cmds:

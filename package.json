@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "workspaces": [
-    "launcher/ui"
+    "launcher/ui",
+    "launcher-rust"
   ],
   "scripts": {
     "typegen": "pocketbase-typegen --db backend/pb_data/data.db --out launcher/ui/src/lib/pocketbase-types.ts"
