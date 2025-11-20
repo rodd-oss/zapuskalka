@@ -1,14 +1,75 @@
 <script setup lang="ts">
-import { type GamesResponse } from '@/lib/pocketbase-types'
+import {
+  type GameReleasesResponse,
+  type GamesResponse,
+  AppBuildsTargetOptions,
+  type AppBuildsResponse,
+} from 'backend-api'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { Select, createListCollection } from '@ark-ui/vue/select'
+import { ChevronDownIcon } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 useAuthenticated()
 const pb = usePocketBase()
 const route = useRoute()
 
 const game = ref<GamesResponse>()
+const releases = ref<GameReleasesResponse[]>([])
+const releasesMap = computed(() => {
+  const m = new Map<string, GameReleasesResponse>()
+  releases.value.forEach((r) => {
+    m.set(r.id, r)
+  })
+  return m
+})
+
+const collection = computed(() =>
+  createListCollection({
+    items: releases.value,
+    itemToString: (i) => i.name,
+    itemToValue: (i) => i.id,
+  }),
+)
+const targetRelease = ref<string[]>([])
+const mytarget = ref<AppBuildsTargetOptions>(AppBuildsTargetOptions['macos-universal'])
+const build = ref<AppBuildsResponse>()
+
+watch(targetRelease, async (newValue) => {
+  const release = newValue.at(0)
+  if (release == undefined) {
+    build.value = undefined
+    console.log('release undefined')
+    return
+  }
+
+  const builds = releasesMap.value.get(release)?.builds
+  if (builds == undefined) {
+    build.value = undefined
+    console.log('builds undefined')
+    return
+  }
+
+  if (builds.length == 0) {
+    build.value = undefined
+    console.log('no builds')
+    return
+  }
+
+  const filter = `((${builds.map((b) => `id='${b}'`).join('||')}) && target='${mytarget.value}')`
+  console.log(filter)
+
+  try {
+    const fetchedBuild = await pb.collection('app_builds').getFirstListItem(filter)
+    console.log(fetchedBuild)
+    build.value = fetchedBuild
+  } catch (err) {
+    console.error(err)
+  }
+})
 
 const fetchGameInfo = async (id: string | string[] | undefined) => {
   if (typeof id != 'string') {
@@ -17,6 +78,13 @@ const fetchGameInfo = async (id: string | string[] | undefined) => {
 
   try {
     game.value = await pb.collection('games').getOne(id)
+    if (game.value == undefined) {
+      throw new Error('game undefined')
+    }
+
+    releases.value = await pb.collection('game_releases').getFullList({
+      filter: `game="${game.value.id}"`,
+    })
   } catch (error) {
     console.error(error)
   }
@@ -36,9 +104,58 @@ const zapusk = async () => {
 }
 </script>
 <template>
-  <div class="flex flex-col gap-4 p-4">
+  <div class="flex h-full w-full flex-col gap-4 p-4">
     <h1 class="text-6xl">{{ game?.title }}</h1>
-    <button size="lg" :onclick="zapusk">ZAPUSK</button>
+
+    <div class="w-full max-w-sm">
+      <Select.Root :collection="collection" v-model="targetRelease">
+        <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+          Build
+        </Select.Label>
+        <Select.Control>
+          <Select.Trigger
+            class="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-gray-100 dark:focus:ring-gray-100"
+          >
+            <Select.ValueText placeholder="Select build" />
+            <Select.Indicator>
+              <ChevronDownIcon class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+            </Select.Indicator>
+          </Select.Trigger>
+        </Select.Control>
+        <Teleport to="body">
+          <Select.Positioner>
+            <Select.Content
+              class="z-50 min-w-(--reference-width) rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+            >
+              <Select.ItemGroup>
+                <Select.Item
+                  v-for="item in collection.items"
+                  :key="item.name"
+                  :item="item.id"
+                  class="relative flex cursor-pointer items-center px-3 py-2 text-sm text-gray-900 select-none data-highlighted:bg-gray-100 data-[state=checked]:bg-gray-50 dark:text-gray-100 dark:data-highlighted:bg-gray-700 dark:data-[state=checked]:bg-gray-700"
+                >
+                  <Select.ItemText>{{ item.name }}</Select.ItemText>
+                  <Select.ItemIndicator class="absolute right-3 text-blue-600 dark:text-blue-400">
+                    ✓
+                  </Select.ItemIndicator>
+                </Select.Item>
+              </Select.ItemGroup>
+            </Select.Content>
+          </Select.Positioner>
+        </Teleport>
+        <Select.HiddenSelect />
+      </Select.Root>
+    </div>
+
+    <div v-if="build">
+      <button
+        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
+        @click="zapusk"
+      >
+        ZAPUSK
+      </button>
+    </div>
+    <div v-else>No build available for your machine</div>
   </div>
 </template>
 <style scoped></style>

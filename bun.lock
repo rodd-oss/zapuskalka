@@ -20,10 +20,11 @@
         "@tailwindcss/vite": "^4.1.17",
         "@tauri-apps/api": "^2",
         "@tauri-apps/plugin-opener": "^2",
+        "backend-api": "workspace:*",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
+        "lucide-vue-next": "^0.552.0",
         "pinia": "^3.0.3",
-        "pocketbase": "^0.26.3",
         "tailwind-merge": "^3.3.1",
         "tailwindcss": "^4.1.17",
         "vue": "^3.5.22",
@@ -80,6 +81,13 @@
         "vite": "^7.1.11",
         "vite-plugin-vue-devtools": "^8.0.3",
         "vue-tsc": "^3.1.1",
+      },
+    },
+    "packages/backend-api": {
+      "name": "backend-api",
+      "version": "1.0.0",
+      "dependencies": {
+        "pocketbase": "^0.26.3",
       },
     },
   },
@@ -629,6 +637,8 @@
     "argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
     "asynckit": ["asynckit@0.4.0", "", {}, "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q=="],
+
+    "backend-api": ["backend-api@workspace:packages/backend-api"],
 
     "balanced-match": ["balanced-match@1.0.2", "", {}, "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="],
 

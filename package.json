@@ -5,10 +5,13 @@
   "private": true,
   "workspaces": [
     "launcher/ui",
-    "launcher-rust"
+    "launcher-rust",
+    "packages/**",
+    "!packages/**/test/**",
+    "!packages/**/template/**"
   ],
   "scripts": {
-    "typegen": "pocketbase-typegen --db backend/pb_data/data.db --out launcher/ui/src/lib/pocketbase-types.ts"
+    "typegen": "pocketbase-typegen --db backend/pb_data/data.db --out packages/backend-api/pocketbase-types.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

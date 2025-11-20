@@ -11,6 +11,8 @@ export enum Collections {
 	Mfas = "_mfas",
 	Otps = "_otps",
 	Superusers = "_superusers",
+	AppBuilds = "app_builds",
+	GameReleases = "game_releases",
 	Games = "games",
 	Users = "users",
 }
@@ -93,6 +95,31 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
+export enum AppBuildsTargetOptions {
+	"windows-x86_64" = "windows-x86_64",
+	"windows-arm64" = "windows-arm64",
+	"linux-x86_64" = "linux-x86_64",
+	"linux-arm64" = "linux-arm64",
+	"macos-universal" = "macos-universal",
+}
+export type AppBuildsRecord = {
+	created: IsoAutoDateString
+	file: FileNameString
+	game: RecordIdString
+	id: string
+	target: AppBuildsTargetOptions
+	updated: IsoAutoDateString
+}
+
+export type GameReleasesRecord = {
+	builds?: RecordIdString[]
+	created: IsoAutoDateString
+	game: RecordIdString
+	id: string
+	name: string
+	updated: IsoAutoDateString
+}
+
 export type GamesRecord = {
 	created: IsoAutoDateString
 	id: string
@@ -119,6 +146,8 @@ export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRec
 export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
+export type AppBuildsResponse<Texpand = unknown> = Required<AppBuildsRecord> & BaseSystemFields<Texpand>
+export type GameReleasesResponse<Texpand = unknown> = Required<GameReleasesRecord> & BaseSystemFields<Texpand>
 export type GamesResponse<Texpand = unknown> = Required<GamesRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
@@ -130,6 +159,8 @@ export type CollectionRecords = {
 	_mfas: MfasRecord
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
+	app_builds: AppBuildsRecord
+	game_releases: GameReleasesRecord
 	games: GamesRecord
 	users: UsersRecord
 }
@@ -140,6 +171,8 @@ export type CollectionResponses = {
 	_mfas: MfasResponse
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
+	app_builds: AppBuildsResponse
+	game_releases: GameReleasesResponse
 	games: GamesResponse
 	users: UsersResponse
 }

@@ -1,27 +1,26 @@
-import PocketBase from 'pocketbase'
-import { type TypedPocketBase } from './pocketbase-types'
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { newApiClient } from 'backend-api'
 
-const pbClient = new PocketBase('http://localhost:8090') as TypedPocketBase
+const apiClient = newApiClient('http://localhost:8090')
 
 const authStore = reactive({
-  isSuperuser: pbClient.authStore.isSuperuser,
-  isValid: pbClient.authStore.isValid,
-  record: pbClient.authStore.record,
-  token: pbClient.authStore.token,
+  isSuperuser: apiClient.authStore.isSuperuser,
+  isValid: apiClient.authStore.isValid,
+  record: apiClient.authStore.record,
+  token: apiClient.authStore.token,
 })
 
-const unsub = pbClient.authStore.onChange((newToken, newRecord) => {
-  authStore.isSuperuser = pbClient.authStore.isSuperuser
-  authStore.isValid = pbClient.authStore.isValid
+const unsub = apiClient.authStore.onChange((newToken, newRecord) => {
+  authStore.isSuperuser = apiClient.authStore.isSuperuser
+  authStore.isValid = apiClient.authStore.isValid
   authStore.record = newRecord
   authStore.token = newToken
 })
 
 onUnmounted(unsub)
 
-export const usePocketBase = () => pbClient
+export const usePocketBase = () => apiClient
 
 export const useAuthenticated = () => {
   const auth = useAuth()

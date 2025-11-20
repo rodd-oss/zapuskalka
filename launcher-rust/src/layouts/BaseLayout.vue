@@ -53,7 +53,12 @@ async function onLogOutHandler() {
       </Tabs.Root>
 
       <div>
-        <button @click="onLogOutHandler" class="bg-amber-400">Log out</button>
+        <button
+          @click="onLogOutHandler"
+          class="cursor-pointer rounded-xs bg-gray-400 p-2 hover:bg-gray-300"
+        >
+          Log out
+        </button>
       </div>
     </div>
 

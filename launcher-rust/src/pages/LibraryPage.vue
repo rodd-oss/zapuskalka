@@ -4,9 +4,10 @@ import BaseLayout from '@/layouts/BaseLayout.vue'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 
 import { onMounted, ref } from 'vue'
-import type { GamesResponse } from '@/lib/pocketbase-types'
 import { computed } from 'vue'
 import { ScrollArea } from '@ark-ui/vue'
+import Input from '@/components/ui/Input.vue'
+import { GamesResponse } from 'backend-api'
 
 const games = ref<GamesResponse[]>([])
 
@@ -21,7 +22,7 @@ onMounted(async () => {
   }
 })
 
-const searchFilter = ref('')
+const searchFilter = ref<string>('')
 const filteredGames = computed(() => {
   if (searchFilter.value.trim() == '') return games.value
 
@@ -48,14 +49,23 @@ useAuthenticated()
         >
           <Splitter.Panel
             id="a"
-            class="flex items-start justify-start border border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
+            class="flex flex-col items-start justify-start border border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
           >
-            <ScrollArea.Root class="h-full">
+            <label class="w-full bg-gray-800 p-2">
+              <Input class="w-full" placeholder="Search" v-model="searchFilter" />
+            </label>
+            <ScrollArea.Root class="h-full w-full">
               <ScrollArea.Viewport class="h-full">
-                <ScrollArea.Content class="h-full p-1">
-                  <p v-for="game in filteredGames" :key="game.id">
+                <ScrollArea.Content class="flex h-full flex-col">
+                  <RouterLink
+                    v-for="game in filteredGames"
+                    :key="game.id"
+                    :to="`/library/${game.id}`"
+                    class="p-2"
+                    active-class="bg-gray-700 text-gray-50"
+                  >
                     {{ game.title }}
-                  </p>
+                  </RouterLink>
                 </ScrollArea.Content>
               </ScrollArea.Viewport>
               <ScrollArea.Scrollbar>
