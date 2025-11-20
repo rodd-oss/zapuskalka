@@ -12,7 +12,7 @@ pub fn run() {
         .setup(|app| {
             let app_ = app.handle().clone();
             let window =
-                WebviewWindowBuilder::new(app, "core", WebviewUrl::App("index.html".into()))
+                WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
                     .on_new_window(move |url, features| {
                         // Create a new window with a unique label
                         let builder = tauri::WebviewWindowBuilder::new(

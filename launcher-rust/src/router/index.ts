@@ -1,6 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { useAuth } from '@/lib/usePocketbase'
-import HomePage from '@/pages/HomePage.vue'
+// import HomePage from '@/pages/HomePage.vue'
 import AuthPage from '@/pages/AuthPage.vue'
 import LibraryPage from '@/pages/LibraryPage.vue'
 import LibraryGamePage from '@/pages/LibraryGamePage.vue'
@@ -11,7 +11,7 @@ import SettingsStoragePage from '@/pages/SettingsStoragePage.vue'
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', component: HomePage },
+    { path: '/', redirect: '/library' },
     { path: '/auth', component: AuthPage },
     {
       path: '/settings',
