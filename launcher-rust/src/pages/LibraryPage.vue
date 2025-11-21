@@ -7,15 +7,15 @@ import { onMounted, ref } from 'vue'
 import { computed } from 'vue'
 import { ScrollArea } from '@ark-ui/vue'
 import Input from '@/components/ui/Input.vue'
-import { GamesResponse } from 'backend-api'
+import { AppsResponse } from 'backend-api'
 
-const games = ref<GamesResponse[]>([])
+const games = ref<AppsResponse[]>([])
 
 const pb = usePocketBase()
 
 onMounted(async () => {
   try {
-    const res = await pb.collection('games').getFullList()
+    const res = await pb.collection('apps').getFullList()
     games.value = res
   } catch (error) {
     console.error(error)

@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  type GameReleasesResponse,
-  type GamesResponse,
-  AppBuildsTargetOptions,
-  type AppBuildsResponse,
-} from 'backend-api'
+import { type AppReleasesResponse, type AppsResponse, type AppBuildsResponse } from 'backend-api'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -17,10 +12,10 @@ useAuthenticated()
 const pb = usePocketBase()
 const route = useRoute()
 
-const game = ref<GamesResponse>()
-const releases = ref<GameReleasesResponse[]>([])
+const game = ref<AppsResponse>()
+const releases = ref<AppReleasesResponse[]>([])
 const releasesMap = computed(() => {
-  const m = new Map<string, GameReleasesResponse>()
+  const m = new Map<string, AppReleasesResponse>()
   releases.value.forEach((r) => {
     m.set(r.id, r)
   })
@@ -34,12 +29,12 @@ const collection = computed(() =>
     itemToValue: (i) => i.id,
   }),
 )
-const targetRelease = ref<string[]>([])
-const mytarget = ref<AppBuildsTargetOptions>(AppBuildsTargetOptions['macos-universal'])
+const selectedReleases = ref<string[]>([])
+const selectedRelease = computed(() => selectedReleases.value.at(0))
 const build = ref<AppBuildsResponse>()
 
-watch(targetRelease, async (newValue) => {
-  const release = newValue.at(0)
+watch(selectedRelease, async (newValue) => {
+  const release = newValue
   if (release == undefined) {
     build.value = undefined
     console.log('release undefined')
@@ -59,7 +54,7 @@ watch(targetRelease, async (newValue) => {
     return
   }
 
-  const filter = `((${builds.map((b) => `id='${b}'`).join('||')}) && target='${mytarget.value}')`
+  const filter = `((${builds.map((b) => `id='${b}'`).join('||')}) && os='macos' && arch='universal')`
   console.log(filter)
 
   try {
@@ -76,13 +71,18 @@ const fetchGameInfo = async (id: string | string[] | undefined) => {
     return
   }
 
+  releases.value = []
+  selectedReleases.value = []
+
+  build.value = undefined
+
   try {
-    game.value = await pb.collection('games').getOne(id)
+    game.value = await pb.collection('apps').getOne(id)
     if (game.value == undefined) {
       throw new Error('game undefined')
     }
 
-    releases.value = await pb.collection('game_releases').getFullList({
+    releases.value = await pb.collection('app_releases').getFullList({
       filter: `game="${game.value.id}"`,
     })
   } catch (error) {
@@ -108,15 +108,15 @@ const zapusk = async () => {
     <h1 class="text-6xl">{{ game?.title }}</h1>
 
     <div class="w-full max-w-sm">
-      <Select.Root :collection="collection" v-model="targetRelease">
+      <Select.Root :collection="collection" v-model="selectedReleases">
         <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          Build
+          Release
         </Select.Label>
         <Select.Control>
           <Select.Trigger
             class="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-gray-100 dark:focus:ring-gray-100"
           >
-            <Select.ValueText placeholder="Select build" />
+            <Select.ValueText placeholder="Select release" />
             <Select.Indicator>
               <ChevronDownIcon class="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </Select.Indicator>
@@ -155,7 +155,7 @@ const zapusk = async () => {
         ZAPUSK
       </button>
     </div>
-    <div v-else>No build available for your machine</div>
+    <div v-else-if="selectedRelease">No build available for your machine</div>
   </div>
 </template>
 <style scoped></style>

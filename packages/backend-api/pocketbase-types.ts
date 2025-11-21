@@ -12,8 +12,8 @@ export enum Collections {
 	Otps = "_otps",
 	Superusers = "_superusers",
 	AppBuilds = "app_builds",
-	GameReleases = "game_releases",
-	Games = "games",
+	AppReleases = "app_releases",
+	Apps = "apps",
 	Users = "users",
 }
 
@@ -95,23 +95,29 @@ export type SuperusersRecord = {
 	verified?: boolean
 }
 
-export enum AppBuildsTargetOptions {
-	"windows-x86_64" = "windows-x86_64",
-	"windows-arm64" = "windows-arm64",
-	"linux-x86_64" = "linux-x86_64",
-	"linux-arm64" = "linux-arm64",
-	"macos-universal" = "macos-universal",
+export enum AppBuildsOsOptions {
+	"windows" = "windows",
+	"linux" = "linux",
+	"macos" = "macos",
+}
+
+export enum AppBuildsArchOptions {
+	"x86_64" = "x86_64",
+	"arm" = "arm",
+	"aarch64" = "aarch64",
+	"universal" = "universal",
 }
 export type AppBuildsRecord = {
+	app: RecordIdString
+	arch: AppBuildsArchOptions
 	created: IsoAutoDateString
-	file: FileNameString
-	game: RecordIdString
+	files: FileNameString[]
 	id: string
-	target: AppBuildsTargetOptions
+	os: AppBuildsOsOptions
 	updated: IsoAutoDateString
 }
 
-export type GameReleasesRecord = {
+export type AppReleasesRecord = {
 	builds?: RecordIdString[]
 	created: IsoAutoDateString
 	game: RecordIdString
@@ -120,7 +126,7 @@ export type GameReleasesRecord = {
 	updated: IsoAutoDateString
 }
 
-export type GamesRecord = {
+export type AppsRecord = {
 	created: IsoAutoDateString
 	id: string
 	title?: string
@@ -147,8 +153,8 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type AppBuildsResponse<Texpand = unknown> = Required<AppBuildsRecord> & BaseSystemFields<Texpand>
-export type GameReleasesResponse<Texpand = unknown> = Required<GameReleasesRecord> & BaseSystemFields<Texpand>
-export type GamesResponse<Texpand = unknown> = Required<GamesRecord> & BaseSystemFields<Texpand>
+export type AppReleasesResponse<Texpand = unknown> = Required<AppReleasesRecord> & BaseSystemFields<Texpand>
+export type AppsResponse<Texpand = unknown> = Required<AppsRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -160,8 +166,8 @@ export type CollectionRecords = {
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
 	app_builds: AppBuildsRecord
-	game_releases: GameReleasesRecord
-	games: GamesRecord
+	app_releases: AppReleasesRecord
+	apps: AppsRecord
 	users: UsersRecord
 }
 
@@ -172,8 +178,8 @@ export type CollectionResponses = {
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
 	app_builds: AppBuildsResponse
-	game_releases: GameReleasesResponse
-	games: GamesResponse
+	app_releases: AppReleasesResponse
+	apps: AppsResponse
 	users: UsersResponse
 }
 
