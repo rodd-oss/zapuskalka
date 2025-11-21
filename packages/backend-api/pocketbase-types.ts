@@ -106,6 +106,14 @@ export enum AppBuildsArchOptions {
 	"arm" = "arm",
 	"aarch64" = "aarch64",
 	"universal" = "universal",
+	"x86" = "x86",
+	"mips" = "mips",
+	"mips64" = "mips64",
+	"powerpc" = "powerpc",
+	"powerpc64" = "powerpc64",
+	"riscv64" = "riscv64",
+	"s390x" = "s390x",
+	"sparc64" = "sparc64",
 }
 export type AppBuildsRecord = {
 	app: RecordIdString

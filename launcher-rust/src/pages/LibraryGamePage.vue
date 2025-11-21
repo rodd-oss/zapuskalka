@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import { type AppReleasesResponse, type AppsResponse, type AppBuildsResponse } from 'backend-api'
+import {
+  type AppReleasesResponse,
+  type AppsResponse,
+  type AppBuildsResponse,
+  type AppBuildsArchOptions,
+} from 'backend-api'
 import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+
+import { type as os, arch } from '@tauri-apps/plugin-os'
 
 import { Select, createListCollection } from '@ark-ui/vue/select'
 import { ChevronDownIcon } from 'lucide-vue-next'
@@ -54,12 +61,18 @@ watch(selectedRelease, async (newValue) => {
     return
   }
 
-  const filter = `((${builds.map((b) => `id='${b}'`).join('||')}) && os='macos' && arch='universal')`
-  console.log(filter)
+  const archs: (keyof typeof AppBuildsArchOptions)[] = [arch()]
+  if (os() == 'macos') {
+    archs.push('universal')
+  }
+
+  // Get all builds with any build id from the release that matches users os and arch
+  const filterIds = builds.map((b) => `id='${b}'`).join('||')
+  const filterArchs = archs.map((a) => `arch='${a}'`).join('||')
+  const filter = `((${filterIds}) && (os='${os()}') && (${filterArchs}))`
 
   try {
     const fetchedBuild = await pb.collection('app_builds').getFirstListItem(filter)
-    console.log(fetchedBuild)
     build.value = fetchedBuild
   } catch (err) {
     console.error(err)
