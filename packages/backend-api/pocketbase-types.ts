@@ -115,12 +115,20 @@ export enum AppBuildsArchOptions {
 	"s390x" = "s390x",
 	"sparc64" = "sparc64",
 }
+
+export enum AppBuildsInstallRulesOptions {
+	"direct_copy" = "direct_copy",
+	"untar" = "untar",
+	"ungzip" = "ungzip",
+	"unzip" = "unzip",
+}
 export type AppBuildsRecord = {
 	app: RecordIdString
 	arch: AppBuildsArchOptions
 	created: IsoAutoDateString
 	files: FileNameString[]
 	id: string
+	install_rules: AppBuildsInstallRulesOptions[]
 	os: AppBuildsOsOptions
 	updated: IsoAutoDateString
 }
