@@ -4,8 +4,9 @@ import {
   type AppsResponse,
   type AppBuildsResponse,
   type AppBuildsArchOptions,
+  PublishersResponse,
 } from 'backend-api'
-import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
+import { useAuth, useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -14,12 +15,16 @@ import { type as os, arch } from '@tauri-apps/plugin-os'
 import { Select, createListCollection } from '@ark-ui/vue/select'
 import { ChevronDownIcon } from 'lucide-vue-next'
 import { computed } from 'vue'
+import LibraryAppController from '@/components/LibraryAppController.vue'
+import DeveloperConsole from '@/components/DeveloperConsole.vue'
 
 useAuthenticated()
 const pb = usePocketBase()
+const auth = useAuth()
 const route = useRoute()
 
-const game = ref<AppsResponse>()
+const app = ref<AppsResponse>()
+const publisher = ref<PublishersResponse>()
 const releases = ref<AppReleasesResponse[]>([])
 const releasesMap = computed(() => {
   const m = new Map<string, AppReleasesResponse>()
@@ -79,24 +84,31 @@ watch(selectedRelease, async (newValue) => {
   }
 })
 
-const fetchGameInfo = async (id: string | string[] | undefined) => {
+const fetchAppInfo = async (id: string | string[] | undefined) => {
   if (typeof id != 'string') {
     return
   }
 
+  app.value = undefined
+  publisher.value = undefined
   releases.value = []
   selectedReleases.value = []
 
   build.value = undefined
 
   try {
-    game.value = await pb.collection('apps').getOne(id)
-    if (game.value == undefined) {
-      throw new Error('game undefined')
+    app.value = await pb.collection('apps').getOne(id)
+    if (app.value == undefined) {
+      throw new Error('app undefined')
+    }
+
+    publisher.value = await pb.collection('publishers').getOne(app.value.publisher)
+    if (publisher.value == undefined) {
+      throw new Error('publisher undefined')
     }
 
     releases.value = await pb.collection('app_releases').getFullList({
-      filter: `game="${game.value.id}"`,
+      filter: `app="${app.value.id}"`,
     })
   } catch (error) {
     console.error(error)
@@ -105,20 +117,18 @@ const fetchGameInfo = async (id: string | string[] | undefined) => {
 
 watch(
   () => route.params.id,
-  (id) => fetchGameInfo(id),
+  (id) => fetchAppInfo(id),
   {
     immediate: true,
   },
 )
-
-const zapusk = async () => {
-  if (game.value == undefined) return
-  // await RunGame(game.value.id)
-}
 </script>
 <template>
-  <div class="flex h-full w-full flex-col gap-4 p-4">
-    <h1 class="text-6xl">{{ game?.title }}</h1>
+  <div v-if="app && publisher" class="flex h-full w-full flex-col gap-4 p-4">
+    <h1 class="text-6xl">{{ app.title }}</h1>
+    <h3 class="text-xl">from {{ publisher.title }}</h3>
+
+    <DeveloperConsole v-if="publisher.users.includes(auth.record.value!.id)" />
 
     <div class="w-full max-w-sm">
       <Select.Root :collection="collection" v-model="selectedReleases">
@@ -161,12 +171,7 @@ const zapusk = async () => {
     </div>
 
     <div v-if="build">
-      <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
-        @click="zapusk"
-      >
-        ZAPUSK
-      </button>
+      <LibraryAppController :build="build" :app="app" />
     </div>
     <div v-else-if="selectedRelease">No build available for your machine</div>
   </div>

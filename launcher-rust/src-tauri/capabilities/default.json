@@ -2,9 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": [
-    "main"
-  ],
+  "windows": ["main"],
   "permissions": [
     "core:default",
     "opener:default",
@@ -14,6 +12,101 @@
     "core:webview:allow-webview-close",
     "core:window:allow-close",
     "core:webview:allow-create-webview-window",
-    "os:default"
+    "os:default",
+    "upload:default",
+    "upload:allow-download",
+    "fs:default",
+    "fs:write-files",
+    "fs:allow-create",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-copy-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    "dialog:default",
+    "dialog:allow-open",
+    "shell:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "open",
+          "cmd": "open",
+          "args": ["**"]
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-open",
+      "allow": [
+        {
+          "name": "exec-sh",
+          "cmd": "sh",
+          "args": [
+            "-c",
+            {
+              "validator": "\\S+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "exec-sh",
+          "cmd": "sh",
+          "args": [
+            "-c",
+            {
+              "validator": "\\S+"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-stdin-write",
+      "allow": [
+        {
+          "name": "exec-sh",
+          "cmd": "sh",
+          "args": [
+            "-c",
+            {
+              "validator": "\\S+"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

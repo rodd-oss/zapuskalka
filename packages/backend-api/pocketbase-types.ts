@@ -14,6 +14,7 @@ export enum Collections {
 	AppBuilds = "app_builds",
 	AppReleases = "app_releases",
 	Apps = "apps",
+	Publishers = "publishers",
 	Users = "users",
 }
 
@@ -126,6 +127,7 @@ export type AppBuildsRecord = {
 	app: RecordIdString
 	arch: AppBuildsArchOptions
 	created: IsoAutoDateString
+	entrypoint: string
 	files: FileNameString[]
 	id: string
 	install_rules: AppBuildsInstallRulesOptions[]
@@ -134,9 +136,9 @@ export type AppBuildsRecord = {
 }
 
 export type AppReleasesRecord = {
+	app: RecordIdString
 	builds?: RecordIdString[]
 	created: IsoAutoDateString
-	game: RecordIdString
 	id: string
 	name: string
 	updated: IsoAutoDateString
@@ -145,8 +147,18 @@ export type AppReleasesRecord = {
 export type AppsRecord = {
 	created: IsoAutoDateString
 	id: string
-	title?: string
+	publisher: RecordIdString
+	title: string
 	updated: IsoAutoDateString
+}
+
+export type PublishersRecord = {
+	created: IsoAutoDateString
+	id: string
+	owner: RecordIdString
+	title: string
+	updated: IsoAutoDateString
+	users?: RecordIdString[]
 }
 
 export type UsersRecord = {
@@ -171,6 +183,7 @@ export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
 export type AppBuildsResponse<Texpand = unknown> = Required<AppBuildsRecord> & BaseSystemFields<Texpand>
 export type AppReleasesResponse<Texpand = unknown> = Required<AppReleasesRecord> & BaseSystemFields<Texpand>
 export type AppsResponse<Texpand = unknown> = Required<AppsRecord> & BaseSystemFields<Texpand>
+export type PublishersResponse<Texpand = unknown> = Required<PublishersRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
 // Types containing all Records and Responses, useful for creating typing helper functions
@@ -184,6 +197,7 @@ export type CollectionRecords = {
 	app_builds: AppBuildsRecord
 	app_releases: AppReleasesRecord
 	apps: AppsRecord
+	publishers: PublishersRecord
 	users: UsersRecord
 }
 
@@ -196,6 +210,7 @@ export type CollectionResponses = {
 	app_builds: AppBuildsResponse
 	app_releases: AppReleasesResponse
 	apps: AppsResponse
+	publishers: PublishersResponse
 	users: UsersResponse
 }
 
