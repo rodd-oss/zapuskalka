@@ -61,12 +61,6 @@ const selectFolder = async () => {
     console.log('build record' + buildRecord)
 
     const url = `${pb.baseURL}/api/collections/app_builds/records/${buildRecord.id}`
-    // await upload(
-    //   url,
-    //   archivePath,
-    //   ({ progress, total }) => console.log(`Uploaded ${progress} of ${total} bytes`), // a callback that will be called with the upload progress
-    //   new Map().set('Content-Type', 'multipart/form-data'), // optional headers to send with the request
-    // )
 
     interface ProgressPayload {
       progress: number
@@ -80,6 +74,7 @@ const selectFolder = async () => {
       console.log(`speed ${transfer_speed} Uploaded ${progress} of ${total} bytes`)
     }
 
+    // TODO: migrate to one-shot build creation from rust side
     // Use custom Rust function that properly creates multipart/form-data with "files" field
     // This ensures correct boundary and field name for PocketBase
     await invoke('upload_file_as_form_data', {
@@ -88,32 +83,6 @@ const selectFolder = async () => {
       authToken: pb.authStore.token || null,
       progressChannel: onProgress,
     })
-
-    // // Step 2: Read the file and prepare for upload
-    // // Read the file as binary using Rust command
-    // const fileDataArray = await invoke<number[]>('read_file_bytes', {
-    //   filePath: archivePath,
-    // })
-
-    // // Convert number array to Uint8Array
-    // const fileData = new Uint8Array(fileDataArray)
-
-    // // Get the filename from the path
-    // const fileName = archivePath.split(/[/\\]/).pop() || 'archive.tar.gz'
-
-    // // Create a File instance from the binary data
-    // const file = new File([fileData], fileName, { type: 'application/gzip' })
-
-    // // Step 3: Upload to PocketBase using the SDK's create method
-    // // Note: The app_builds collection requires additional fields (app, os, arch, entrypoint, install_rules)
-    // // For now, we'll just upload the file. You may want to add UI for these fields later.
-    // const formData = new FormData()
-    // formData.append('files', file)
-
-    // // Upload using PocketBase SDK (following the example pattern)
-    // // Note: Progress tracking is not available with the SDK's create method
-    // // The SDK handles authentication automatically via pb.authStore
-    // await pb.collection('app_builds').create(formData)
 
     success.value = true
     uploadProgress.value = 100
