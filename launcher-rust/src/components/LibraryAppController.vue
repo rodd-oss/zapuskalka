@@ -132,6 +132,8 @@ const install = async () => {
   })
   await Promise.all(downloads)
 
+  // untar every file
+
   //remove build folder if exists
   const exctractDirPath = await path.join(installDir, build.id)
   const extractDirExists = await exists(exctractDirPath)

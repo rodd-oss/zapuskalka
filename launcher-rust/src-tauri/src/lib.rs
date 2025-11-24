@@ -49,10 +49,27 @@ async fn archive_and_compress_folder(folder_path: String) -> Result<String, Stri
     // Create tar archive builder
     let mut tar_builder = Builder::new(writer);
 
-    // Add the entire folder to the archive
-    tar_builder
-        .append_dir_all(folder_name, source_path)
-        .map_err(|e| format!("Failed to add directory to archive: {}", e))?;
+    // Add only the folder contents (not the root folder itself)
+    let entries = std::fs::read_dir(source_path)
+        .map_err(|e| format!("Failed to read directory contents: {}", e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+        let entry_path = entry.path();
+        let relative_path = entry_path
+            .strip_prefix(source_path)
+            .map_err(|e| format!("Failed to calculate relative path: {}", e))?;
+
+        if entry_path.is_dir() {
+            tar_builder
+                .append_dir_all(relative_path, &entry_path)
+                .map_err(|e| format!("Failed to add directory to archive: {}", e))?;
+        } else {
+            tar_builder
+                .append_path_with_name(&entry_path, relative_path)
+                .map_err(|e| format!("Failed to add file to archive: {}", e))?;
+        }
+    }
 
     // Finish writing the archive
     // into_inner() returns the BufWriter, then we need to get the GzEncoder from it
@@ -99,15 +116,15 @@ async fn upload_file_as_form_data(
     use std::time::Instant;
 
     let file_path = Path::new(&file_path);
-    
+
     // Check if file exists
     if !file_path.exists() {
         return Err(format!("File does not exist: {}", file_path.display()));
     }
 
     // Get file metadata
-    let metadata = std::fs::metadata(file_path)
-        .map_err(|e| format!("Failed to get file metadata: {}", e))?;
+    let metadata =
+        std::fs::metadata(file_path).map_err(|e| format!("Failed to get file metadata: {}", e))?;
     let file_size = metadata.len();
 
     // Get filename
@@ -117,12 +134,11 @@ async fn upload_file_as_form_data(
         .ok_or_else(|| "Invalid filename".to_string())?;
 
     // Open file
-    let mut file = File::open(file_path)
-        .map_err(|e| format!("Failed to open file: {}", e))?;
+    let mut file = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
 
     // Create multipart form
     let mut form = reqwest::multipart::Form::new();
-    
+
     // Read file into memory (for small files) or use streaming for large files
     // For now, we'll read into memory. For very large files, consider streaming
     let mut file_data = Vec::new();
@@ -140,9 +156,7 @@ async fn upload_file_as_form_data(
 
     // Build the request
     let client = reqwest::Client::new();
-    let mut request = client
-        .patch(&url)
-        .multipart(form);
+    let mut request = client.patch(&url).multipart(form);
 
     // Add authorization header if provided
     if let Some(token) = auth_token {
@@ -178,7 +192,10 @@ async fn upload_file_as_form_data(
             .text()
             .await
             .unwrap_or_else(|_| "Unknown error".to_string());
-        return Err(format!("Upload failed with status {}: {}", status, error_text));
+        return Err(format!(
+            "Upload failed with status {}: {}",
+            status, error_text
+        ));
     }
 
     Ok(())
