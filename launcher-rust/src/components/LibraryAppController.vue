@@ -12,10 +12,10 @@ import {
   writeTextFile,
   mkdir,
   remove,
-  copyFile,
 } from '@tauri-apps/plugin-fs'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { onMounted } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
 
 const safeJsonParse = <T,>(str: string) => {
   try {
@@ -132,8 +132,6 @@ const install = async () => {
   })
   await Promise.all(downloads)
 
-  // untar every file
-
   //remove build folder if exists
   const exctractDirPath = await path.join(installDir, build.id)
   const extractDirExists = await exists(exctractDirPath)
@@ -147,19 +145,14 @@ const install = async () => {
     recursive: true,
   })
 
-  const installs = files.map(async (file) => {
-    const from = await path.join(downloadDirPath, file.name)
-    const to = await path.join(exctractDirPath, file.name)
-    return copyFile(from, to)
+  const extractions = files.map(async (file) => {
+    const archivePath = await path.join(downloadDirPath, file.name)
+    return invoke('extract_archive', {
+      archivePath,
+      destinationPath: exctractDirPath,
+    })
   })
-  await Promise.all(installs)
-
-  // // extract from archive
-  // const extracts = files.map(async (file) => {
-  //   const p = await path.join(exctractDirPath, file.name)
-  //   return openPath(p)
-  // })
-  // await Promise.all(extracts)
+  await Promise.all(extractions)
 
   await remove(downloadDirPath, {
     recursive: true,

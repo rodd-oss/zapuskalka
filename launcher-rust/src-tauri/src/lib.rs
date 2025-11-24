@@ -1,9 +1,9 @@
-use flate2::write::GzEncoder;
+use flate2::{read::GzDecoder, write::GzEncoder};
 use flate2::Compression;
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
-use tar::Builder;
+use tar::{Archive, Builder};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -97,6 +97,29 @@ async fn archive_and_compress_folder(folder_path: String) -> Result<String, Stri
 async fn read_file_bytes(file_path: String) -> Result<Vec<u8>, String> {
     use std::fs;
     fs::read(&file_path).map_err(|e| format!("Failed to read file: {}", e))
+}
+
+#[tauri::command]
+async fn extract_archive(archive_path: String, destination_path: String) -> Result<(), String> {
+    let archive_path = Path::new(&archive_path);
+    if !archive_path.exists() {
+        return Err(format!("Archive does not exist: {}", archive_path.display()));
+    }
+
+    let destination_path = Path::new(&destination_path);
+    std::fs::create_dir_all(destination_path)
+        .map_err(|e| format!("Failed to create destination directory: {}", e))?;
+
+    let file = File::open(archive_path)
+        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    let decoder = GzDecoder::new(file);
+    let mut archive = Archive::new(decoder);
+
+    archive
+        .unpack(destination_path)
+        .map_err(|e| format!("Failed to extract archive: {}", e))?;
+
+    Ok(())
 }
 
 #[derive(serde::Serialize, Clone)]
@@ -240,6 +263,7 @@ pub fn run() {
             greet,
             archive_and_compress_folder,
             read_file_bytes,
+            extract_archive,
             upload_file_as_form_data
         ])
         .run(tauri::generate_context!())
