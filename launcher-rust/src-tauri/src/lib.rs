@@ -1,5 +1,5 @@
-use flate2::{read::GzDecoder, write::GzEncoder};
 use flate2::Compression;
+use flate2::{read::GzDecoder, write::GzEncoder};
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
@@ -103,15 +103,17 @@ async fn read_file_bytes(file_path: String) -> Result<Vec<u8>, String> {
 async fn extract_archive(archive_path: String, destination_path: String) -> Result<(), String> {
     let archive_path = Path::new(&archive_path);
     if !archive_path.exists() {
-        return Err(format!("Archive does not exist: {}", archive_path.display()));
+        return Err(format!(
+            "Archive does not exist: {}",
+            archive_path.display()
+        ));
     }
 
     let destination_path = Path::new(&destination_path);
     std::fs::create_dir_all(destination_path)
         .map_err(|e| format!("Failed to create destination directory: {}", e))?;
 
-    let file = File::open(archive_path)
-        .map_err(|e| format!("Failed to open archive: {}", e))?;
+    let file = File::open(archive_path).map_err(|e| format!("Failed to open archive: {}", e))?;
     let decoder = GzDecoder::new(file);
     let mut archive = Archive::new(decoder);
 
@@ -227,6 +229,7 @@ async fn upload_file_as_form_data(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())

@@ -52,62 +52,6 @@
       ]
     },
     "dialog:default",
-    "dialog:allow-open",
-    "shell:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [
-        {
-          "name": "open",
-          "cmd": "open",
-          "args": ["**"]
-        }
-      ]
-    },
-    {
-      "identifier": "shell:allow-open",
-      "allow": [
-        {
-          "name": "exec-sh",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            {
-              "validator": "\\S+"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "identifier": "shell:allow-execute",
-      "allow": [
-        {
-          "name": "exec-sh",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            {
-              "validator": "\\S+"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "identifier": "shell:allow-stdin-write",
-      "allow": [
-        {
-          "name": "exec-sh",
-          "cmd": "sh",
-          "args": [
-            "-c",
-            {
-              "validator": "\\S+"
-            }
-          ]
-        }
-      ]
-    }
+    "dialog:allow-open"
   ]
 }

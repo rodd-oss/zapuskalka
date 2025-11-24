@@ -31,3 +31,6 @@ tar = "0.4.44"
 flate2 = "1.1.5"
 reqwest = { version = "0.12", features = ["multipart", "json"] }
 tokio = { version = "1", features = ["full"] }
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-updater = "2"
