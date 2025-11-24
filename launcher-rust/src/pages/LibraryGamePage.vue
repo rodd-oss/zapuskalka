@@ -95,6 +95,8 @@ const fetchAppInfo = async (id: string | string[] | undefined) => {
       throw new Error('publisher undefined')
     }
 
+    selectedBranchesIds.value = [app.value.default_branch]
+
     branches.value = await pb.collection('app_branches').getFullList({
       filter: `app="${app.value.id}"`,
     })
@@ -116,24 +118,16 @@ watch(
     <h1 class="text-6xl">{{ app.title }}</h1>
     <h3 class="text-xl">from {{ publisher.title }}</h3>
 
-    <template v-if="selectedBranch != undefined">
-      <DeveloperConsole
-        :app="app"
-        v-if="publisher.users.includes(auth.record.value!.id)"
-        :branch="selectedBranch"
-      />
-    </template>
-
     <div class="w-full max-w-sm">
       <Select.Root :collection="collection" v-model="selectedBranchesIds">
         <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          Release
+          Branch
         </Select.Label>
         <Select.Control>
           <Select.Trigger
             class="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-gray-100 dark:focus:ring-gray-100"
           >
-            <Select.ValueText placeholder="Select release" />
+            <Select.ValueText placeholder="Select branch" />
             <Select.Indicator>
               <ChevronDownIcon class="h-4 w-4 text-gray-500 dark:text-gray-400" />
             </Select.Indicator>
@@ -168,6 +162,13 @@ watch(
       <LibraryAppController :build="build" :app="app" />
     </div>
     <div v-else-if="selectedBranchId">No build available for your machine</div>
+    <template v-if="selectedBranch != undefined">
+      <DeveloperConsole
+        :app="app"
+        v-if="publisher.users.includes(auth.record.value!.id)"
+        :branch="selectedBranch"
+      />
+    </template>
   </div>
 </template>
 <style scoped></style>

@@ -95,7 +95,11 @@ const selectFolder = async () => {
 }
 </script>
 <template>
+  <h3>Developer Console</h3>
   <div class="flex w-full flex-col items-center rounded-xl bg-white px-4 py-12 dark:bg-gray-800">
+    <h5 class="text-lg">
+      Upload new build for the <span class="text-amber-300">{{ branch.name }}</span> branch
+    </h5>
     <label class="flex flex-col gap-2 rounded-xl bg-white px-6 py-4 dark:bg-gray-700">
       Select folder with your exported app
       <button

@@ -48,15 +48,12 @@ const state = ref<'not_installed' | 'need_update' | 'ready' | 'error' | 'running
 const stateError = ref('')
 const config = ref<AppConfig>()
 
-// open config file {gameId}.json
-// if not -> state = notIstalled
-// get installDir path
-// if installDir not exists -> state = notIstalled, remove config
-// if installDir/{buildid} not exists -> state = needUpdate
-//
-// if state notInstalled show install button
-// else if state needUpdate show update button
-// else show launch button
+type ActionType = 'install' | 'update' | null
+const activeAction = ref<ActionType>(null)
+const actionProgress = ref(0)
+const actionError = ref<string | null>(null)
+const actionSuccess = ref(false)
+const lastAction = ref<ActionType>(null)
 
 const calculateState = async () => {
   try {
@@ -77,12 +74,14 @@ const calculateState = async () => {
     }
     if (config.value.installDir == '') {
       state.value = 'not_installed'
+      console.error('bad config need to delete')
       // TODO: bad config need to delete
       return
     }
     const installDirExists = await exists(config.value.installDir)
     if (!installDirExists) {
       state.value = 'not_installed'
+      console.error('bad config need to delete')
       // TODO: bad config need to delete
       return
     }
@@ -120,7 +119,10 @@ const saveAppConfig = async (installDir: string) => {
   config.value = configData
 }
 
-const downloadAndExtractBuild = async (installDir: string) => {
+const downloadAndExtractBuild = async (
+  installDir: string,
+  onProgress?: (value: number) => void,
+) => {
   // Remove previous installation contents to ensure clean state
   const installDirExists = await exists(installDir)
   if (installDirExists) {
@@ -132,6 +134,7 @@ const downloadAndExtractBuild = async (installDir: string) => {
   await mkdir(installDir, {
     recursive: true,
   })
+  onProgress?.(5)
 
   const downloadDirPath = await path.join(installDir, `temp_downloads_${build.id}`)
   await mkdir(downloadDirPath, {
@@ -147,6 +150,7 @@ const downloadAndExtractBuild = async (installDir: string) => {
     )
   })
   await Promise.all(downloads)
+  onProgress?.(40)
 
   //remove build folder if exists
   const exctractDirPath = await path.join(installDir, build.id)
@@ -169,10 +173,24 @@ const downloadAndExtractBuild = async (installDir: string) => {
     })
   })
   await Promise.all(extractions)
+  onProgress?.(90)
 
   await remove(downloadDirPath, {
     recursive: true,
   })
+  onProgress?.(100)
+}
+
+const describeAction = (action: ActionType | null) => {
+  if (action === 'install') return 'Installation'
+  if (action === 'update') return 'Update'
+  return ''
+}
+
+const resetActionState = () => {
+  actionError.value = null
+  actionSuccess.value = false
+  actionProgress.value = 0
 }
 
 const install = async () => {
@@ -188,20 +206,50 @@ const install = async () => {
   }
 
   const installDir = await path.join(storageFolder, app.title)
-  await downloadAndExtractBuild(installDir)
-  await saveAppConfig(installDir)
-
-  await calculateState()
+  activeAction.value = 'install'
+  lastAction.value = 'install'
+  resetActionState()
+  try {
+    await downloadAndExtractBuild(installDir, (value) => {
+      actionProgress.value = value
+    })
+    await saveAppConfig(installDir)
+    actionSuccess.value = true
+    actionProgress.value = 100
+    await calculateState()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error occurred'
+    actionError.value = message
+    console.error('Install error:', err)
+  } finally {
+    activeAction.value = null
+  }
 }
 
 const update = async () => {
   if (!config.value?.installDir) {
-    throw new Error('Cannot update because install directory is unknown')
+    actionError.value = 'Cannot update because install directory is unknown'
+    return
   }
 
-  await downloadAndExtractBuild(config.value.installDir)
-  await saveAppConfig(config.value.installDir)
-  await calculateState()
+  activeAction.value = 'update'
+  lastAction.value = 'update'
+  resetActionState()
+  try {
+    await downloadAndExtractBuild(config.value.installDir, (value) => {
+      actionProgress.value = value
+    })
+    await saveAppConfig(config.value.installDir)
+    actionSuccess.value = true
+    actionProgress.value = 100
+    await calculateState()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Unknown error occurred'
+    actionError.value = message
+    console.error('Update error:', err)
+  } finally {
+    activeAction.value = null
+  }
 }
 
 const launch = async () => {
@@ -227,35 +275,56 @@ const close = async () => {}
   <div v-else>
     <div v-if="state == 'not_installed'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
+        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="install"
+        :disabled="activeAction !== null"
       >
         Install
       </button>
     </div>
     <div v-else-if="state == 'need_update'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
+        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="update"
+        :disabled="activeAction !== null"
       >
         Update
       </button>
     </div>
     <div v-else-if="state == 'ready'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
+        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="launch"
+        :disabled="activeAction !== null"
       >
         Zapusk
       </button>
     </div>
     <div v-else-if="state == 'running'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400"
+        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="close"
+        :disabled="activeAction !== null"
       >
         Close
       </button>
+    </div>
+    <div v-if="activeAction" class="mt-4 w-full max-w-md">
+      <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">
+        {{ describeAction(activeAction) }} in progress...
+      </div>
+      <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+        <div
+          class="h-full bg-emerald-500 transition-[width] duration-200 ease-out"
+          :style="{ width: `${actionProgress}%` }"
+        ></div>
+      </div>
+    </div>
+    <div
+      v-if="actionError"
+      class="mt-4 w-full max-w-md rounded bg-red-100 px-4 py-2 text-sm text-red-800 dark:bg-red-900 dark:text-red-200"
+    >
+      Error: {{ actionError }}
     </div>
   </div>
 </template>
