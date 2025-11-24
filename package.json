@@ -1,0 +1,23 @@
+{
+  "name": "zapuskalka-monorepo",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "launcher/ui",
+    "launcher-rust",
+    "packages/**",
+    "!packages/**/test/**",
+    "!packages/**/template/**"
+  ],
+  "scripts": {
+    "typegen": "pocketbase-typegen --db backend/pb_data/data.db --out packages/backend-api/pocketbase-types.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "pocketbase-typegen": "^1.3.2"
+  },
+  "peerDependencies": {
+    "typescript": "~5.9.0"
+  }
+}

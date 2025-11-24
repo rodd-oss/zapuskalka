@@ -1,0 +1,51 @@
+# https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+  build-win:
+    dir: ./launcher
+    cmds:
+      - wails build -nsis
+
+  build-osx:
+    dir: ./launcher
+    cmds:
+      - wails build
+
+  dev:
+    desc: Run backend and launcher together
+    deps:
+      - task: dev-backend
+      - task: dev-launcher-rust
+      - task: dev-typegen
+
+  dev-backend:
+    desc: Run backend server
+    dir: ./backend
+    cmds:
+      - go run -tags automigrate . serve
+
+  dev-launcher:
+    desc: Run launcher
+    dir: ./launcher
+    cmds:
+      - wails dev
+
+  dev-launcher-rust:
+    desc: Run rust launcher
+    dir: ./launcher-rust
+    cmds:
+      - bun run tauri dev
+
+  sign-launcher:
+    dir: ./launcher-rust
+    cmds:
+      - bunx tauri signer generate -w ~/.tauri/zapuskalka.key
+
+  dev-typegen:
+    cmds:
+      - bun run scripts/typegen-watcher.ts

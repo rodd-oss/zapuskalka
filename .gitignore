@@ -1,36 +1,42 @@
-# Combined Godot + launcher ignores
-.godot/
-.nomedia
-.import/
-export.cfg
-export_credentials.cfg
-# Godot build presets backup
-export_presets.cfg~
-# Translations
-*.translation
-# Mono-specific
-.mono/
-data_*/
-mono_crash.*.json
-# Launcher runtime
-launcher_tmp/
-# Downloaded game content
-game/
-# Local version file
-game/version.json
 # Logs
+logs
 *.log
-# OS artifacts
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
 .DS_Store
-Thumbs.db
-# Archives
-*.zip
-*.7z
-*.rar
-# Editor temp
-*~
-# Virtual envs
-.venv/
-# Node deps
-node_modules/
-addons/
+dist
+dist-ssr
+coverage
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+*.tsbuildinfo
+
+.eslintcache
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+
+# Vitest
+__screenshots__/
+
+launcher/build/bin
+
+# Auto-generated type declarations
+auto-imports.d.ts
+components.d.ts

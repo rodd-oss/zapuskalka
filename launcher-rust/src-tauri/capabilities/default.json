@@ -1,0 +1,57 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "core:window:default",
+    "core:webview:default",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-webview-close",
+    "core:window:allow-close",
+    "core:webview:allow-create-webview-window",
+    "os:default",
+    "upload:default",
+    "upload:allow-download",
+    "upload:allow-upload",
+    "fs:default",
+    "fs:write-files",
+    "fs:allow-create",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-remove",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-exists",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "fs:allow-copy-file",
+      "allow": ["**"]
+    },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "**"
+        }
+      ]
+    },
+    "dialog:default",
+    "dialog:allow-open"
+  ]
+}
