@@ -23,8 +23,11 @@ tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tauri-plugin-os = "2"
-tauri-plugin-upload = "2"
+tauri-plugin-upload = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "ci/release-v2" }
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
-
+tar = "0.4.44"
+flate2 = "1.1.5"
+reqwest = { version = "0.12", features = ["multipart", "json"] }
+tokio = { version = "1", features = ["full"] }

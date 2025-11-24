@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-  type AppReleasesResponse,
+  type AppBranchesResponse,
   type AppsResponse,
   type AppBuildsResponse,
   type AppBuildsArchOptions,
@@ -25,44 +25,30 @@ const route = useRoute()
 
 const app = ref<AppsResponse>()
 const publisher = ref<PublishersResponse>()
-const releases = ref<AppReleasesResponse[]>([])
-const releasesMap = computed(() => {
-  const m = new Map<string, AppReleasesResponse>()
-  releases.value.forEach((r) => {
-    m.set(r.id, r)
-  })
-  return m
-})
+const branches = ref<AppBranchesResponse[]>([])
 
 const collection = computed(() =>
   createListCollection({
-    items: releases.value,
+    items: branches.value,
     itemToString: (i) => i.name,
     itemToValue: (i) => i.id,
   }),
 )
-const selectedReleases = ref<string[]>([])
-const selectedRelease = computed(() => selectedReleases.value.at(0))
+const selectedBranchesIds = ref<string[]>([])
+const selectedBranchId = computed(() => selectedBranchesIds.value.at(0))
+const selectedBranch = ref<AppBranchesResponse>()
 const build = ref<AppBuildsResponse>()
 
-watch(selectedRelease, async (newValue) => {
-  const release = newValue
-  if (release == undefined) {
+watch(selectedBranchId, async (newBranchId) => {
+  if (newBranchId == undefined) {
     build.value = undefined
-    console.log('release undefined')
+    console.error('branch undefined')
     return
   }
 
-  const builds = releasesMap.value.get(release)?.builds
-  if (builds == undefined) {
-    build.value = undefined
-    console.log('builds undefined')
-    return
-  }
-
-  if (builds.length == 0) {
-    build.value = undefined
-    console.log('no builds')
+  selectedBranch.value = await pb.collection('app_branches').getOne(newBranchId)
+  if (selectedBranch.value == undefined) {
+    console.error('branch not found')
     return
   }
 
@@ -72,14 +58,16 @@ watch(selectedRelease, async (newValue) => {
   }
 
   // Get all builds with any build id from the release that matches users os and arch
-  const filterIds = builds.map((b) => `id='${b}'`).join('||')
   const filterArchs = archs.map((a) => `arch='${a}'`).join('||')
-  const filter = `((${filterIds}) && (os='${os()}') && (${filterArchs}))`
+  const filter = `((branch='${newBranchId}') && (os='${os()}') && (${filterArchs}))`
 
   try {
-    const fetchedBuild = await pb.collection('app_builds').getFirstListItem(filter)
+    const fetchedBuild = await pb.collection('app_builds').getFirstListItem(filter, {
+      sort: '-updated',
+    })
     build.value = fetchedBuild
   } catch (err) {
+    build.value = undefined
     console.error(err)
   }
 })
@@ -91,8 +79,8 @@ const fetchAppInfo = async (id: string | string[] | undefined) => {
 
   app.value = undefined
   publisher.value = undefined
-  releases.value = []
-  selectedReleases.value = []
+  branches.value = []
+  selectedBranchesIds.value = []
 
   build.value = undefined
 
@@ -107,7 +95,7 @@ const fetchAppInfo = async (id: string | string[] | undefined) => {
       throw new Error('publisher undefined')
     }
 
-    releases.value = await pb.collection('app_releases').getFullList({
+    branches.value = await pb.collection('app_branches').getFullList({
       filter: `app="${app.value.id}"`,
     })
   } catch (error) {
@@ -128,10 +116,16 @@ watch(
     <h1 class="text-6xl">{{ app.title }}</h1>
     <h3 class="text-xl">from {{ publisher.title }}</h3>
 
-    <DeveloperConsole v-if="publisher.users.includes(auth.record.value!.id)" />
+    <template v-if="selectedBranch != undefined">
+      <DeveloperConsole
+        :app="app"
+        v-if="publisher.users.includes(auth.record.value!.id)"
+        :branch="selectedBranch"
+      />
+    </template>
 
     <div class="w-full max-w-sm">
-      <Select.Root :collection="collection" v-model="selectedReleases">
+      <Select.Root :collection="collection" v-model="selectedBranchesIds">
         <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
           Release
         </Select.Label>
@@ -173,7 +167,7 @@ watch(
     <div v-if="build">
       <LibraryAppController :build="build" :app="app" />
     </div>
-    <div v-else-if="selectedRelease">No build available for your machine</div>
+    <div v-else-if="selectedBranchId">No build available for your machine</div>
   </div>
 </template>
 <style scoped></style>

@@ -15,6 +15,7 @@
     "os:default",
     "upload:default",
     "upload:allow-download",
+    "upload:allow-upload",
     "fs:default",
     "fs:write-files",
     "fs:allow-create",
