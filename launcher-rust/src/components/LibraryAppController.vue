@@ -104,19 +104,23 @@ onMounted(calculateState)
 
 // ask install dir
 // create config file
-const install = async () => {
-  const storageFolder = await open({
-    title: 'Where to create app folder?',
-    canCreateDirectories: true,
-    multiple: false,
-    directory: true,
+const saveAppConfig = async (installDir: string) => {
+  const configDir = await path.appConfigDir()
+  const appsConfigsDir = await path.join(configDir, 'apps')
+  await mkdir(appsConfigsDir, {
+    recursive: true,
   })
 
-  if (!storageFolder) {
-    return
+  const configData: AppConfig = {
+    id: app.id,
+    installDir,
   }
+  const jsonConfig = JSON.stringify(configData)
+  await writeTextFile(await path.join(appsConfigsDir, `${app.id}.json`), jsonConfig)
+  config.value = configData
+}
 
-  const installDir = await path.join(storageFolder, app.title)
+const downloadAndExtractBuild = async (installDir: string) => {
   const downloadDirPath = await path.join(installDir, `temp_downloads_${build.id}`)
   await mkdir(downloadDirPath, {
     recursive: true,
@@ -157,25 +161,36 @@ const install = async () => {
   await remove(downloadDirPath, {
     recursive: true,
   })
+}
 
-  // write config
-  const configDir = await path.appConfigDir()
-  const appsConfigsDir = await path.join(configDir, 'apps')
-  await mkdir(appsConfigsDir, {
-    recursive: true,
+const install = async () => {
+  const storageFolder = await open({
+    title: 'Where to create app folder?',
+    canCreateDirectories: true,
+    multiple: false,
+    directory: true,
   })
 
-  const config: AppConfig = {
-    id: app.id,
-    installDir: installDir,
+  if (!storageFolder) {
+    return
   }
-  const jsonConfig = JSON.stringify(config)
-  await writeTextFile(await path.join(appsConfigsDir, `${app.id}.json`), jsonConfig)
+
+  const installDir = await path.join(storageFolder, app.title)
+  await downloadAndExtractBuild(installDir)
+  await saveAppConfig(installDir)
 
   await calculateState()
 }
 
-const update = async () => {}
+const update = async () => {
+  if (!config.value?.installDir) {
+    throw new Error('Cannot update because install directory is unknown')
+  }
+
+  await downloadAndExtractBuild(config.value.installDir)
+  await saveAppConfig(config.value.installDir)
+  await calculateState()
+}
 
 const launch = async () => {
   if (config.value == undefined) {
