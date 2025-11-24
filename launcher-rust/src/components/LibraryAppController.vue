@@ -121,6 +121,18 @@ const saveAppConfig = async (installDir: string) => {
 }
 
 const downloadAndExtractBuild = async (installDir: string) => {
+  // Remove previous installation contents to ensure clean state
+  const installDirExists = await exists(installDir)
+  if (installDirExists) {
+    await remove(installDir, {
+      recursive: true,
+    })
+  }
+
+  await mkdir(installDir, {
+    recursive: true,
+  })
+
   const downloadDirPath = await path.join(installDir, `temp_downloads_${build.id}`)
   await mkdir(downloadDirPath, {
     recursive: true,
