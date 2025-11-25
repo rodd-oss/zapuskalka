@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - release
-      - main
 
 jobs:
   publish-tauri:
@@ -21,6 +20,7 @@ jobs:
             args: "--target x86_64-apple-darwin"
           - platform: "ubuntu-22.04"
             args: ""
+          # TODO: Fix deps for ubutu arm
           # - platform: "ubuntu-22.04-arm" # Only available in public repos.
           #   args: ""
           - platform: "windows-latest"
