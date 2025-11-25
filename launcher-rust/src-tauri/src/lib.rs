@@ -7,11 +7,6 @@ use tar::{Archive, Builder};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
 async fn archive_and_compress_folder(folder_path: String) -> Result<String, String> {
     let source_path = Path::new(&folder_path);
 
@@ -235,7 +230,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_os::init())
-        .setup(|app| {
+        .setup(|_app| {
             // let app_ = app.handle().clone();
             // let window =
             //     WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
@@ -263,7 +258,6 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
             archive_and_compress_folder,
             read_file_bytes,
             extract_archive,
