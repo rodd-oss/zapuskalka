@@ -9,7 +9,7 @@ import { onMounted } from 'vue'
 
 interface UpdateState {
   available: boolean
-  status: 'idle' | 'downloading' | 'finished' | 'error'
+  status: 'idle' | 'checking' | 'downloading' | 'finished' | 'error'
   progress: number
   version: string
   date?: string
@@ -32,10 +32,13 @@ const showApp = computed(() => !updateState.available || updateState.status === 
 
 const startUpdateProcess = async () => {
   try {
+    updateState.status = 'checking'
+
     const update = await check()
 
     if (!update) {
       updateState.available = false
+      updateState.status = 'idle'
       return
     }
 
@@ -86,6 +89,9 @@ onMounted(() => {
 </script>
 
 <template>
+  <div v-if="updateState.status == 'checking'" class="update-container">
+    Checking for updates...
+  </div>
   <div v-if="showUpdateUI" class="update-container">
     <div class="update-content">
       <h2>Обновление приложения</h2>

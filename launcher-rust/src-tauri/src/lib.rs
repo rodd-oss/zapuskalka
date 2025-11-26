@@ -257,6 +257,7 @@ pub fn run() {
                 }
             })
             .build()?;
+            window.set_title("Zapuskalka")?;
             window.set_min_size(Some(LogicalSize::new(800, 600)))?;
             Ok(())
         })

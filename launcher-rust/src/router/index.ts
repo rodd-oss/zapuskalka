@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, RouteLocationNormalizedGeneric } from 'vue-router'
 import { useAuth } from '@/lib/usePocketbase'
 // import HomePage from '@/pages/HomePage.vue'
 import AuthPage from '@/pages/AuthPage.vue'
@@ -8,24 +8,27 @@ import SettingsPage from '@/pages/SettingsPage.vue'
 import SettingsAccountPage from '@/pages/SettingsAccountPage.vue'
 import SettingsStoragePage from '@/pages/SettingsStoragePage.vue'
 
+import { getCurrentWindow } from '@tauri-apps/api/window'
+
 export const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', redirect: '/library' },
-    { path: '/auth', component: AuthPage },
+    { path: '/auth', component: AuthPage, name: 'Authentication' },
     {
       path: '/settings',
       component: SettingsPage,
       children: [
-        { path: '', redirect: '/settings/account' },
-        { path: 'account', component: SettingsAccountPage },
-        { path: 'storage', component: SettingsStoragePage },
+        { path: '', redirect: '/settings/account', name: 'Settings' },
+        { path: 'account', component: SettingsAccountPage, name: 'Settings - Account' },
+        { path: 'storage', component: SettingsStoragePage, name: 'Settings - Storage' },
       ],
     },
     {
       path: '/library',
       component: LibraryPage,
       children: [{ path: ':id', component: LibraryGamePage }],
+      name: 'Library',
     },
   ],
 })
@@ -36,5 +39,22 @@ router.beforeEach(async (to) => {
     return { path: '/auth' }
   }
 })
+
+router.afterEach(async (to) => {
+  await getCurrentWindow().setTitle(titleBuilder(to))
+})
+
+const title = 'Zapuskalka'
+function titleBuilder(to: RouteLocationNormalizedGeneric) {
+  if (to.path === '/') {
+    return title
+  }
+
+  if (to.name === undefined) {
+    return title
+  }
+
+  return `${title} | ${to.name.toString()}`
+}
 
 export default router
