@@ -1,6 +1,6 @@
 [package]
 name = "Zapuskalka"
-version = "0.1.1"
+version = "0.1.2"
 description = "Launcher for indie apps and games."
 authors = ["Milan Rodd"]
 edition = "2021"
