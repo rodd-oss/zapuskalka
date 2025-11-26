@@ -1,3 +1,16 @@
+# Install Guide
+
+## MacOS
+
+- download dmg
+- drag Zapuskalka to application folder
+- open terminal
+- execute command
+``` bash
+sudo xattr -r -c /Applications/Zapuskalka.app
+```
+- you are ready to launch
+
 # Development guide
 
 ## Setup
