@@ -16,6 +16,11 @@
     }
   },
   "bundle": {
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      }
+    },
     "createUpdaterArtifacts": true,
     "active": true,
     "targets": "all",
