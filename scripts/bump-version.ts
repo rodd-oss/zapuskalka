@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
+import { join, dirname } from "path";
 
 type VersionPart = "major" | "minor" | "patch";
 
@@ -68,10 +69,10 @@ async function main() {
     process.exit(1);
   }
 
-  const rootDir = import.meta.dir + "/..";
-  const tauriConfPath = `${rootDir}/launcher-rust/src-tauri/tauri.conf.json`;
-  const cargoTomlPath = `${rootDir}/launcher-rust/src-tauri/Cargo.toml`;
-  const packageJsonPath = `${rootDir}/launcher-rust/package.json`;
+  const rootDir = join(import.meta.dir, "..");
+  const tauriConfPath = join(rootDir, "launcher-rust", "src-tauri", "tauri.conf.json");
+  const cargoTomlPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.toml");
+  const packageJsonPath = join(rootDir, "launcher-rust", "package.json");
 
   const tauriConfFile = Bun.file(tauriConfPath);
   const tauriConf = await tauriConfFile.json() as { version: string };
