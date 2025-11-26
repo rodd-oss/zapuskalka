@@ -1,6 +1,6 @@
 [package]
 name = "Zapuskalka"
-version = "0.1.3"
+version = "0.1.4"
 description = "Launcher for indie apps and games."
 authors = ["Milan Rodd"]
 edition = "2021"
@@ -32,6 +32,7 @@ flate2 = "1.1.5"
 reqwest = { version = "0.12", features = ["multipart", "json"] }
 tokio = { version = "1", features = ["full"] }
 tauri-plugin-process = "2"
+os_info = "3"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
