@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { $ } from "bun";
-import { join, dirname } from "path";
+import { join } from "path";
 
 type VersionPart = "major" | "minor" | "patch";
 
@@ -72,6 +72,7 @@ async function main() {
   const rootDir = join(import.meta.dir, "..");
   const tauriConfPath = join(rootDir, "launcher-rust", "src-tauri", "tauri.conf.json");
   const cargoTomlPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.toml");
+  const cargoLockPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.lock");
   const packageJsonPath = join(rootDir, "launcher-rust", "package.json");
 
   const tauriConfFile = Bun.file(tauriConfPath);
@@ -90,7 +91,7 @@ async function main() {
   console.log("");
 
   const commitMessage = `chore: bump version to ${newVersionString}`;
-  await $`git add ${tauriConfPath} ${cargoTomlPath} ${packageJsonPath}`;
+  await $`git add ${tauriConfPath} ${cargoTomlPath} ${cargoLockPath} ${packageJsonPath}`;
   await $`git commit -m ${commitMessage}`;
 
   const tagName = `app-v${newVersionString}`;
