@@ -46,7 +46,7 @@ async function updateJsonFile(filePath: string, newVersion: string): Promise<voi
   console.log(`Updated ${file.name} to version ${newVersion}`);
 }
 
-async function updateCargoToml(filePath: string, newVersion: string): Promise<void> {
+async function updateTomlFile(filePath: string, newVersion: string): Promise<void> {
   const file = Bun.file(filePath);
   const content = await file.text();
   const updated = content.replace(/^version = ".*"$/m, `version = "${newVersion}"`);
@@ -85,7 +85,8 @@ async function main() {
   console.log("");
 
   await updateJsonFile(tauriConfPath, newVersionString);
-  await updateCargoToml(cargoTomlPath, newVersionString);
+  await updateTomlFile(cargoTomlPath, newVersionString);
+  await updateTomlFile(cargoLockPath, newVersionString);
   await updateJsonFile(packageJsonPath, newVersionString);
 
   console.log("");
