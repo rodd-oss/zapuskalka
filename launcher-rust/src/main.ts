@@ -14,6 +14,7 @@ Sentry.init({
   integrations: [Sentry.browserTracingIntegration({ router })],
   enableLogs: true,
   environment: import.meta.env.PROD ? 'production' : 'development',
+  tracesSampleRate: 0.01,
 })
 
 const pinia = createPinia()

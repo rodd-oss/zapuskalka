@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/usePocketbase'
 import { useRouter } from 'vue-router'
 import type { AuthMethodsList } from 'pocketbase'
-import { openUrl } from '@tauri-apps/plugin-opener'
+// import { openUrl } from '@tauri-apps/plugin-opener'
 
 const auth = useAuth()
 const router = useRouter()
@@ -21,8 +21,7 @@ const onLoginWithOAuth = async (provider: string) => {
 }
 
 const AuthWithBrowser = async () => {
-  throw Error('s')
-  await openUrl(`${import.meta.env.VITE_BACKEND_URL}`)
+  // await openUrl(`${import.meta.env.VITE_BACKEND_URL}/auth`)
 }
 </script>
 
