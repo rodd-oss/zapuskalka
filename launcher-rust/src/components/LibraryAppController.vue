@@ -4,7 +4,6 @@ import { AppsResponse, RecordIdString, type AppBuildsResponse } from 'backend-ap
 import { ref } from 'vue'
 import * as path from '@tauri-apps/api/path'
 import { download } from '@tauri-apps/plugin-upload'
-import { open } from '@tauri-apps/plugin-dialog'
 import {
   exists,
   BaseDirectory,
