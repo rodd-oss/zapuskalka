@@ -42,10 +42,7 @@ function bumpVersion(version: Version, part: VersionPart): Version {
   }
 }
 
-async function updateJsonFile(
-  filePath: string,
-  newVersion: string,
-): Promise<void> {
+async function updateJsonFile(filePath: string, newVersion: string): Promise<void> {
   const file = Bun.file(filePath);
   const content = (await file.json()) as { version?: string };
   content.version = newVersion;
@@ -53,16 +50,10 @@ async function updateJsonFile(
   console.log(`Updated ${file.name} to version ${newVersion}`);
 }
 
-async function updateTomlFile(
-  filePath: string,
-  newVersion: string,
-): Promise<void> {
+async function updateTomlFile(filePath: string, newVersion: string): Promise<void> {
   const file = Bun.file(filePath);
   const content = await file.text();
-  const updated = content.replace(
-    /^version = ".*"$/m,
-    `version = "${newVersion}"`,
-  );
+  const updated = content.replace(/^version = ".*"$/m, `version = "${newVersion}"`);
   await Bun.write(filePath, updated);
   console.log(`Updated ${file.name} to version ${newVersion}`);
 }
@@ -78,31 +69,14 @@ async function main() {
 
   const gitStatus = await $`git status --porcelain`.text();
   if (gitStatus.trim()) {
-    console.error(
-      "Error: Working directory is not clean. Please commit or stash changes first.",
-    );
+    console.error("Error: Working directory is not clean. Please commit or stash changes first.");
     process.exit(1);
   }
 
   const rootDir = join(import.meta.dir, "..");
-  const tauriConfPath = join(
-    rootDir,
-    "launcher-rust",
-    "src-tauri",
-    "tauri.conf.json",
-  );
-  const cargoTomlPath = join(
-    rootDir,
-    "launcher-rust",
-    "src-tauri",
-    "Cargo.toml",
-  );
-  const cargoLockPath = join(
-    rootDir,
-    "launcher-rust",
-    "src-tauri",
-    "Cargo.lock",
-  );
+  const tauriConfPath = join(rootDir, "launcher-rust", "src-tauri", "tauri.conf.json");
+  const cargoTomlPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.toml");
+  const cargoLockPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.lock");
   const packageJsonPath = join(rootDir, "launcher-rust", "package.json");
 
   const tauriConfFile = Bun.file(tauriConfPath);
@@ -135,7 +109,7 @@ async function main() {
   console.log(`Created tag: ${tagName}`);
   console.log("");
 
-  await $`git push --tags`;
+  await $`git push --follow-tags`;
   console.log("");
   console.log(`Pushed tag: ${tagName}`);
   console.log("");
