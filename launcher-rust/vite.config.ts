@@ -29,7 +29,7 @@ export default defineConfig(async ({ mode }) => {
       },
     },
     build: {
-      sourcemap: 'inline',
+      sourcemap: true,
     },
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

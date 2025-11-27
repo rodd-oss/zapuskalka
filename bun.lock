@@ -14,7 +14,7 @@
     },
     "launcher-rust": {
       "name": "zapuskalka-launcher-rust",
-      "version": "0.2.0",
+      "version": "0.2.3",
       "dependencies": {
         "@ark-ui/vue": "^5.28.0",
         "@sentry/vue": "^10.27.0",
