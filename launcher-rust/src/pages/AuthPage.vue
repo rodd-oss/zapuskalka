@@ -21,6 +21,7 @@ const onLoginWithOAuth = async (provider: string) => {
 }
 
 const AuthWithBrowser = async () => {
+  throw Error('Not implemented')
   // await openUrl(`${import.meta.env.VITE_BACKEND_URL}/auth`)
 }
 </script>
