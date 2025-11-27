@@ -21,7 +21,6 @@ sudo xattr -r -c /Applications/Zapuskalka.app
 - install Node.js 20.19+ or 22.12+ - https://nodejs.org/en/download
 - install go - https://go.dev/dl/
 - install taskfile - https://taskfile.dev/docs/installation#get-the-binary
-- install wails cli (make sure it matches with the `/launcher/go.mod` required wails version) - https://wails.io/docs/gettingstarted/installation
 
 ### Install dependencies
 
@@ -49,18 +48,4 @@ task dev-backend
 
 ```bash
 task dev
-```
-
-### Build
-
-Windows
-
-```bash
-task build-win
-```
-
-or MacOS
-
-```bash
-task build-osx
 ```

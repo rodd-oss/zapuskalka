@@ -6,21 +6,27 @@ vars:
   GREETING: Hello, World!
 
 tasks:
-  build-win:
-    dir: ./launcher
-    cmds:
-      - wails build -nsis
+  build:
+    desc: Build backend and launcher together
+    deps:
+      - task: build-backend
+      - task: build-launcher
 
-  build-osx:
-    dir: ./launcher
+  build-backend:
+    dir: ./backend
     cmds:
-      - wails build
+      - go build -o dist/main.bin .
+
+  build-launcher:
+    dir: ./launcher-rust
+    cmds:
+      - bun tauri build
 
   dev:
     desc: Run backend and launcher together
     deps:
       - task: dev-backend
-      - task: dev-launcher-rust
+      - task: dev-launcher
       - task: dev-typegen
 
   dev-backend:
@@ -31,12 +37,6 @@ tasks:
 
   dev-launcher:
     desc: Run launcher
-    dir: ./launcher
-    cmds:
-      - wails dev
-
-  dev-launcher-rust:
-    desc: Run rust launcher
     dir: ./launcher-rust
     cmds:
       - bun run tauri dev
