@@ -38,7 +38,7 @@ export const useAuthenticated = () => {
 export const useAuth = () => {
   const pb = usePocketBase()
 
-  const loading = ref(false)
+  const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
 
   const logout = async () => {

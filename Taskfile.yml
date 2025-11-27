@@ -25,9 +25,9 @@ tasks:
   dev:
     desc: Run backend and launcher together
     deps:
-      - task: dev-backend
-      - task: dev-launcher
-      - task: dev-typegen
+      - dev-backend
+      - dev-launcher
+      - dev-typegen
 
   dev-backend:
     desc: Run backend server

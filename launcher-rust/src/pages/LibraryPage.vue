@@ -51,7 +51,7 @@ useAuthenticated()
             id="a"
             class="flex flex-col items-start justify-start border border-gray-200 bg-gray-50 text-gray-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400"
           >
-            <label class="w-full bg-gray-800 p-2">
+            <label class="w-full bg-white p-2 dark:bg-gray-800">
               <Input class="w-full" placeholder="Search" v-model="searchFilter" />
             </label>
             <ScrollArea.Root class="h-full w-full">

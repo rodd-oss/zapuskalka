@@ -38,6 +38,10 @@ router.beforeEach(async (to) => {
   if (!auth.isValid.value && to.path !== '/auth') {
     return { path: '/auth' }
   }
+
+  if (auth.isValid.value && to.path === '/auth') {
+    return { path: '/' }
+  }
 })
 
 router.afterEach(async (to) => {
