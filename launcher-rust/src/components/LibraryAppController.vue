@@ -194,16 +194,7 @@ const resetActionState = () => {
 }
 
 const install = async () => {
-  const storageFolder = await open({
-    title: 'Where to create app folder?',
-    canCreateDirectories: true,
-    multiple: false,
-    directory: true,
-  })
-
-  if (!storageFolder) {
-    return
-  }
+  const storageFolder = await path.appDataDir()
 
   const installDir = await path.join(storageFolder, app.title)
   activeAction.value = 'install'
@@ -218,8 +209,15 @@ const install = async () => {
     actionProgress.value = 100
     await calculateState()
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error occurred'
-    actionError.value = message
+    if (err instanceof Error) {
+      actionError.value = err.message
+    } else if (err instanceof String) {
+      actionError.value = err.toString()
+    } else if (typeof err == 'string') {
+      actionError.value = err
+    } else {
+      actionError.value = 'Unknown error occurred'
+    }
     console.error('Install error:', err)
   } finally {
     activeAction.value = null
@@ -244,8 +242,15 @@ const update = async () => {
     actionProgress.value = 100
     await calculateState()
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error occurred'
-    actionError.value = message
+    if (err instanceof Error) {
+      actionError.value = err.message
+    } else if (err instanceof String) {
+      actionError.value = err.toString()
+    } else if (typeof err == 'string') {
+      actionError.value = err
+    } else {
+      actionError.value = 'Unknown error occurred'
+    }
     console.error('Update error:', err)
   } finally {
     activeAction.value = null

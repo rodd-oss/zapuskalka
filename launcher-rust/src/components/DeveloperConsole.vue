@@ -87,7 +87,16 @@ const selectFolder = async () => {
     success.value = true
     uploadProgress.value = 100
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Unknown error occurred'
+    if (err instanceof Error) {
+      error.value = err.message
+    } else if (err instanceof String) {
+      error.value = err.toString()
+    } else if (typeof err == 'string') {
+      error.value = err
+    } else {
+      error.value = 'Unknown error occurred'
+    }
+
     console.error('Upload error:', err)
   } finally {
     uploading.value = false
