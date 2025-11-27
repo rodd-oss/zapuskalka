@@ -34,22 +34,35 @@ function bumpVersion(version: Version, part: VersionPart): Version {
     case "minor":
       return { major: version.major, minor: version.minor + 1, patch: 0 };
     case "patch":
-      return { major: version.major, minor: version.minor, patch: version.patch + 1 };
+      return {
+        major: version.major,
+        minor: version.minor,
+        patch: version.patch + 1,
+      };
   }
 }
 
-async function updateJsonFile(filePath: string, newVersion: string): Promise<void> {
+async function updateJsonFile(
+  filePath: string,
+  newVersion: string,
+): Promise<void> {
   const file = Bun.file(filePath);
-  const content = await file.json() as { version?: string };
+  const content = (await file.json()) as { version?: string };
   content.version = newVersion;
   await Bun.write(filePath, JSON.stringify(content, null, 2) + "\n");
   console.log(`Updated ${file.name} to version ${newVersion}`);
 }
 
-async function updateTomlFile(filePath: string, newVersion: string): Promise<void> {
+async function updateTomlFile(
+  filePath: string,
+  newVersion: string,
+): Promise<void> {
   const file = Bun.file(filePath);
   const content = await file.text();
-  const updated = content.replace(/^version = ".*"$/m, `version = "${newVersion}"`);
+  const updated = content.replace(
+    /^version = ".*"$/m,
+    `version = "${newVersion}"`,
+  );
   await Bun.write(filePath, updated);
   console.log(`Updated ${file.name} to version ${newVersion}`);
 }
@@ -65,23 +78,42 @@ async function main() {
 
   const gitStatus = await $`git status --porcelain`.text();
   if (gitStatus.trim()) {
-    console.error("Error: Working directory is not clean. Please commit or stash changes first.");
+    console.error(
+      "Error: Working directory is not clean. Please commit or stash changes first.",
+    );
     process.exit(1);
   }
 
   const rootDir = join(import.meta.dir, "..");
-  const tauriConfPath = join(rootDir, "launcher-rust", "src-tauri", "tauri.conf.json");
-  const cargoTomlPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.toml");
-  const cargoLockPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.lock");
+  const tauriConfPath = join(
+    rootDir,
+    "launcher-rust",
+    "src-tauri",
+    "tauri.conf.json",
+  );
+  const cargoTomlPath = join(
+    rootDir,
+    "launcher-rust",
+    "src-tauri",
+    "Cargo.toml",
+  );
+  const cargoLockPath = join(
+    rootDir,
+    "launcher-rust",
+    "src-tauri",
+    "Cargo.lock",
+  );
   const packageJsonPath = join(rootDir, "launcher-rust", "package.json");
 
   const tauriConfFile = Bun.file(tauriConfPath);
-  const tauriConf = await tauriConfFile.json() as { version: string };
+  const tauriConf = (await tauriConfFile.json()) as { version: string };
   const currentVersion = parseVersion(tauriConf.version);
   const newVersion = bumpVersion(currentVersion, part);
   const newVersionString = formatVersion(newVersion);
 
-  console.log(`Bumping version from ${formatVersion(currentVersion)} to ${newVersionString} (${part})`);
+  console.log(
+    `Bumping version from ${formatVersion(currentVersion)} to ${newVersionString} (${part})`,
+  );
   console.log("");
 
   await updateJsonFile(tauriConfPath, newVersionString);
@@ -101,6 +133,11 @@ async function main() {
   console.log("");
   console.log(`Created commit: ${commitMessage}`);
   console.log(`Created tag: ${tagName}`);
+  console.log("");
+
+  await $`git push --tags`;
+  console.log("");
+  console.log(`Pushed tag: ${tagName}`);
   console.log("");
 }
 
