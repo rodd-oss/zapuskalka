@@ -31,9 +31,19 @@ tasks:
 
   dev-backend:
     desc: Run backend server
+    deps:
+      - dev-backend-go
+      - dev-backend-bun
+
+  dev-backend-go:
     dir: ./backend
     cmds:
       - go run -tags automigrate . serve
+
+  dev-backend-bun:
+    dir: ./backend
+    cmds:
+      - bun run dev
 
   dev-launcher:
     desc: Run launcher
