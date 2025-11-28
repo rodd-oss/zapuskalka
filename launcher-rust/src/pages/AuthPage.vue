@@ -20,10 +20,10 @@ const onLoginWithOAuth = async (provider: string) => {
   router.push('/')
 }
 
-const AuthWithBrowser = async () => {
-  throw Error('Not implemented')
-  // await openUrl(`${import.meta.env.VITE_BACKEND_URL}/auth`)
-}
+// const AuthWithBrowser = async () => {
+//   throw Error('Not implemented')
+//   // await openUrl(`${import.meta.env.VITE_BACKEND_URL}/auth`)
+// }
 </script>
 
 <template>
@@ -43,14 +43,14 @@ const AuthWithBrowser = async () => {
             >
               Login with {{ provider.displayName }}
             </button>
-            <button
+            <!-- <button
               class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               :disabled="auth.loading.value"
               @click="AuthWithBrowser"
             >
               Auth with browser
-            </button>
+            </button> -->
           </template>
         </div>
       </div>

@@ -257,6 +257,12 @@ const update = async () => {
 }
 
 const launch = async () => {
+  await calculateState()
+
+  if (state.value == 'need_update') {
+    await update()
+  }
+
   if (config.value == undefined) {
     throw new Error('State error. Should not call if config is not loaded')
   }
