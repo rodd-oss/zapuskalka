@@ -1,0 +1,34 @@
+name: Bug report
+description: Report errors or unexpected behavior.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting issues of Zapuskalka!
+        To make it easier for us to help you please enter detailed information below.
+
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      placeholder:
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Zapuskalka version
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: OS Version
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Logs
+      placeholder: Insert log.txt here (if necessary)
+      render: shell
