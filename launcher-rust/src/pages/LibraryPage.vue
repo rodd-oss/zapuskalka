@@ -62,7 +62,7 @@ useAuthenticated()
                     :key="game.id"
                     :to="`/library/${game.id}`"
                     class="p-2"
-                    active-class="bg-gray-700 text-gray-50"
+                    active-class="dark:bg-gray-700 bg-gray-200 dark:text-gray-50"
                   >
                     {{ game.title }}
                   </RouterLink>
