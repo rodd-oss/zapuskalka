@@ -6,6 +6,7 @@
   "workspaces": [
     "launcher-rust",
     "packages/**",
+    "backend",
     "!packages/**/test/**",
     "!packages/**/template/**"
   ],
@@ -18,6 +19,6 @@
     "pocketbase-typegen": "^1.3.2"
   },
   "peerDependencies": {
-    "typescript": "~5.9.0"
+    "typescript": "~5.9.3"
   }
 }

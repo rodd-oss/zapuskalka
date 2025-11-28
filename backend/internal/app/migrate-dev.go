@@ -1,5 +1,5 @@
 //go:build automigrate
 
-package main
+package app
 
 const AutoMigrate = true
