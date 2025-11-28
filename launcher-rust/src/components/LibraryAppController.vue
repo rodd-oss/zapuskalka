@@ -393,7 +393,7 @@ const deleteApp = async () => {
                 <Popover.CloseTrigger asChild>
                   <Dialog.Trigger asChild>
                     <button
-                      class="inline-flex cursor-pointer items-center justify-center rounded bg-white px-4 py-2 text-red-600 transition-colors hover:outline dark:bg-gray-800"
+                      class="inline-flex cursor-pointer items-center justify-center rounded bg-white px-4 py-2 text-red-500 transition-colors hover:outline dark:bg-gray-800"
                     >
                       Uninstall
                     </button>
