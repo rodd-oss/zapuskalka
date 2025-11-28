@@ -18,7 +18,7 @@ import {
 import { openPath } from '@tauri-apps/plugin-opener'
 import { onMounted } from 'vue'
 import { invoke } from '@tauri-apps/api/core'
-import { ChevronDown } from 'lucide-vue-next'
+import { EllipsisVertical } from 'lucide-vue-next'
 
 const safeJsonParse = <T,>(str: string) => {
   try {
@@ -32,7 +32,10 @@ const safeJsonParse = <T,>(str: string) => {
 
 interface AppConfig {
   id: RecordIdString
+  buildId: string
   installDir: string
+  storageDir: string
+  entrypoint: string
 }
 
 const { build, app } = defineProps<{ build: AppBuildsResponse; app: AppsResponse }>()
@@ -51,7 +54,7 @@ const state = ref<'not_installed' | 'need_update' | 'ready' | 'error' | 'running
 const stateError = ref('')
 const config = ref<AppConfig>()
 
-type ActionType = 'install' | 'update' | null
+type ActionType = 'install' | 'update' | 'download' | null
 const activeAction = ref<ActionType>(null)
 const actionProgress = ref(0)
 const actionError = ref<string | null>(null)
@@ -59,70 +62,61 @@ const actionSuccess = ref(false)
 const lastAction = ref<ActionType>(null)
 
 const calculateState = async () => {
+  state.value = undefined
   try {
-    state.value = undefined
-    try {
-      const file = await readTextFile(`apps/${app.id}.json`, {
-        baseDir: BaseDirectory.AppConfig,
-      })
-      config.value = safeJsonParse(file)
-    } catch {
-      state.value = 'not_installed'
-      return
-    }
-    if (config.value == undefined) {
-      state.value = 'not_installed'
-      // TODO: bad config need to delete
-      return
-    }
-    if (config.value.installDir == '') {
-      state.value = 'not_installed'
-      console.error('bad config need to delete')
-      // TODO: bad config need to delete
-      return
-    }
-    const installDirExists = await exists(config.value.installDir)
-    if (!installDirExists) {
-      state.value = 'not_installed'
-      console.error('bad config need to delete')
-      // TODO: bad config need to delete
-      return
-    }
-    const buildDirExists = await exists(await path.join(config.value.installDir, build.id))
-    if (!buildDirExists) {
-      state.value = 'need_update'
-      return
-    }
-    state.value = 'ready'
-  } catch (err) {
-    console.error(err)
-    stateError.value = err as string
-    state.value = 'error'
+    const file = await readTextFile(`apps/${app.id}.json`, {
+      baseDir: BaseDirectory.AppConfig,
+    })
+    config.value = safeJsonParse(file)
+  } catch {
+    state.value = 'not_installed'
+    config.value = undefined
     return
   }
+  if (config.value == undefined) {
+    state.value = 'not_installed'
+    // Bad config need to delete
+    await removeAppConfig()
+    return
+  }
+  if (config.value.installDir == '') {
+    state.value = 'not_installed'
+    // Bad config need to delete
+    await removeAppConfig()
+    return
+  }
+  const installDirExists = await exists(config.value.installDir)
+  if (!installDirExists) {
+    state.value = 'not_installed'
+    // Bad config need to delete
+    await removeAppConfig()
+    return
+  }
+  if (config.value.buildId != build.id || config.value.entrypoint != build.entrypoint) {
+    state.value = 'need_update'
+    return
+  }
+  state.value = 'ready'
 }
 
 onMounted(calculateState)
 
 // ask install dir
 // create config file
-const saveAppConfig = async (installDir: string) => {
+const saveAppConfig = async (configData: AppConfig) => {
   const configDir = await path.appConfigDir()
   const appsConfigsDir = await path.join(configDir, 'apps')
   await mkdir(appsConfigsDir, {
     recursive: true,
   })
 
-  const configData: AppConfig = {
-    id: app.id,
-    installDir,
-  }
   const jsonConfig = JSON.stringify(configData)
   await writeTextFile(await path.join(appsConfigsDir, `${app.id}.json`), jsonConfig)
   config.value = configData
 }
 
 const removeAppConfig = async () => {
+  console.log(`Removing ${app.title} config`)
   const configDir = await path.appConfigDir()
   const appsConfigsDir = await path.join(configDir, 'apps')
 
@@ -133,71 +127,51 @@ const removeAppConfig = async () => {
 }
 
 const downloadAndExtractBuild = async (
+  downloadRootDir: string,
   installDir: string,
   onProgress?: (value: number) => void,
 ) => {
-  // Remove previous installation contents to ensure clean state
-  const installDirExists = await exists(installDir)
-  if (installDirExists) {
-    await remove(installDir, {
-      recursive: true,
-    })
-  }
-
   await mkdir(installDir, {
     recursive: true,
   })
-  onProgress?.(5)
 
-  const downloadDirPath = await path.join(installDir, `temp_downloads_${build.id}`)
+  const downloadDirPath = await path.join(downloadRootDir, `temp_downloads_${build.id}`)
   await mkdir(downloadDirPath, {
     recursive: true,
   })
+  activeAction.value = 'download'
+  lastAction.value = 'download'
   const downloads = files.map(async (file) => {
     return path.join(downloadDirPath, file.name).then((saveFilePath) =>
       download(
         file.URL,
         saveFilePath,
-        ({ progress, total }) => console.log(`Downloaded ${progress} of ${total} bytes`), // a callback that will be called with the download progress // optional headers to send with the request
+        ({ total, progressTotal }) => {
+          const perc = progressTotal / total
+          onProgress?.(perc * 50)
+          // console.log(`Downloaded ${progress} of ${total} with ${progressTotal} bytes ${perc}`)
+        }, // a callback that will be called with the download progress // optional headers to send with the request
       ),
     )
   })
   await Promise.all(downloads)
-  onProgress?.(40)
 
-  //remove build folder if exists
-  const exctractDirPath = await path.join(installDir, build.id)
-  const extractDirExists = await exists(exctractDirPath)
-  if (extractDirExists) {
-    await remove(exctractDirPath, {
-      recursive: true,
-    })
-  }
-
-  await mkdir(exctractDirPath, {
-    recursive: true,
-  })
-
+  activeAction.value = 'install'
+  lastAction.value = 'install'
   const extractions = files.map(async (file) => {
     const archivePath = await path.join(downloadDirPath, file.name)
     return invoke('extract_archive', {
       archivePath,
-      destinationPath: exctractDirPath,
+      destinationPath: installDir,
     })
   })
   await Promise.all(extractions)
-  onProgress?.(90)
+  onProgress?.(95)
 
   await remove(downloadDirPath, {
     recursive: true,
   })
   onProgress?.(100)
-}
-
-const describeAction = (action: ActionType | null) => {
-  if (action === 'install') return 'Installation'
-  if (action === 'update') return 'Update'
-  return ''
 }
 
 const resetActionState = () => {
@@ -207,17 +181,32 @@ const resetActionState = () => {
 }
 
 const install = async () => {
-  const storageFolder = await path.appDataDir()
+  const appDir = await path.appDataDir()
+  const storageDir = await path.join(appDir, 'storage')
 
-  const installDir = await path.join(storageFolder, app.title)
+  const installDir = await path.join(storageDir, app.title)
   activeAction.value = 'install'
   lastAction.value = 'install'
   resetActionState()
   try {
-    await downloadAndExtractBuild(installDir, (value) => {
+    // Remove previous installation contents to ensure clean state
+    const installDirExists = await exists(installDir)
+    if (installDirExists) {
+      await remove(installDir, {
+        recursive: true,
+      })
+    }
+
+    await downloadAndExtractBuild(storageDir, installDir, (value) => {
       actionProgress.value = value
     })
-    await saveAppConfig(installDir)
+    await saveAppConfig({
+      id: app.id,
+      installDir,
+      storageDir,
+      buildId: build.id,
+      entrypoint: build.entrypoint,
+    })
     actionSuccess.value = true
     actionProgress.value = 100
     await calculateState()
@@ -247,10 +236,22 @@ const update = async () => {
   lastAction.value = 'update'
   resetActionState()
   try {
-    await downloadAndExtractBuild(config.value.installDir, (value) => {
+    // Remove previous installation contents to ensure clean state
+    const installDirExists = await exists(config.value.installDir)
+    if (installDirExists) {
+      await remove(config.value.installDir, {
+        recursive: true,
+      })
+    }
+
+    await downloadAndExtractBuild(config.value.storageDir, config.value.installDir, (value) => {
       actionProgress.value = value
     })
-    await saveAppConfig(config.value.installDir)
+    const newConfig = config.value
+    newConfig.buildId = build.id
+    newConfig.entrypoint = build.entrypoint
+
+    await saveAppConfig(newConfig)
     actionSuccess.value = true
     actionProgress.value = 100
     await calculateState()
@@ -281,7 +282,7 @@ const launch = async () => {
     throw new Error('State error. Should not call if config is not loaded')
   }
 
-  const entrypointPath = await path.join(config.value.installDir, build.id, build.entrypoint)
+  const entrypointPath = await path.join(config.value.installDir, config.value.entrypoint)
 
   await openPath(entrypointPath)
 }
@@ -293,7 +294,7 @@ const openLocalFiles = async () => {
     throw new Error('State error. Should not call if config is not loaded')
   }
 
-  const entrypointPath = await path.join(config.value.installDir, build.id)
+  const entrypointPath = await path.join(config.value.installDir)
 
   await openPath(entrypointPath)
 }
@@ -323,7 +324,7 @@ const deleteApp = async () => {
       {{ stateError }}
     </div>
   </div>
-  <div v-else-if="state == 'not_installed'">
+  <div v-else-if="state == 'not_installed'" class="flex flex-col">
     <button
       class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
       @click="install"
@@ -333,141 +334,143 @@ const deleteApp = async () => {
     </button>
   </div>
 
-  <div v-else class="flex flex-row">
-    <div v-if="state == 'need_update'">
+  <div v-else class="flex flex-col">
+    <div class="flex flex-row overflow-hidden rounded bg-emerald-600">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+        v-if="state == 'need_update'"
+        class="cursor-pointer bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="update"
         :disabled="activeAction !== null"
       >
         Update
       </button>
-    </div>
-    <div v-else-if="state == 'ready'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+        v-else-if="state == 'ready'"
+        class="w-full cursor-pointer bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="launch"
         :disabled="activeAction !== null"
       >
         Zapusk
       </button>
-    </div>
-    <div v-else-if="state == 'running'">
       <button
-        class="cursor-pointer rounded bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+        v-else-if="state == 'running'"
+        class="cursor-pointer bg-emerald-500 p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
         @click="close"
         :disabled="activeAction !== null"
       >
         Close
       </button>
-    </div>
-    <Popover.Root>
-      <Popover.Trigger
-        class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-      >
-        <ChevronDown :size="16" />
-      </Popover.Trigger>
-      <Teleport to="body">
-        <Popover.Positioner>
-          <Popover.Content
-            class="data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out z-50 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-          >
-            <Popover.Arrow
-              class="[--arrow-background:var(--color-white)] [--arrow-size:12px] dark:[--arrow-background:var(--color-gray-800)]"
+      <SeparatorHorizontal />
+      <Popover.Root class="h-full">
+        <Popover.Trigger
+          class="inline-flex cursor-pointer items-center justify-center p-2 text-amber-50 hover:bg-emerald-400"
+        >
+          <EllipsisVertical :size="16" />
+        </Popover.Trigger>
+        <Teleport to="body">
+          <Popover.Positioner>
+            <Popover.Content
+              class="data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out z-50 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800"
             >
-              <Popover.ArrowTip class="border-t border-l border-gray-200 dark:border-gray-700" />
-            </Popover.Arrow>
+              <Popover.Arrow
+                class="[--arrow-background:var(--color-white)] [--arrow-size:12px] dark:[--arrow-background:var(--color-gray-800)]"
+              >
+                <Popover.ArrowTip class="border-t border-l border-gray-200 dark:border-gray-700" />
+              </Popover.Arrow>
 
-            <div class="flex flex-col gap-2">
-              <Popover.CloseTrigger asChild>
-                <button
-                  class="cursor-pointer rounded p-2 text-gray-900 hover:outline disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-50"
-                  @click="openLocalFiles"
-                  :disabled="activeAction !== null"
-                >
-                  Browse local files
-                </button>
-              </Popover.CloseTrigger>
-
-              <Dialog.Root>
+              <div class="flex flex-col gap-2">
                 <Popover.CloseTrigger asChild>
-                  <Dialog.Trigger asChild>
-                    <button
-                      class="inline-flex cursor-pointer items-center justify-center rounded bg-white px-4 py-2 text-red-500 transition-colors hover:outline dark:bg-gray-800"
-                    >
-                      Uninstall
-                    </button>
-                  </Dialog.Trigger>
-                </Popover.CloseTrigger>
-                <Teleport to="body">
-                  <Dialog.Backdrop class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs" />
-                  <Dialog.Positioner
-                    class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                  <button
+                    class="cursor-pointer rounded p-2 text-gray-900 hover:outline disabled:cursor-not-allowed disabled:opacity-50 dark:text-amber-50"
+                    @click="openLocalFiles"
+                    :disabled="activeAction !== null"
                   >
-                    <Dialog.Content
-                      class="relative w-full max-w-sm rounded-lg bg-white p-5 shadow-lg dark:bg-gray-900"
+                    Browse local files
+                  </button>
+                </Popover.CloseTrigger>
+
+                <Dialog.Root>
+                  <Popover.CloseTrigger asChild>
+                    <Dialog.Trigger asChild>
+                      <button
+                        class="inline-flex cursor-pointer items-center justify-center rounded bg-white px-4 py-2 text-red-500 transition-colors hover:outline dark:bg-gray-800"
+                      >
+                        Uninstall
+                      </button>
+                    </Dialog.Trigger>
+                  </Popover.CloseTrigger>
+                  <Teleport to="body">
+                    <Dialog.Backdrop class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs" />
+                    <Dialog.Positioner
+                      class="fixed inset-0 z-50 flex items-center justify-center p-4"
                     >
-                      <Dialog.CloseTrigger asChild>
-                        <button
-                          class="absolute top-3 right-3 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
-                        >
-                          <X class="h-4 w-4" />
-                        </button>
-                      </Dialog.CloseTrigger>
-
-                      <div class="space-y-4">
-                        <div class="flex items-start space-x-3">
-                          <div
-                            class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800"
+                      <Dialog.Content
+                        class="relative w-full max-w-sm rounded-lg bg-white p-5 shadow-lg dark:bg-gray-900"
+                      >
+                        <Dialog.CloseTrigger asChild>
+                          <button
+                            class="absolute top-3 right-3 cursor-pointer p-1 text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
                           >
-                            <Trash class="h-5 w-5 text-gray-600 dark:text-white" />
-                          </div>
-                          <div class="space-y-1">
-                            <Dialog.Title
-                              class="text-lg font-semibold text-gray-900 dark:text-white"
+                            <X class="h-4 w-4" />
+                          </button>
+                        </Dialog.CloseTrigger>
+
+                        <div class="space-y-4">
+                          <div class="flex items-start space-x-3">
+                            <div
+                              class="flex h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800"
                             >
-                              Uninstall
-                            </Dialog.Title>
-                            <Dialog.Description class="text-sm text-gray-600 dark:text-gray-400">
-                              Would you like to uninstall
-                              <span class="font-bold text-emerald-400">{{ app.title }}</span> from
-                              this device?
-                            </Dialog.Description>
+                              <Trash class="h-5 w-5 text-gray-600 dark:text-white" />
+                            </div>
+                            <div class="space-y-1">
+                              <Dialog.Title
+                                class="text-lg font-semibold text-gray-900 dark:text-white"
+                              >
+                                Uninstall
+                              </Dialog.Title>
+                              <Dialog.Description class="text-sm text-gray-600 dark:text-gray-400">
+                                Would you like to uninstall
+                                <span class="font-bold text-emerald-400">{{ app.title }}</span> from
+                                this device?
+                              </Dialog.Description>
+                            </div>
+                          </div>
+
+                          <div class="flex justify-end space-x-3">
+                            <Dialog.CloseTrigger asChild>
+                              <button
+                                class="inline-flex cursor-pointer items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                              >
+                                Cancel
+                              </button>
+                            </Dialog.CloseTrigger>
+
+                            <Dialog.CloseTrigger asChild>
+                              <button
+                                class="inline-flex cursor-pointer items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
+                                @click="deleteApp"
+                              >
+                                Uninstall
+                              </button>
+                            </Dialog.CloseTrigger>
                           </div>
                         </div>
-
-                        <div class="flex justify-end space-x-3">
-                          <Dialog.CloseTrigger asChild>
-                            <button
-                              class="inline-flex cursor-pointer items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
-                            >
-                              Cancel
-                            </button>
-                          </Dialog.CloseTrigger>
-
-                          <Dialog.CloseTrigger asChild>
-                            <button
-                              class="inline-flex cursor-pointer items-center justify-center rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600"
-                              @click="deleteApp"
-                            >
-                              Uninstall
-                            </button>
-                          </Dialog.CloseTrigger>
-                        </div>
-                      </div>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Teleport>
-              </Dialog.Root>
-            </div>
-          </Popover.Content>
-        </Popover.Positioner>
-      </Teleport>
-    </Popover.Root>
+                      </Dialog.Content>
+                    </Dialog.Positioner>
+                  </Teleport>
+                </Dialog.Root>
+              </div>
+            </Popover.Content>
+          </Popover.Positioner>
+        </Teleport>
+      </Popover.Root>
+    </div>
   </div>
-  <div v-if="activeAction" class="mt-4 w-full max-w-md">
+  <div v-if="activeAction" class="mt-4 w-full">
     <div class="mb-2 text-sm text-gray-600 dark:text-gray-300">
-      {{ describeAction(activeAction) }} in progress...
+      <span v-if="activeAction == 'install'">Installation in progress...</span>
+      <span v-else-if="activeAction == 'update'">Update in progress...</span>
+      <span v-else-if="activeAction == 'download'">Download in progress...</span>
     </div>
     <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
       <div
