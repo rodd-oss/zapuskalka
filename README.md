@@ -1,51 +1,106 @@
-# Install Guide
+<div align="center">
+  <img src="launcher-rust/app-icon.png" alt="Zapuskalka Logo" width="128" height="128">
+  
+  # Zapuskalka
+  
+  **Open-source launcher and platform for distributing indie games and applications**
+  
+  [![Latest Release](https://img.shields.io/github/v/release/rodd-oss/zapuskalka?label=Latest%20Release&style=for-the-badge)](https://github.com/rodd-oss/zapuskalka/releases/latest)
+</div>
 
-## MacOS
+## About
 
-- download dmg
-- drag Zapuskalka to application folder
-- open terminal
-- execute command
-``` bash
+Zapuskalka is a modern open-source launcher designed for indie game players and developers. The project combines the ease of use of Steam with the open distribution model of itch.io, providing a free and fair platform for indie content distribution.
+
+### Key Features
+
+- 🎮 **Game Library** — manage all your indie games in one place
+- 🛒 **Game Store** — open marketplace with search and filtering
+- 📦 **Installation & Updates** — automatic game installation and updates
+- 🔐 **Secure Authentication** — sign in via OAuth (GitHub/Twitch) or email
+- 🎨 **Modern Interface** — intuitive UI built with Vue 3
+- 🚀 **Cross-platform** — support for Windows, macOS, and Linux
+
+## Download
+
+### Latest Release
+
+Download the latest version for your platform from the [releases page](https://github.com/rodd-oss/zapuskalka/releases/latest):
+
+- **Windows** — Look for `.exe` (installer) or `.msi` files (recommended)
+- **macOS** — Look for `.dmg` files (for Apple Silicon or Intel)
+- **Linux** — Look for `.AppImage` or `.deb` files
+
+📦 [All releases and versions](https://github.com/rodd-oss/zapuskalka/releases)
+
+### macOS Installation
+
+After downloading and installing the application:
+
+1. Drag Zapuskalka to the Applications folder
+2. Open Terminal
+3. Run the following command to remove the quarantine attribute:
+
+```bash
 sudo xattr -r -c /Applications/Zapuskalka.app
 ```
-- you are ready to launch
 
-# Development guide
+The application is now ready to launch!
 
-## Setup
+---
 
-### Requirments
+## Development Guide
 
-- install bun - https://bun.com/docs/installation
-- install Node.js 20.19+ or 22.12+ - https://nodejs.org/en/download
-- install go - https://go.dev/dl/
-- install taskfile - https://taskfile.dev/docs/installation#get-the-binary
+### Requirements
 
-### Install dependencies
+Before starting development, make sure you have installed:
 
-Run this command in the project root
+- **Node.js** 20.19+ or 22.12+ — [Download](https://nodejs.org/en/download)
+- **Rust** — [Installation guide](https://www.rust-lang.org/tools/install)
+- **Bun** — [Installation guide](https://bun.com/docs/installation)
+- **Taskfile** — [Installation guide](https://taskfile.dev/docs/installation#get-the-binary)
+
+### Install Dependencies
+
+Run in the project root:
 
 ```bash
 bun install
 ```
 
-### Create backend admin account
+### Create Backend Admin Account
 
-- Launch backend
+1. Start the backend:
 
 ```bash
 task dev-backend
 ```
 
-- Open url from the terminal and create local admin account
-- Navigate to the users table enable and create user acount
-- Stop backend service
+2. Open the URL from the terminal and create a local admin account
+3. Navigate to the users table, enable and create a user account
+4. Stop the backend service
 
-## Devolopment
+### Run Development Mode
 
-### Run dev mode
+To run the entire project in development mode:
 
 ```bash
 task dev
 ```
+
+---
+
+## Useful Links
+
+### Documentation
+- 📖 [Product Documentation](docs/PRODUCT.md) — Product requirements and feature specifications
+- 🏗️ [Project Architecture](docs/ARCHITECTURE.md) — Technical architecture and system design
+
+### Community & Support
+- 🐛 [Report a Bug](https://github.com/rodd-oss/zapuskalka/issues/new?template=bug_report.yml) — Found a bug? Let us know!
+- 💡 [Request a Feature](https://github.com/rodd-oss/zapuskalka/issues/new) — Have an idea? Share it with us!
+- 🔄 [Changelog](https://github.com/rodd-oss/zapuskalka/releases) — See what's new in each release
+
+### Contributing
+- 🤝 [Contributing Guide](https://github.com/rodd-oss/zapuskalka/blob/main/CONTRIBUTING.md) — Learn how to contribute (in development)
+- 📝 [Code of Conduct](https://github.com/rodd-oss/zapuskalka/blob/main/CODE_OF_CONDUCT.md) — Community guidelines (in development)
