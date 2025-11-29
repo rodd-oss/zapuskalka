@@ -118,8 +118,7 @@ jobs:
 
       - name: Сборка приложения
         working-directory: launcher-rust
-        # Флаг --bundles app для сборки только основного приложения без updater-артефактов.
-        run: bun run tauri build ${{ matrix.args }} -- --bundles app
+        run: bun run tauri build ${{ matrix.args }} --config src-tauri/tauri.conf.ci.json
         env:
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
