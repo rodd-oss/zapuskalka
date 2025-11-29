@@ -420,26 +420,26 @@ pub fn run() {
                 .on_tray_icon_event({
                     let app_handle_for_click = app.handle().clone();
                     let app_handle_for_save = app.handle().clone();
-                    move |tray, event| match event {
-                        TrayIconEvent::Click {
-                          button: MouseButton::Left,
-                          button_state: MouseButtonState::Up,
-                          ..
-                        } => {
-                          let app = tray.app_handle();
-                          if let Some(window) = app.get_webview_window("main") {
-                            if window.is_visible().unwrap_or(false) {
-                                let _ = save_window_state(&app_handle_for_save, &window);
-                                let _ = window.hide();
-                            } else {
-                                restore_window_position(&window, &app_handle_for_click);
-                                let _ = window.unminimize();
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                    move |tray, event| {
+                        if let TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } = event
+                        {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                if window.is_visible().unwrap_or(false) {
+                                    let _ = save_window_state(&app_handle_for_save, &window);
+                                    let _ = window.hide();
+                                } else {
+                                    restore_window_position(&window, &app_handle_for_click);
+                                    let _ = window.unminimize();
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
                             }
-                          }
                         }
-                        _ => {}
                     }
                 })
                 .build(app)
