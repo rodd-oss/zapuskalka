@@ -423,7 +423,7 @@ pub fn run() {
                             let _ = window_for_show.set_focus();
                         }
                         "quit" => {
-                            let _ = app_handle_for_tray.exit(0);
+                            app_handle_for_tray.exit(0);
                         }
                         _ => {}
                     }
