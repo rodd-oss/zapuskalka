@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
 use tar::{Archive, Builder};
-use tauri::LogicalSize;
+use tauri::{LogicalPosition, LogicalSize, Manager};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -222,6 +222,70 @@ async fn upload_file_as_form_data(
     Ok(())
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
+struct WindowState {
+    width: f64,
+    height: f64,
+    x: Option<f64>,
+    y: Option<f64>,
+}
+
+fn get_window_state_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    let app_config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| format!("Failed to get app config dir: {}", e))?;
+    std::fs::create_dir_all(&app_config_dir)
+        .map_err(|e| format!("Failed to create config dir: {}", e))?;
+    Ok(app_config_dir.join("window_state.json"))
+}
+
+fn save_window_state(app: &tauri::AppHandle, window: &tauri::WebviewWindow) -> Result<(), String> {
+    let scale_factor = window.scale_factor().unwrap_or(1.0);
+    let size = window
+        .inner_size()
+        .map_err(|e| format!("Failed to get window size: {}", e))?;
+    
+    let position = window
+        .inner_position()
+        .ok()
+        .map(|p| LogicalPosition::new(
+            p.x as f64 / scale_factor,
+            p.y as f64 / scale_factor,
+        ));
+
+    let state = WindowState {
+        width: size.width as f64 / scale_factor,
+        height: size.height as f64 / scale_factor,
+        x: position.map(|p| p.x),
+        y: position.map(|p| p.y),
+    };
+
+    let state_path = get_window_state_path(app)?;
+    let json = serde_json::to_string_pretty(&state)
+        .map_err(|e| format!("Failed to serialize window state: {}", e))?;
+
+    std::fs::write(&state_path, json)
+        .map_err(|e| format!("Failed to write window state: {}", e))?;
+
+    Ok(())
+}
+
+fn load_window_state(app: &tauri::AppHandle) -> Result<Option<WindowState>, String> {
+    let state_path = get_window_state_path(app)?;
+
+    if !state_path.exists() {
+        return Ok(None);
+    }
+
+    let json = std::fs::read_to_string(&state_path)
+        .map_err(|e| format!("Failed to read window state: {}", e))?;
+
+    serde_json::from_str(&json)
+        .map(Some)
+        .map_err(|e| format!("Failed to parse window state: {}", e))
+}
+
 fn should_set_webkit_workaround() -> bool {
     let is_appimage = std::env::var("APPIMAGE").is_ok();
 
@@ -259,32 +323,59 @@ pub fn run() {
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_os::init())
         .setup(|app| {
-            let app_ = app.handle().clone();
+            let app_handle = app.handle().clone();
+            let saved_state = load_window_state(app.handle()).ok().flatten();
+            
             let window = tauri::WebviewWindowBuilder::from_config(
                 app.handle(),
                 &app.config().app.windows[0],
             )?
-            .on_new_window(move |url, features| {
-                // Create a new window with a unique label
-                let builder = tauri::WebviewWindowBuilder::new(
-                    &app_,
-                    "opened-window", // Ideally use a counter for multiple windows
-                    tauri::WebviewUrl::External(url.clone()),
-                )
-                .window_features(features)
-                .on_document_title_changed(|window, title| {
-                    window.set_title(&title).unwrap();
-                })
-                .title(url.as_str());
+            .on_new_window({
+                let app_ = app.handle().clone();
+                move |url, features| {
+                    let builder = tauri::WebviewWindowBuilder::new(
+                        &app_,
+                        "opened-window",
+                        tauri::WebviewUrl::External(url.clone()),
+                    )
+                    .window_features(features)
+                    .on_document_title_changed(|window, title| {
+                        let _ = window.set_title(&title);
+                    })
+                    .title(url.as_str());
 
-                match builder.build() {
-                    Ok(window) => tauri::webview::NewWindowResponse::Create { window },
-                    Err(_) => tauri::webview::NewWindowResponse::Deny,
+                    match builder.build() {
+                        Ok(window) => tauri::webview::NewWindowResponse::Create { window },
+                        Err(_) => tauri::webview::NewWindowResponse::Deny,
+                    }
                 }
             })
             .build()?;
+            
             window.set_title("Zapuskalka")?;
-            window.set_min_size(Some(LogicalSize::new(800, 600)))?;
+            
+            if let Some(state) = saved_state {
+                window.set_size(LogicalSize::new(state.width, state.height))
+                    .map_err(|e| format!("Failed to set window size: {}", e))?;
+                if let (Some(x), Some(y)) = (state.x, state.y) {
+                    window.set_position(LogicalPosition::new(x, y))
+                        .map_err(|e| format!("Failed to set window position: {}", e))?;
+                }
+            } else {
+                window.set_min_size(Some(LogicalSize::new(800, 600)))?;
+            }
+            
+            let window_clone = window.clone();
+            let app_handle_clone = app_handle.clone();
+            // TODO: Save window state on resize and move with debounce
+            window.on_window_event(move |event| {
+                if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+                    if let Err(e) = save_window_state(&app_handle_clone, &window_clone) {
+                        eprintln!("Failed to save window state: {}", e);
+                    }
+                }
+            });
+            
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
