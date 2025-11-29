@@ -439,9 +439,7 @@ pub fn run() {
                             }
                           }
                         }
-                        _ => {
-                          println!("unhandled event {event:?}");
-                        }
+                        _ => {}
                     }
                 })
                 .build(app)
