@@ -4,7 +4,13 @@ use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
 use tar::{Archive, Builder};
-use tauri::{LogicalPosition, LogicalSize, Manager};
+use tauri::{
+    LogicalPosition, 
+    LogicalSize, 
+    Manager,
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
+    menu::{Menu, MenuItem}
+};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -369,12 +375,75 @@ pub fn run() {
             let app_handle_clone = app_handle.clone();
             // TODO: Save window state on resize and move with debounce
             window.on_window_event(move |event| {
-                if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     if let Err(e) = save_window_state(&app_handle_clone, &window_clone) {
                         eprintln!("Failed to save window state: {}", e);
                     }
+                    api.prevent_close();
+                    let _ = window_clone.hide();
                 }
             });
+
+            let app_handle_for_tray = app.handle().clone();
+            let app_handle_for_menu = app.handle().clone();
+            let show_i = MenuItem::with_id(&app_handle_for_menu, "show", "Показать", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(&app_handle_for_menu, "quit", "Выход", true, None::<&str>)?;
+            let menu = Menu::with_items(&app_handle_for_menu, &[&show_i, &quit_i])?;
+
+            let restore_window_position = |window: &tauri::WebviewWindow, app_handle: &tauri::AppHandle| {
+                if let Ok(Some(state)) = load_window_state(app_handle) {
+                    if let (Some(x), Some(y)) = (state.x, state.y) {
+                        let _ = window.set_position(LogicalPosition::new(x, y));
+                    }
+                }
+            };
+
+            let app_handle_for_show = app.handle().clone();
+            let window_for_show = window.clone();
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Zapuskalka")    
+                .menu(&menu)
+                .on_menu_event(move |_app, event| {
+                    match event.id.as_ref() {
+                        "show" => {
+                            restore_window_position(&window_for_show, &app_handle_for_show);
+                            let _ = window_for_show.show();
+                            let _ = window_for_show.set_focus();
+                        }
+                        "quit" => {
+                            let _ = app_handle_for_tray.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .on_tray_icon_event({
+                    let app_handle_for_click = app.handle().clone();
+                    let app_handle_for_save = app.handle().clone();
+                    move |tray, event| {
+                        if let TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } = event
+                        {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                if window.is_visible().unwrap_or(false) {
+                                    let _ = save_window_state(&app_handle_for_save, &window);
+                                    let _ = window.hide();
+                                } else {
+                                    restore_window_position(&window, &app_handle_for_click);
+                                    let _ = window.unminimize();
+                                    let _ = window.show();
+                                    let _ = window.set_focus();
+                                }
+                            }
+                        }
+                    }
+                })
+                .build(app)
+                .map_err(|e| format!("Failed to create tray icon: {}", e))?;
             
             Ok(())
         })
