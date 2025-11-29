@@ -391,10 +391,21 @@ pub fn run() {
             let menu = Menu::with_items(&app_handle_for_menu, &[&show_i, &quit_i])?;
 
             let restore_window_position = |window: &tauri::WebviewWindow, app_handle: &tauri::AppHandle| {
-                if let Ok(Some(state)) = load_window_state(app_handle) {
-                    if let (Some(x), Some(y)) = (state.x, state.y) {
-                        let _ = window.set_position(LogicalPosition::new(x, y));
+                let (x, y) = match load_window_state(app_handle) {
+                    Ok(Some(state)) => {
+                        (state.x.unwrap_or(0.0), state.y.unwrap_or(0.0))
                     }
+                    Ok(None) => {
+                        (0.0, 0.0)
+                    }
+                    Err(e) => {
+                        eprintln!("Failed to load window state: {}", e);
+                        (0.0, 0.0)
+                    }
+                };
+
+                if let Err(e) = window.set_position(LogicalPosition::new(x, y)) {
+                    eprintln!("Failed to restore window position: {}", e);
                 }
             };
 
