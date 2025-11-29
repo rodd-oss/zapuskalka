@@ -10,6 +10,49 @@ on:
 
 jobs:
   check:
+    name: Проверка кода
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./launcher-rust/src-tauri -> target"
+
+      - name: install frontend dependencies
+        working-directory: ./
+        run: bun install
+
+      - name: Проверка TypeScript типов (frontend)
+        working-directory: launcher-rust
+        run: bunx vue-tsc --noEmit
+
+      - name: Проверка ESLint (frontend)
+        working-directory: launcher-rust
+        run: bun lint
+
+      - name: Проверка Rust кода (cargo check)
+        working-directory: launcher-rust/src-tauri
+        run: cargo check --all-targets
+
+      - name: Проверка Rust кода (clippy)
+        working-directory: launcher-rust/src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Проверка форматирования Rust кода
+        working-directory: launcher-rust/src-tauri
+        run: cargo fmt --all -- --check
+
+  build:
+    name: Сборка приложения
+    needs: check
     strategy:
       fail-fast: false
       matrix:
@@ -44,7 +87,6 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Rust cache
@@ -55,26 +97,6 @@ jobs:
       - name: install frontend dependencies
         working-directory: ./
         run: bun install
-
-      - name: Проверка TypeScript типов (frontend)
-        working-directory: launcher-rust
-        run: bunx vue-tsc --noEmit
-
-      - name: Проверка ESLint (frontend)
-        working-directory: launcher-rust
-        run: bun lint
-
-      - name: Проверка Rust кода (cargo check)
-        working-directory: launcher-rust/src-tauri
-        run: cargo check --all-targets
-
-      - name: Проверка Rust кода (clippy)
-        working-directory: launcher-rust/src-tauri
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Проверка форматирования Rust кода
-        working-directory: launcher-rust/src-tauri
-        run: cargo fmt --all -- --check
 
       - name: Сборка приложения
         working-directory: launcher-rust
