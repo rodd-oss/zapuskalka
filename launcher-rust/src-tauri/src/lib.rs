@@ -367,7 +367,7 @@ pub fn run() {
             
             let window_clone = window.clone();
             let app_handle_clone = app_handle.clone();
-            // TODO: Add other events to save the window state and use debounce
+            // TODO: Save window state on resize and move with debounce
             window.on_window_event(move |event| {
                 if matches!(event, tauri::WindowEvent::CloseRequested { .. }) {
                     if let Err(e) = save_window_state(&app_handle_clone, &window_clone) {
