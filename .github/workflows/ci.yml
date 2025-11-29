@@ -58,11 +58,11 @@ jobs:
 
       - name: Проверка TypeScript типов (frontend)
         working-directory: launcher-rust
-        run: npx vue-tsc --noEmit
+        run: bunx vue-tsc --noEmit
 
       - name: Проверка ESLint (frontend)
         working-directory: launcher-rust
-        run: npx eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts
+        run: bun lint
 
       - name: Проверка Rust кода (cargo check)
         working-directory: launcher-rust/src-tauri
