@@ -6,6 +6,7 @@ import { usePocketBase } from '@/lib/usePocketbase'
 import { AppsResponse, RecordIdString, type AppBuildsResponse } from 'backend-api'
 import { ref } from 'vue'
 import * as path from '@tauri-apps/api/path'
+import * as z from 'zod'
 import { download } from '@tauri-apps/plugin-upload'
 import {
   exists,
@@ -30,13 +31,15 @@ const safeJsonParse = <T,>(str: string) => {
   }
 }
 
-interface AppConfig {
-  id: RecordIdString
-  buildId: string
-  installDir: string
-  storageDir: string
-  entrypoint: string
-}
+const ZAppConfig = z.object({
+  id: z.custom<RecordIdString>((val) => typeof val === 'string'),
+  buildId: z.custom<RecordIdString>((val) => typeof val === 'string'),
+  installDir: z.string().min(1),
+  storageDir: z.string().default(''),
+  entrypoint: z.string().default(''),
+})
+
+type AppConfig = z.infer<typeof ZAppConfig>
 
 const { build, app } = defineProps<{ build: AppBuildsResponse; app: AppsResponse }>()
 
@@ -63,28 +66,34 @@ const lastAction = ref<ActionType>(null)
 
 const calculateState = async () => {
   state.value = undefined
+  let file: string
   try {
-    const file = await readTextFile(`apps/${app.id}.json`, {
+    file = await readTextFile(`apps/${app.id}.json`, {
       baseDir: BaseDirectory.AppConfig,
     })
-    config.value = safeJsonParse(file)
   } catch {
     state.value = 'not_installed'
     config.value = undefined
     return
   }
-  if (config.value == undefined) {
+  const fileContent = safeJsonParse<AppConfig>(file)
+  if (fileContent == undefined) {
     state.value = 'not_installed'
     // Bad config need to delete
     await removeAppConfig()
     return
   }
-  if (config.value.installDir == '') {
+
+  const { error, data } = ZAppConfig.safeParse(safeJsonParse<AppConfig>(file))
+  if (error !== undefined) {
     state.value = 'not_installed'
     // Bad config need to delete
     await removeAppConfig()
     return
   }
+
+  config.value = data
+
   const installDirExists = await exists(config.value.installDir)
   if (!installDirExists) {
     state.value = 'not_installed'
@@ -92,10 +101,24 @@ const calculateState = async () => {
     await removeAppConfig()
     return
   }
-  if (config.value.buildId != build.id || config.value.entrypoint != build.entrypoint) {
+  if (config.value.buildId != build.id) {
     state.value = 'need_update'
     return
   }
+
+  if (config.value.storageDir == '') {
+    const appDir = await path.appDataDir()
+    config.value.storageDir = await path.join(appDir, 'storage')
+    state.value = 'need_update'
+    return
+  }
+
+  // Config need update
+  if (config.value.entrypoint != build.entrypoint) {
+    config.value.entrypoint = build.entrypoint
+  }
+
+  saveAppConfig(config.value)
   state.value = 'ready'
 }
 
@@ -334,7 +357,7 @@ const deleteApp = async () => {
     </button>
   </div>
 
-  <div v-else class="flex flex-col">
+  <div v-else class="flex">
     <div class="flex flex-row overflow-hidden rounded bg-emerald-600">
       <button
         v-if="state == 'need_update'"
@@ -360,10 +383,10 @@ const deleteApp = async () => {
       >
         Close
       </button>
-      <SeparatorHorizontal />
       <Popover.Root class="h-full">
         <Popover.Trigger
-          class="inline-flex cursor-pointer items-center justify-center p-2 text-amber-50 hover:bg-emerald-400"
+          class="inline-flex cursor-pointer items-center justify-center p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="activeAction !== null"
         >
           <EllipsisVertical :size="16" />
         </Popover.Trigger>
