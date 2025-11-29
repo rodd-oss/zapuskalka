@@ -379,19 +379,27 @@ pub fn run() {
                     if let Err(e) = save_window_state(&app_handle_clone, &window_clone) {
                         eprintln!("Failed to save window state: {}", e);
                     }
-                    // Предотвращаем закрытие окна
                     api.prevent_close();
-                    // Скрываем окно вместо закрытия
                     let _ = window_clone.hide();
                 }
             });
 
             let app_handle_for_tray = app.handle().clone();
-            let window_for_tray = window.clone();
-            let show_i = MenuItem::with_id(&app_handle_for_tray, "show", "Показать", true, None::<&str>)?;
-            let quit_i = MenuItem::with_id(&app_handle_for_tray, "quit", "Выход", true, None::<&str>)?;
-            let menu = Menu::with_items(&app_handle_for_tray, &[&show_i, &quit_i])?;
+            let app_handle_for_menu = app.handle().clone();
+            let show_i = MenuItem::with_id(&app_handle_for_menu, "show", "Показать", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(&app_handle_for_menu, "quit", "Выход", true, None::<&str>)?;
+            let menu = Menu::with_items(&app_handle_for_menu, &[&show_i, &quit_i])?;
 
+            let restore_window_position = |window: &tauri::WebviewWindow, app_handle: &tauri::AppHandle| {
+                if let Ok(Some(state)) = load_window_state(app_handle) {
+                    if let (Some(x), Some(y)) = (state.x, state.y) {
+                        let _ = window.set_position(LogicalPosition::new(x, y));
+                    }
+                }
+            };
+
+            let app_handle_for_show = app.handle().clone();
+            let window_for_show = window.clone();
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("Zapuskalka")    
@@ -399,8 +407,9 @@ pub fn run() {
                 .on_menu_event(move |_app, event| {
                     match event.id.as_ref() {
                         "show" => {
-                            let _ = window_for_tray.show();
-                            let _ = window_for_tray.set_focus();
+                            restore_window_position(&window_for_show, &app_handle_for_show);
+                            let _ = window_for_show.show();
+                            let _ = window_for_show.set_focus();
                         }
                         "quit" => {
                             let _ = app_handle_for_tray.exit(0);
@@ -408,21 +417,31 @@ pub fn run() {
                         _ => {}
                     }
                 })
-                .on_tray_icon_event(|tray, event| match event {
-                    TrayIconEvent::Click {
-                      button: MouseButton::Left,
-                      button_state: MouseButtonState::Up,
-                      ..
-                    } => {
-                      let app = tray.app_handle();
-                      if let Some(window) = app.get_webview_window("main") {
-                        let _ = window.unminimize();
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                      }
-                    }
-                    _ => {
-                      println!("unhandled event {event:?}");
+                .on_tray_icon_event({
+                    let app_handle_for_click = app.handle().clone();
+                    let app_handle_for_save = app.handle().clone();
+                    move |tray, event| match event {
+                        TrayIconEvent::Click {
+                          button: MouseButton::Left,
+                          button_state: MouseButtonState::Up,
+                          ..
+                        } => {
+                          let app = tray.app_handle();
+                          if let Some(window) = app.get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                let _ = save_window_state(&app_handle_for_save, &window);
+                                let _ = window.hide();
+                            } else {
+                                restore_window_position(&window, &app_handle_for_click);
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                          }
+                        }
+                        _ => {
+                          println!("unhandled event {event:?}");
+                        }
                     }
                 })
                 .build(app)
