@@ -5,11 +5,9 @@ use std::io::{BufWriter, Read};
 use std::path::Path;
 use tar::{Archive, Builder};
 use tauri::{
-    LogicalPosition, 
-    LogicalSize, 
-    Manager,
+    menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    menu::{Menu, MenuItem}
+    LogicalPosition, LogicalSize, Manager,
 };
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -251,14 +249,11 @@ fn save_window_state(app: &tauri::AppHandle, window: &tauri::WebviewWindow) -> R
     let size = window
         .inner_size()
         .map_err(|e| format!("Failed to get window size: {}", e))?;
-    
+
     let position = window
         .inner_position()
         .ok()
-        .map(|p| LogicalPosition::new(
-            p.x as f64 / scale_factor,
-            p.y as f64 / scale_factor,
-        ));
+        .map(|p| LogicalPosition::new(p.x as f64 / scale_factor, p.y as f64 / scale_factor));
 
     let state = WindowState {
         width: size.width as f64 / scale_factor,
@@ -331,7 +326,7 @@ pub fn run() {
         .setup(|app| {
             let app_handle = app.handle().clone();
             let saved_state = load_window_state(app.handle()).ok().flatten();
-            
+
             let window = tauri::WebviewWindowBuilder::from_config(
                 app.handle(),
                 &app.config().app.windows[0],
@@ -357,20 +352,22 @@ pub fn run() {
                 }
             })
             .build()?;
-            
+
             window.set_title("Zapuskalka")?;
-            
+
             if let Some(state) = saved_state {
-                window.set_size(LogicalSize::new(state.width, state.height))
+                window
+                    .set_size(LogicalSize::new(state.width, state.height))
                     .map_err(|e| format!("Failed to set window size: {}", e))?;
                 if let (Some(x), Some(y)) = (state.x, state.y) {
-                    window.set_position(LogicalPosition::new(x, y))
+                    window
+                        .set_position(LogicalPosition::new(x, y))
                         .map_err(|e| format!("Failed to set window position: {}", e))?;
                 }
             } else {
                 window.set_min_size(Some(LogicalSize::new(800, 600)))?;
             }
-            
+
             let window_clone = window.clone();
             let app_handle_clone = app_handle.clone();
             // TODO: Save window state on resize and move with debounce
@@ -386,36 +383,44 @@ pub fn run() {
 
             let app_handle_for_tray = app.handle().clone();
             let app_handle_for_menu = app.handle().clone();
-            let show_i = MenuItem::with_id(&app_handle_for_menu, "show", "Показать", true, None::<&str>)?;
-            let quit_i = MenuItem::with_id(&app_handle_for_menu, "quit", "Выход", true, None::<&str>)?;
+            let show_i =
+                MenuItem::with_id(&app_handle_for_menu, "show", "Показать", true, None::<&str>)?;
+            let quit_i =
+                MenuItem::with_id(&app_handle_for_menu, "quit", "Выход", true, None::<&str>)?;
             let menu = Menu::with_items(&app_handle_for_menu, &[&show_i, &quit_i])?;
 
-            let restore_window_position = |window: &tauri::WebviewWindow, app_handle: &tauri::AppHandle| {
-                if let Ok(Some(state)) = load_window_state(app_handle) {
-                    if let (Some(x), Some(y)) = (state.x, state.y) {
-                        let _ = window.set_position(LogicalPosition::new(x, y));
+            let restore_window_position =
+                |window: &tauri::WebviewWindow, app_handle: &tauri::AppHandle| {
+                    let (x, y) = match load_window_state(app_handle) {
+                        Ok(Some(state)) => (state.x.unwrap_or(0.0), state.y.unwrap_or(0.0)),
+                        Ok(None) => (0.0, 0.0),
+                        Err(e) => {
+                            eprintln!("Failed to load window state: {}", e);
+                            (0.0, 0.0)
+                        }
+                    };
+
+                    if let Err(e) = window.set_position(LogicalPosition::new(x, y)) {
+                        eprintln!("Failed to restore window position: {}", e);
                     }
-                }
-            };
+                };
 
             let app_handle_for_show = app.handle().clone();
             let window_for_show = window.clone();
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("Zapuskalka")    
+                .tooltip("Zapuskalka")
                 .menu(&menu)
-                .on_menu_event(move |_app, event| {
-                    match event.id.as_ref() {
-                        "show" => {
-                            restore_window_position(&window_for_show, &app_handle_for_show);
-                            let _ = window_for_show.show();
-                            let _ = window_for_show.set_focus();
-                        }
-                        "quit" => {
-                            let _ = app_handle_for_tray.exit(0);
-                        }
-                        _ => {}
+                .on_menu_event(move |_app, event| match event.id.as_ref() {
+                    "show" => {
+                        restore_window_position(&window_for_show, &app_handle_for_show);
+                        let _ = window_for_show.show();
+                        let _ = window_for_show.set_focus();
                     }
+                    "quit" => {
+                        app_handle_for_tray.exit(0);
+                    }
+                    _ => {}
                 })
                 .on_tray_icon_event({
                     let app_handle_for_click = app.handle().clone();
@@ -444,7 +449,7 @@ pub fn run() {
                 })
                 .build(app)
                 .map_err(|e| format!("Failed to create tray icon: {}", e))?;
-            
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
