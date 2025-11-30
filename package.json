@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "typegen": "pocketbase-typegen --db backend/pb_data/data.db --out packages/backend-api/pocketbase-types.ts",
-    "release": "bun run scripts/bump-version.ts"
+    "release": "bun run scripts/bump-version.ts",
+    "prepare-ci": "bun run scripts/prepare-ci-config.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

@@ -116,9 +116,13 @@ jobs:
         working-directory: ./
         run: bun install
 
+      - name: Подготовка конфига для CI
+        working-directory: ./
+        run: bun run prepare-ci
+
       - name: Сборка приложения
         working-directory: launcher-rust
-        run: bun run tauri build ${{ matrix.args }} --config src-tauri/tauri.conf.ci.json
+        run: bun run tauri build ${{ matrix.args }}
         env:
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
