@@ -10,13 +10,13 @@ on:
 
 jobs:
   check-frontend:
-    name: Check launcher ui
+    name: Check frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install frontend dependencies
+      - name: Install Dependencies
         working-directory: ./
         run: bun install
 
@@ -33,13 +33,13 @@ jobs:
         run: bun run check:format
 
   check-launcher-ui:
-    name: Check launcher ui
+    name: Check Launcher UI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install frontend dependencies
+      - name: Install Dependencies
         working-directory: ./
         run: bun install
 
@@ -56,12 +56,12 @@ jobs:
         run: bun run check:format
 
   check-launcher-core:
-    name: Check launcher core
+    name: Check Launcher Core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: install dependencies
+      - name: install Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libappindicator3-dev librsvg2-dev patchelf libglib2.0-dev \
