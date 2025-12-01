@@ -2,7 +2,7 @@ import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { newApiClient } from 'backend-api'
 
-const apiClient = newApiClient(import.meta.env.VITE_BACKEND_URL)
+const apiClient = newApiClient(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8090')
 
 const authStore = reactive({
   isSuperuser: apiClient.authStore.isSuperuser,
