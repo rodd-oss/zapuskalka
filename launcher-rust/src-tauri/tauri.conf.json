@@ -45,6 +45,11 @@
       "endpoints": [
         "https://github.com/rodd-oss/zapuskalka/releases/latest/download/latest.json"
       ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["zapuskalka"]
+      }
     }
   }
 }
