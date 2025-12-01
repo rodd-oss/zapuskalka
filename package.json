@@ -6,7 +6,7 @@
   "workspaces": [
     "launcher-rust",
     "packages/**",
-    "backend/web",
+    "frontend",
     "!packages/**/test/**",
     "!packages/**/template/**"
   ],

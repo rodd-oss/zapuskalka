@@ -26,6 +26,7 @@ tasks:
     desc: Run backend and launcher together
     deps:
       - dev-backend
+      - dev-frontend
       - dev-launcher
       - dev-typegen
 
@@ -35,17 +36,23 @@ tasks:
     cmds:
       - go run -tags automigrate . serve
 
+  dev-frontend:
+    desc: Run frontend server
+    dir: ./frontend
+    cmds:
+      - bun run dev
+
   dev-launcher:
     desc: Run launcher
     dir: ./launcher-rust
     cmds:
       - bun run tauri dev
 
+  dev-typegen:
+    cmds:
+      - bun run scripts/typegen-watcher.ts
+
   sign-launcher:
     dir: ./launcher-rust
     cmds:
       - bunx tauri signer generate -w ~/.tauri/zapuskalka.key
-
-  dev-typegen:
-    cmds:
-      - bun run scripts/typegen-watcher.ts
