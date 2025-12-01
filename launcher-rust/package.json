@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "check": "vue-tsc --noEmit",
+    "check": "run-p check:lsp check:lint check:format",
+    "check:lsp": "vue-tsc --noEmit",
+    "check:lint": "eslint .",
+    "check:format": "prettier --check ./src",
+    "format": "prettier --write --experimental-cli src/",
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
-    "tauri": "tauri",
-    "lint": "eslint ."
+    "tauri": "tauri"
   },
   "dependencies": {
     "@ark-ui/vue": "^5.28.0",
@@ -45,6 +48,7 @@
     "@vue/tsconfig": "^0.8.1",
     "eslint": "^9.37.0",
     "eslint-plugin-vue": "~10.5.0",
+    "npm-run-all2": "^8.0.4",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "typescript": "~5.9.0",
