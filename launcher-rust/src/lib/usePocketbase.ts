@@ -1,8 +1,10 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { newApiClient } from 'backend-api'
+import { newApiClient, UsersRecord } from 'backend-api'
 
 const apiClient = newApiClient(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8090')
+
+const user = ref<UsersRecord | null>(apiClient.authStore.record as unknown as UsersRecord)
 
 const authStore = reactive({
   isSuperuser: apiClient.authStore.isSuperuser,
@@ -15,6 +17,7 @@ const unsub = apiClient.authStore.onChange((newToken, newRecord) => {
   authStore.isSuperuser = apiClient.authStore.isSuperuser
   authStore.isValid = apiClient.authStore.isValid
   authStore.record = newRecord
+  user.value = newRecord as unknown as UsersRecord
   authStore.token = newToken
 })
 
@@ -77,11 +80,25 @@ export const useAuth = () => {
     return pb.collection('users').listAuthMethods()
   }
 
+  const avatarURL = computed(() => {
+    if (user.value == null) {
+      return undefined
+    }
+
+    if (user.value.avatar == undefined) {
+      return undefined
+    }
+
+    return pb.files.getURL(user.value, user.value.avatar)
+  })
+
   return {
     isSuperuser: computed(() => authStore.isSuperuser),
     isValid: computed(() => authStore.isValid),
     record: computed(() => authStore.record),
     token: computed(() => authStore.token),
+    user: user,
+    avatarURL: avatarURL,
     logout,
     authUserWithPassword,
     authWithOAuth2,

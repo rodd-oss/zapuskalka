@@ -2,30 +2,32 @@
 import { ref } from 'vue'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/usePocketbase'
-// import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import type { AuthMethodsList } from 'pocketbase'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { onOpenUrl } from '@tauri-apps/plugin-deep-link'
 
 const auth = useAuth()
-// const router = useRouter()
+const router = useRouter()
 // TODO: Implement OTP with email
 // const email = ref('')
 const authMethods = ref<AuthMethodsList>()
 
 auth.listAuthMethods().then((methods) => (authMethods.value = methods))
 
-// const onLoginWithOAuth = async (provider: string) => {
-//   await auth.authWithOAuth2(provider)
-//   router.push('/')
-// }
+const onLoginWithOAuth = async (provider: string) => {
+  await auth.authWithOAuth2(provider)
+  router.push('/')
+}
 
 const AuthWithBrowser = async () => {
   // throw Error('Not implemented')
-  await openUrl(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8090'}/auth/login?isApp=true`)
+  await openUrl(
+    `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:8090'}/auth/login?isApp=true`,
+  )
   await onOpenUrl((urls) => {
-    console.log('deep link:', urls);
-  });
+    console.log('deep link:', urls)
+  })
 }
 </script>
 
@@ -36,7 +38,7 @@ const AuthWithBrowser = async () => {
       <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-3">
           <template v-if="authMethods && authMethods.oauth2.enabled">
-            <!-- <button
+            <button
               class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               v-for="provider in authMethods.oauth2.providers"
@@ -45,10 +47,13 @@ const AuthWithBrowser = async () => {
               @click="onLoginWithOAuth(provider.name)"
             >
               Login with {{ provider.displayName }}
-            </button> -->
+            </button>
             <button
               class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              type="button" :disabled="auth.loading.value" @click="AuthWithBrowser">
+              type="button"
+              :disabled="auth.loading.value"
+              @click="AuthWithBrowser"
+            >
               Auth with browser
             </button>
           </template>
