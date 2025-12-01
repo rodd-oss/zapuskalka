@@ -385,9 +385,9 @@ pub fn run() {
             let app_handle_for_tray = app.handle().clone();
             let app_handle_for_menu = app.handle().clone();
             let show_i =
-                MenuItem::with_id(&app_handle_for_menu, "show", "Показать", true, None::<&str>)?;
+                MenuItem::with_id(&app_handle_for_menu, "show", "Open", true, None::<&str>)?;
             let quit_i =
-                MenuItem::with_id(&app_handle_for_menu, "quit", "Выход", true, None::<&str>)?;
+                MenuItem::with_id(&app_handle_for_menu, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(&app_handle_for_menu, &[&show_i, &quit_i])?;
 
             let restore_window_position =
