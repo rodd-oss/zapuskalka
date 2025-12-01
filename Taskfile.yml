@@ -10,12 +10,18 @@ tasks:
     desc: Build backend and launcher together
     deps:
       - task: build-backend
+      - task: build-frontend
       - task: build-launcher
 
   build-backend:
     dir: ./backend
     cmds:
       - go build -o dist/main.bin .
+
+  build-frontend:
+    dir: ./frontend
+    cmds:
+      - bun run build
 
   build-launcher:
     dir: ./launcher-rust

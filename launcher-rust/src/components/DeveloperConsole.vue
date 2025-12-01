@@ -4,13 +4,13 @@ import { Channel, invoke } from '@tauri-apps/api/core'
 import { usePocketBase } from '@/lib/usePocketbase'
 import { ref } from 'vue'
 import {
-  AppBranchesResponse,
+  type AppBranchesResponse,
   AppBuildsArchOptions,
   AppBuildsInstallRulesOptions,
   AppBuildsOsOptions,
-  AppsResponse,
+  type AppsResponse,
   Collections,
-  Create,
+  type Create,
 } from 'backend-api'
 
 const pb = usePocketBase()

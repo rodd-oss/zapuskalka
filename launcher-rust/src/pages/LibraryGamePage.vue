@@ -4,7 +4,7 @@ import {
   type AppsResponse,
   type AppBuildsResponse,
   type AppBuildsArchOptions,
-  PublishersResponse,
+  type PublishersResponse,
 } from 'backend-api'
 import { useAuth, useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'

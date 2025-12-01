@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory, RouteLocationNormalizedGeneric } from 'vue-router'
+import { createRouter, createWebHashHistory, type RouteLocationNormalizedGeneric } from 'vue-router'
 import { useAuth } from '@/lib/usePocketbase'
 // import HomePage from '@/pages/HomePage.vue'
 import AuthPage from '@/pages/AuthPage.vue'

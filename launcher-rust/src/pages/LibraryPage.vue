@@ -7,7 +7,7 @@ import { onMounted, ref } from 'vue'
 import { computed } from 'vue'
 import { ScrollArea } from '@ark-ui/vue'
 import Input from '@/components/ui/Input.vue'
-import { AppsResponse } from 'backend-api'
+import { type AppsResponse } from 'backend-api'
 
 const games = ref<AppsResponse[]>([])
 

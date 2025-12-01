@@ -1,6 +1,6 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { newApiClient, UsersRecord } from 'backend-api'
+import { newApiClient, type UsersRecord } from 'backend-api'
 
 const apiClient = newApiClient(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8090')
 

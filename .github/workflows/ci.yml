@@ -9,27 +9,27 @@ on:
       - main
 
 jobs:
-  check-frontend:
-    name: Проверка фронтенда
+  check-launcher-ui:
+    name: Check launcher ui
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
-      - name: install frontend dependencies
+      - name: Install frontend dependencies
         working-directory: ./
         run: bun install
 
-      - name: Проверка TypeScript типов (frontend)
+      - name: Check LSP (launcher-ui)
         working-directory: launcher-rust
-        run: bunx vue-tsc --noEmit
+        run: bun run check
 
-      - name: Проверка ESLint (frontend)
+      - name: Check Lint (launcher-ui)
         working-directory: launcher-rust
-        run: bun lint
+        run: bun run lint
 
-  check-rust:
-    name: Проверка Rust
+  check-launcher-core:
+    name: Check launcher core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +46,7 @@ jobs:
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
 
-      - name: install Rust stable
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -56,21 +56,21 @@ jobs:
         with:
           workspaces: "./launcher-rust/src-tauri -> target"
 
-      - name: Проверка Rust кода (cargo check)
+      - name: Check LSP (cargo check)
         working-directory: launcher-rust/src-tauri
         run: cargo check --all-targets
 
-      - name: Проверка Rust кода (clippy)
+      - name: Check Lint (clippy)
         working-directory: launcher-rust/src-tauri
         run: cargo clippy --all-targets -- -D warnings
 
-      - name: Проверка форматирования Rust кода
+      - name: Check Format
         working-directory: launcher-rust/src-tauri
         run: cargo fmt --all -- --check
 
   build:
-    name: Сборка приложения
-    needs: [check-frontend, check-rust]
+    name: Build Launcher
+    needs: [check-launcher-ui, check-launcher-core]
     strategy:
       fail-fast: false
       matrix:
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
 
-      - name: install dependencies (ubuntu only)
+      - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04'
         run: |
           sudo apt-get update
@@ -102,7 +102,7 @@ jobs:
             gir1.2-javascriptcoregtk-4.1=2.44.0-2 \
             gir1.2-webkit2-4.1=2.44.0-2
 
-      - name: install Rust stable
+      - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -112,15 +112,15 @@ jobs:
         with:
           workspaces: "./launcher-rust/src-tauri -> target"
 
-      - name: install frontend dependencies
+      - name: Install node modules
         working-directory: ./
         run: bun install
 
-      - name: Подготовка конфига для CI
+      - name: Prepare tauri config for ci check
         working-directory: ./
         run: bun run prepare-ci
 
-      - name: Сборка приложения
+      - name: Build
         working-directory: launcher-rust
         run: bun run tauri build ${{ matrix.args }}
         env:
