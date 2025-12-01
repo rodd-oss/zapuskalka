@@ -14,7 +14,9 @@ const auth = useAuthStore()
 const toast = useToast()
 
 const isAppMode = computed(() => props.isApp === true || props.isApp === 'true')
-const appDeepLink = computed(() => `zapuskalka://auth?token=${auth.token}&user=${JSON.stringify(auth.user)}`)
+const appDeepLink = computed(
+  () => `zapuskalka://auth?token=${auth.token}&user=${JSON.stringify(auth.user)}`,
+)
 
 const fields: AuthFormField[] = [
   {
@@ -92,9 +94,7 @@ onMounted(() => {
         </div>
       </template>
       <template v-else>
-        <UAuthForm
-          title="Sign In"
-          :providers="providers"/>
+        <UAuthForm title="Sign In" :providers="providers" />
       </template>
     </UPageCard>
   </div>

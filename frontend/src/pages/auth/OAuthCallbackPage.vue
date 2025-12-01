@@ -109,9 +109,7 @@ onMounted(async () => {
         <div class="text-center text-red-500">
           <UIcon name="i-lucide-alert-circle" class="h-8 w-8 mx-auto mb-2" />
           <p>{{ error }}</p>
-          <UButton class="mt-4" variant="outline" to="/auth/login">
-            Back to Login
-          </UButton>
+          <UButton class="mt-4" variant="outline" to="/auth/login"> Back to Login </UButton>
         </div>
       </template>
 
