@@ -13,6 +13,8 @@ const router = useRouter()
 // const email = ref('')
 const authMethods = ref<AuthMethodsList>()
 
+const isDev = ref(import.meta.env.DEV)
+
 auth.listAuthMethods().then((methods) => (authMethods.value = methods))
 
 const onLoginWithOAuth = async (provider: string) => {
@@ -49,6 +51,7 @@ const AuthWithBrowser = async () => {
               Login with {{ provider.displayName }}
             </button>
             <button
+              v-if="isDev"
               class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               :disabled="auth.loading.value"

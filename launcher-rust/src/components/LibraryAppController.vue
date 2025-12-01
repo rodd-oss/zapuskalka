@@ -383,7 +383,7 @@ const deleteApp = async () => {
       >
         Close
       </button>
-      <Popover.Root class="h-full">
+      <Popover.Root>
         <Popover.Trigger
           class="inline-flex cursor-pointer items-center justify-center p-2 text-amber-50 hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="activeAction !== null"

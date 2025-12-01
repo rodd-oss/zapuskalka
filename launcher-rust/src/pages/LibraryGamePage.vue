@@ -6,7 +6,7 @@ import {
   type AppBuildsArchOptions,
   type PublishersResponse,
 } from 'backend-api'
-import { useAuth, useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
+import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -16,11 +16,10 @@ import { Select, createListCollection } from '@ark-ui/vue/select'
 import { ChevronDownIcon } from 'lucide-vue-next'
 import { computed } from 'vue'
 import LibraryAppController from '@/components/LibraryAppController.vue'
-import DeveloperConsole from '@/components/DeveloperConsole.vue'
+import DeveloperMenu from '@/components/DeveloperMenu.vue'
 
 useAuthenticated()
 const pb = usePocketBase()
-const auth = useAuth()
 const route = useRoute()
 
 const app = ref<AppsResponse>()
@@ -118,57 +117,53 @@ watch(
     <h1 class="text-6xl">{{ app.title }}</h1>
     <h3 class="text-xl">from {{ publisher.title }}</h3>
 
-    <div class="w-full max-w-sm">
-      <Select.Root :collection="collection" v-model="selectedBranchesIds">
-        <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-          Branch
-        </Select.Label>
-        <Select.Control>
-          <Select.Trigger
-            class="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-gray-100 dark:focus:ring-gray-100"
-          >
-            <Select.ValueText placeholder="Select branch" />
-            <Select.Indicator>
-              <ChevronDownIcon class="h-4 w-4 text-gray-500 dark:text-gray-400" />
-            </Select.Indicator>
-          </Select.Trigger>
-        </Select.Control>
-        <Teleport to="body">
-          <Select.Positioner>
-            <Select.Content
-              class="z-50 min-w-(--reference-width) rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+    <div class="flex justify-between">
+      <div class="w-full max-w-sm gap-2">
+        <Select.Root :collection="collection" v-model="selectedBranchesIds">
+          <Select.Label class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+            Branch
+          </Select.Label>
+          <Select.Control>
+            <Select.Trigger
+              class="flex h-10 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-gray-100 dark:focus:ring-gray-100"
             >
-              <Select.ItemGroup>
-                <Select.Item
-                  v-for="item in collection.items"
-                  :key="item.name"
-                  :item="item.id"
-                  class="relative flex cursor-pointer items-center px-3 py-2 text-sm text-gray-900 select-none data-highlighted:bg-gray-100 data-[state=checked]:bg-gray-50 dark:text-gray-100 dark:data-highlighted:bg-gray-700 dark:data-[state=checked]:bg-gray-700"
-                >
-                  <Select.ItemText>{{ item.name }}</Select.ItemText>
-                  <Select.ItemIndicator class="absolute right-3 text-blue-600 dark:text-blue-400">
-                    ✓
-                  </Select.ItemIndicator>
-                </Select.Item>
-              </Select.ItemGroup>
-            </Select.Content>
-          </Select.Positioner>
-        </Teleport>
-        <Select.HiddenSelect />
-      </Select.Root>
+              <Select.ValueText placeholder="Select branch" />
+              <Select.Indicator>
+                <ChevronDownIcon class="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              </Select.Indicator>
+            </Select.Trigger>
+          </Select.Control>
+          <Teleport to="body">
+            <Select.Positioner>
+              <Select.Content
+                class="z-50 min-w-(--reference-width) rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+              >
+                <Select.ItemGroup>
+                  <Select.Item
+                    v-for="item in collection.items"
+                    :key="item.name"
+                    :item="item.id"
+                    class="relative flex cursor-pointer items-center px-3 py-2 text-sm text-gray-900 select-none data-highlighted:bg-gray-100 data-[state=checked]:bg-gray-50 dark:text-gray-100 dark:data-highlighted:bg-gray-700 dark:data-[state=checked]:bg-gray-700"
+                  >
+                    <Select.ItemText>{{ item.name }}</Select.ItemText>
+                    <Select.ItemIndicator class="absolute right-3 text-blue-600 dark:text-blue-400">
+                      ✓
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                </Select.ItemGroup>
+              </Select.Content>
+            </Select.Positioner>
+          </Teleport>
+          <Select.HiddenSelect />
+        </Select.Root>
+      </div>
+      <DeveloperMenu v-if="selectedBranch != undefined" :app="app" :branch="selectedBranch" />
     </div>
 
     <div v-if="build">
       <LibraryAppController :build="build" :app="app" />
     </div>
     <div v-else-if="selectedBranchId">No build available for your machine</div>
-    <template v-if="selectedBranch != undefined">
-      <DeveloperConsole
-        :app="app"
-        v-if="publisher.users.includes(auth.record.value!.id)"
-        :branch="selectedBranch"
-      />
-    </template>
   </div>
 </template>
 <style scoped></style>
