@@ -112,6 +112,18 @@ watch(
     immediate: true,
   },
 )
+
+const isPublisher = computed(() => {
+  if (publisher.value == undefined) {
+    return false
+  }
+
+  if (auth.user.value == undefined) {
+    return false
+  }
+
+  return publisher.value.users.includes(auth.user.value.id)
+})
 </script>
 <template>
   <div v-if="app && publisher" class="flex h-full w-full flex-col gap-4 p-4">
@@ -159,11 +171,7 @@ watch(
         </Select.Root>
       </div>
       <template v-if="selectedBranch != undefined">
-        <DeveloperMenu
-          v-if="auth.user.value && publisher.users.includes(auth.user.value.id)"
-          :app="app"
-          :branch="selectedBranch"
-        />
+        <DeveloperMenu v-if="isPublisher" :app="app" :branch="selectedBranch" />
       </template>
     </div>
 
