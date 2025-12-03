@@ -18,6 +18,7 @@ import {
   Collections,
   type Create,
 } from 'backend-api'
+import { remove } from '@tauri-apps/plugin-fs'
 
 const props = defineProps<{ app: AppsResponse; branch: AppBranchesResponse }>()
 
@@ -53,6 +54,8 @@ const uploadBuildHandler = async () => {
     return false
   }
 
+  let archivePath = ''
+
   try {
     error.value = null
     success.value = false
@@ -60,7 +63,7 @@ const uploadBuildHandler = async () => {
     uploading.value = true
 
     // Step 1: Archive and compress the folder using Rust
-    const archivePath = await invoke<string>('archive_and_compress_folder', {
+    archivePath = await invoke<string>('archive_and_compress_folder', {
       folderPath: dirPath.value,
     })
 
@@ -122,6 +125,11 @@ const uploadBuildHandler = async () => {
     console.error('Upload error:', err)
   } finally {
     uploading.value = false
+    if (archivePath != '') {
+      await remove(archivePath, {
+        recursive: true,
+      })
+    }
   }
 }
 
