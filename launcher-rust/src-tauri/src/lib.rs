@@ -335,6 +335,7 @@ pub fn run() {
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // Show the main window when another instance is launched
             if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
                 let _ = window.show();
                 let _ = window.set_focus();
             }
@@ -391,7 +392,9 @@ pub fn run() {
                         .map_err(|e| format!("Failed to set window position: {}", e))?;
                 }
             } else {
-                window.set_size(Some(LogicalSize::new(800, 600)));
+                window
+                    .set_size(LogicalSize::new(800, 600))
+                    .map_err(|e| format!("Failed to set window size: {}", e))?;
             }
 
             let window_clone = window.clone();
