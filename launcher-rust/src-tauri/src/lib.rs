@@ -1,6 +1,5 @@
 use flate2::Compression;
 use flate2::{read::GzDecoder, write::GzEncoder};
-use sentry;
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
