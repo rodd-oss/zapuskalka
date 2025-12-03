@@ -1,5 +1,6 @@
 use flate2::Compression;
 use flate2::{read::GzDecoder, write::GzEncoder};
+use sentry;
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
@@ -312,8 +313,24 @@ fn should_set_webkit_workaround() -> bool {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     if should_set_webkit_workaround() {
-        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        unsafe {
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
     }
+
+    let client = sentry::init((
+        "https://1487f8979fe541888367281982f24dbb@glitchtip.d.roddtech.ru/2",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            auto_session_tracking: true,
+            ..Default::default()
+        },
+    ));
+
+    // Caution! Everything before here runs in both app and crash reporter processes
+    #[cfg(not(target_os = "ios"))]
+    let _guard = tauri_plugin_sentry::minidump::init(&client);
+    // Everything after here runs in only the app process
 
     tauri::Builder::default()
         .plugin(tauri_plugin_deep_link::init())
@@ -324,6 +341,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_upload::init())
         .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_sentry::init_with_no_injection(&client))
         .setup(|app| {
             let app_handle = app.handle().clone();
             let saved_state = load_window_state(app.handle()).ok().flatten();

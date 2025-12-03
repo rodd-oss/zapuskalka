@@ -43,7 +43,7 @@
     },
     "launcher-rust": {
       "name": "zapuskalka-launcher-rust",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "@ark-ui/vue": "^5.28.0",
         "@sentry/vue": "^10.27.0",
@@ -65,6 +65,7 @@
         "pinia": "^3.0.3",
         "tailwind-merge": "^3.3.1",
         "tailwindcss": "^4.1.17",
+        "tauri-plugin-sentry-api": "^0.5.0",
         "vue": "^3.5.22",
         "vue-router": "^4.6.3",
         "zod": "^4.1.13",
@@ -78,6 +79,7 @@
         "@vue/tsconfig": "^0.8.1",
         "eslint": "^9.37.0",
         "eslint-plugin-vue": "~10.5.0",
+        "npm-run-all2": "^8.0.4",
         "prettier": "^3.6.2",
         "prettier-plugin-tailwindcss": "^0.7.1",
         "typescript": "~5.9.0",
@@ -1477,6 +1479,8 @@
 
     "tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
+    "tauri-plugin-sentry-api": ["tauri-plugin-sentry-api@0.5.0", "", { "dependencies": { "@tauri-apps/api": "2.0.0-beta.8", "tslib": "^2.6.0" } }, "sha512-IUOMOQZafbQJbPS9eisdABt9tdJksec9ajOQRlM31DfOcdzayaUis7FK48AD5ayeNCOwJDZPs1nvlZSD8jFYiQ=="],
+
     "tiny-inflate": ["tiny-inflate@1.0.3", "", {}, "sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw=="],
 
     "tinyexec": ["tinyexec@1.0.2", "", {}, "sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg=="],
@@ -1730,6 +1734,8 @@
     "strip-literal/js-tokens": ["js-tokens@9.0.1", "", {}, "sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ=="],
 
     "tar-fs/chownr": ["chownr@1.1.4", "", {}, "sha512-jJ0bqzaylmJtVnNgzTeSOs8DPavpbYgEr/b0YL8/2GO3xJEhInFmhKMUnEJQjZumK7KXGFhUy89PrsJWlakBVg=="],
+
+    "tauri-plugin-sentry-api/@tauri-apps/api": ["@tauri-apps/api@2.0.0-beta.8", "", {}, "sha512-fN5u+9HsSfhRaXGOdD2kPGbqDgyX+nkm1XF/4d/LNuM4WiNfvHjjRAqWQYBhQsg1aF9nsTPmSW+tmy+Yn5T5+A=="],
 
     "unctx/estree-walker": ["estree-walker@3.0.3", "", { "dependencies": { "@types/estree": "^1.0.0" } }, "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g=="],
 
