@@ -379,6 +379,7 @@ pub fn run() {
             .build()?;
 
             window.set_title("Zapuskalka")?;
+            window.set_min_size(Some(LogicalSize::new(800, 600)))?;
 
             if let Some(state) = saved_state {
                 window
@@ -390,7 +391,7 @@ pub fn run() {
                         .map_err(|e| format!("Failed to set window position: {}", e))?;
                 }
             } else {
-                window.set_min_size(Some(LogicalSize::new(800, 600)))?;
+                window.set_size(Some(LogicalSize::new(800, 600)));
             }
 
             let window_clone = window.clone();
