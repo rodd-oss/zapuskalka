@@ -6,7 +6,7 @@ import {
   type AppBuildsArchOptions,
   type PublishersResponse,
 } from 'backend-api'
-import { useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
+import { useAuth, useAuthenticated, usePocketBase } from '@/lib/usePocketbase'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -21,6 +21,7 @@ import DeveloperMenu from '@/components/DeveloperMenu.vue'
 useAuthenticated()
 const pb = usePocketBase()
 const route = useRoute()
+const auth = useAuth()
 
 const app = ref<AppsResponse>()
 const publisher = ref<PublishersResponse>()
@@ -157,7 +158,13 @@ watch(
           <Select.HiddenSelect />
         </Select.Root>
       </div>
-      <DeveloperMenu v-if="selectedBranch != undefined" :app="app" :branch="selectedBranch" />
+      <template v-if="selectedBranch != undefined">
+        <DeveloperMenu
+          v-if="auth.user.value && publisher.users.includes(auth.user.value.id)"
+          :app="app"
+          :branch="selectedBranch"
+        />
+      </template>
     </div>
 
     <div v-if="build">
