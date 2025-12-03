@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/lib/usePocketbase'
+import { useAuth, usePocketBase } from '@/lib/usePocketbase'
 import { useRouter } from 'vue-router'
 import type { AuthMethodsList } from 'pocketbase'
 import { openUrl } from '@tauri-apps/plugin-opener'
@@ -9,6 +9,7 @@ import { onOpenUrl } from '@tauri-apps/plugin-deep-link'
 
 const auth = useAuth()
 const router = useRouter()
+const pb = usePocketBase()
 // TODO: Implement OTP with email
 // const email = ref('')
 const authMethods = ref<AuthMethodsList>()
@@ -24,12 +25,25 @@ const onLoginWithOAuth = async (provider: string) => {
 
 const AuthWithBrowser = async () => {
   // throw Error('Not implemented')
+  await onOpenUrl(async (urls) => {
+    console.log('deep link:', urls)
+
+    // get authcode id from param
+    const authCodeId = ''
+    const authCode = await pb.collection('_authCode').getOne(authCodeId)
+
+    pb.authStore.save(authCode.token)
+
+    await pb.collection('users').authRefresh()
+
+    if (!pb.authStore.isValid) {
+      throw Error('token is not valid')
+    }
+  })
+
   await openUrl(
     `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:8090'}/auth/login?isApp=true`,
   )
-  await onOpenUrl((urls) => {
-    console.log('deep link:', urls)
-  })
 }
 </script>
 
