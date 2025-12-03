@@ -3,12 +3,19 @@ import { Menu } from '@ark-ui/vue/menu'
 import { ChevronDown } from 'lucide-vue-next'
 import DeveloperUploadBuild from './DeveloperUploadBuild.vue'
 import type { AppBranchesResponse, AppsResponse } from 'backend-api'
+import { ref } from 'vue'
 
 const { app, branch } = defineProps<{ app: AppsResponse; branch: AppBranchesResponse }>()
+
+const isOpen = ref(false)
+
+const closeMenu = () => {
+  isOpen.value = false
+}
 </script>
 
 <template>
-  <Menu.Root>
+  <Menu.Root v-model:open="isOpen">
     <Menu.Trigger
       class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:ring-gray-100"
     >
@@ -24,6 +31,7 @@ const { app, branch } = defineProps<{ app: AppsResponse; branch: AppBranchesResp
             <Menu.Item
               value="upload-build"
               class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:bg-gray-800"
+              @click="closeMenu"
             >
               Upload build
             </Menu.Item>
