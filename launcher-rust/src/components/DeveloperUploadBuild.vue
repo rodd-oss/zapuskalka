@@ -19,6 +19,14 @@ import {
   type Create,
 } from 'backend-api'
 import { remove } from '@tauri-apps/plugin-fs'
+import { listen, type Event } from '@tauri-apps/api/event'
+
+enum Stage {
+  FillingForm,
+  Packing,
+  Uploading,
+  Done,
+}
 
 const props = defineProps<{ app: AppsResponse; branch: AppBranchesResponse }>()
 
@@ -28,8 +36,9 @@ const arch = ref<keyof typeof AppBuildsArchOptions>()
 const entrypoint = ref<string>('')
 
 const pb = usePocketBase()
-const uploading = ref(false)
-const uploadProgress = ref(0)
+const totalSizeToPack = ref(0)
+const currentStage = ref(Stage.FillingForm)
+const stageProgress = ref(0)
 const error = ref<string | null>(null)
 const success = ref(false)
 
@@ -59,8 +68,8 @@ const uploadBuildHandler = async () => {
   try {
     error.value = null
     success.value = false
-    uploadProgress.value = 0
-    uploading.value = true
+    currentStage.value = Stage.Packing
+    stageProgress.value = 0
 
     // Step 1: Archive and compress the folder using Rust
     archivePath = await invoke<string>('archive_and_compress_folder', {
@@ -82,6 +91,9 @@ const uploadBuildHandler = async () => {
 
     console.log(data)
 
+    currentStage.value = Stage.Uploading
+    stageProgress.value = 0
+
     const buildRecord = await pb.collection('app_builds').create(data)
     console.log('build record' + buildRecord)
 
@@ -95,7 +107,7 @@ const uploadBuildHandler = async () => {
 
     const onProgress = new Channel<ProgressPayload>()
     onProgress.onmessage = ({ progress, total, transfer_speed }: ProgressPayload) => {
-      uploadProgress.value = total > 0 ? Math.round((progress / total) * 100) : 0
+      stageProgress.value = total > 0 ? Math.round((progress / total) * 100) : 0
       console.log(`speed ${transfer_speed} Uploaded ${progress} of ${total} bytes`)
     }
 
@@ -110,7 +122,7 @@ const uploadBuildHandler = async () => {
     })
 
     success.value = true
-    uploadProgress.value = 100
+    stageProgress.value = 100
   } catch (err) {
     if (err instanceof Error) {
       error.value = err.message
@@ -124,7 +136,7 @@ const uploadBuildHandler = async () => {
 
     console.error('Upload error:', err)
   } finally {
-    uploading.value = false
+    currentStage.value = Stage.Done
     if (archivePath != '') {
       await remove(archivePath, {
         recursive: true,
@@ -145,8 +157,21 @@ const resetState = (open: boolean) => {
     entrypoint.value = ''
 
     success.value = false
+    currentStage.value = Stage.FillingForm
   }
 }
+
+interface PackingProgressEventData {
+  packed_bytes: number | null,
+  total_bytes: number | null,
+}
+
+listen("packing-progress", (ev: Event<PackingProgressEventData>) => {
+  if (ev.payload.total_bytes !== null)
+    totalSizeToPack.value = ev.payload.total_bytes
+  else if (ev.payload.packed_bytes !== null)
+    stageProgress.value = ev.payload.packed_bytes / totalSizeToPack.value * 100.0
+})
 </script>
 
 <template>
@@ -182,7 +207,7 @@ const resetState = (open: boolean) => {
             </div>
 
             <div class="space-y-4">
-              <div v-if="!success && !uploading" class="space-y-3">
+              <div v-if="!success && currentStage === Stage.FillingForm" class="space-y-3">
                 <DirectoryUpload class="space-y-1" v-model="dirPath" />
 
                 <SelectOs class="space-y-1" v-model="os" />
@@ -203,12 +228,15 @@ const resetState = (open: boolean) => {
               </div>
 
               <!-- Progress indicator -->
-              <div v-if="uploading" class="mt-4 w-full max-w-md">
+              <div v-if="currentStage === Stage.Packing || currentStage === Stage.Uploading"
+                class="mt-4 w-full max-w-md">
                 <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                  Processing and uploading...
+                  <span v-if="currentStage === Stage.Packing">Packing...</span>
+                  <span v-if="currentStage === Stage.Uploading">Uploading...</span>
                 </div>
                 <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div class="h-full w-full animate-pulse bg-emerald-500"></div>
+                  <div class="h-full animate-pulse bg-emerald-500" :style="{ width: `${stageProgress}%` }">
+                  </div>
                 </div>
               </div>
 
