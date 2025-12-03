@@ -162,15 +162,14 @@ const resetState = (open: boolean) => {
 }
 
 interface PackingProgressEventData {
-  packed_bytes: number | null,
-  total_bytes: number | null,
+  packed_bytes: number | null
+  total_bytes: number | null
 }
 
-listen("packing-progress", (ev: Event<PackingProgressEventData>) => {
-  if (ev.payload.total_bytes !== null)
-    totalSizeToPack.value = ev.payload.total_bytes
+listen('packing-progress', (ev: Event<PackingProgressEventData>) => {
+  if (ev.payload.total_bytes !== null) totalSizeToPack.value = ev.payload.total_bytes
   else if (ev.payload.packed_bytes !== null)
-    stageProgress.value = ev.payload.packed_bytes / totalSizeToPack.value * 100.0
+    stageProgress.value = (ev.payload.packed_bytes / totalSizeToPack.value) * 100.0
 })
 </script>
 
@@ -228,15 +227,19 @@ listen("packing-progress", (ev: Event<PackingProgressEventData>) => {
               </div>
 
               <!-- Progress indicator -->
-              <div v-if="currentStage === Stage.Packing || currentStage === Stage.Uploading"
-                class="mt-4 w-full max-w-md">
+              <div
+                v-if="currentStage === Stage.Packing || currentStage === Stage.Uploading"
+                class="mt-4 w-full max-w-md"
+              >
                 <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
                   <span v-if="currentStage === Stage.Packing">Packing...</span>
                   <span v-if="currentStage === Stage.Uploading">Uploading...</span>
                 </div>
                 <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
-                  <div class="h-full animate-pulse bg-emerald-500" :style="{ width: `${stageProgress}%` }">
-                  </div>
+                  <div
+                    class="h-full animate-pulse bg-emerald-500"
+                    :style="{ width: `${stageProgress}%` }"
+                  ></div>
                 </div>
               </div>
 
