@@ -78,6 +78,7 @@ async function main() {
   const cargoTomlPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.toml");
   const cargoLockPath = join(rootDir, "launcher-rust", "src-tauri", "Cargo.lock");
   const packageJsonPath = join(rootDir, "launcher-rust", "package.json");
+  const bunLockPath = join(rootDir, "bun.lock");
 
   const tauriConfFile = Bun.file(tauriConfPath);
   const tauriConf = (await tauriConfFile.json()) as { version: string };
@@ -97,8 +98,10 @@ async function main() {
 
   console.log("");
 
+  await $`bun install`;
+
   const commitMessage = `chore: bump version to ${newVersionString}`;
-  await $`git add ${tauriConfPath} ${cargoTomlPath} ${cargoLockPath} ${packageJsonPath}`;
+  await $`git add ${tauriConfPath} ${cargoTomlPath} ${cargoLockPath} ${packageJsonPath} ${bunLockPath}`;
   await $`git commit -m ${commitMessage}`;
 
   const tagName = `app-v${newVersionString}`;
