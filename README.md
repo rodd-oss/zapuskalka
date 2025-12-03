@@ -56,6 +56,7 @@ The application is now ready to launch!
 Before starting development, make sure you have installed:
 
 - **Node.js** 20.19+ or 22.12+ — [Download](https://nodejs.org/en/download)
+- **Go** 1.25.1+ — [Installation guide](https://go.dev/doc/install)
 - **Rust** — [Installation guide](https://www.rust-lang.org/tools/install)
 - **Bun** — [Installation guide](https://bun.com/docs/installation)
 - **Taskfile** — [Installation guide](https://taskfile.dev/docs/installation#get-the-binary)
