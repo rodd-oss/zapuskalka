@@ -1,5 +1,8 @@
 use flate2::Compression;
 use flate2::{read::GzDecoder, write::GzEncoder};
+use serde::Serialize;
+use std::collections::VecDeque;
+use std::default;
 use std::fs::File;
 use std::io::{BufWriter, Read};
 use std::path::Path;
@@ -9,10 +12,24 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     LogicalPosition, LogicalSize, Manager,
 };
+use tauri::{Emitter, EventTarget};
+
+use crate::tracking_writer::TrackingWriter;
+
+mod tracking_writer;
+
+#[derive(Serialize)]
+struct PackingProgress {
+    packed_bytes: Option<usize>,
+    total_bytes: Option<usize>,
+}
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
-async fn archive_and_compress_folder(folder_path: String) -> Result<String, String> {
+async fn archive_and_compress_folder(
+    folder_path: String,
+    app: tauri::AppHandle,
+) -> Result<String, String> {
     let source_path = Path::new(&folder_path);
 
     // Check if the folder exists
@@ -42,19 +59,69 @@ async fn archive_and_compress_folder(folder_path: String) -> Result<String, Stri
     let output_file =
         File::create(&output_path).map_err(|e| format!("Failed to create output file: {}", e))?;
 
+    let mut total_bytes = 0_usize;
+    let mut packed_bytes = 0_usize;
+
     // Create gzip encoder
     let gz_encoder = GzEncoder::new(output_file, Compression::default());
     let writer = BufWriter::new(gz_encoder);
+    let tracker = TrackingWriter::new(writer, |buf| {
+        packed_bytes += buf.len();
+        let res = app
+            .clone()
+            .emit_to(
+                EventTarget::Any,
+                "packing-progress",
+                &PackingProgress {
+                    packed_bytes: Some(packed_bytes),
+                    total_bytes: None,
+                },
+            )
+            .map_err(|e| format!("Failed to emit packing progress event: {}", e));
+        if let Err(err) = res {
+            eprintln!("{}", err);
+        }
+    });
 
     // Create tar archive builder
-    let mut tar_builder = Builder::new(writer);
+    let mut tar_builder = Builder::new(tracker);
 
-    // Add only the folder contents (not the root folder itself)
-    let entries = std::fs::read_dir(source_path)
-        .map_err(|e| format!("Failed to read directory contents: {}", e))?;
+    let mut to_visit = VecDeque::new();
+    let mut all_entries = vec![];
 
-    for entry in entries {
-        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+    to_visit.push_front(source_path.to_path_buf());
+
+    while let Some(dir_path) = to_visit.pop_front() {
+        let entries = std::fs::read_dir(dir_path)
+            .map_err(|e| format!("Failed to read directory contents: {}", e))?;
+
+        for entry in entries {
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let entry_path = entry.path();
+
+            if entry_path.is_dir() {
+                to_visit.push_front(entry_path);
+            } else {
+                let meta = entry
+                    .metadata()
+                    .map_err(|e| format!("Failed to get file metadata: {}", e))?;
+                total_bytes += meta.len() as usize;
+                all_entries.push(entry);
+            }
+        }
+    }
+
+    app.emit_to(
+        EventTarget::Any,
+        "packing-progress",
+        &PackingProgress {
+            packed_bytes: None,
+            total_bytes: Some(total_bytes),
+        },
+    )
+    .map_err(|e| format!("Failed to emit packing progress event: {}", e))?;
+
+    for entry in all_entries {
         let entry_path = entry.path();
         let relative_path = entry_path
             .strip_prefix(source_path)
@@ -72,10 +139,11 @@ async fn archive_and_compress_folder(folder_path: String) -> Result<String, Stri
     }
 
     // Finish writing the archive
-    // into_inner() returns the BufWriter, then we need to get the GzEncoder from it
-    let buf_writer = tar_builder
+    // into_inner() returns the TrackingWriter, then we need to get the BufWriter from it
+    let tracker = tar_builder
         .into_inner()
         .map_err(|e| format!("Failed to finalize archive: {}", e))?;
+    let buf_writer = tracker.into_inner();
 
     // Get the GzEncoder from the BufWriter and finish compression
     // into_inner() on BufWriter returns Result, and we need to flush first
