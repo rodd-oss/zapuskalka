@@ -15,6 +15,7 @@ Sentry.init({
   enableLogs: true,
   environment: import.meta.env.PROD ? 'production' : 'development',
   tracesSampleRate: 0.01,
+  enabled: import.meta.env.PROD,
 })
 
 const pinia = createPinia()
