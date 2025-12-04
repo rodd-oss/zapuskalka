@@ -418,6 +418,11 @@ pub fn run() {
         .plugin(tauri_plugin_sentry::init_with_no_injection(&client))
         .setup(|app| {
             let app_handle = app.handle().clone();
+            #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+            {
+            use tauri_plugin_deep_link::DeepLinkExt;
+            app_handle.deep_link().register_all()?;
+            }
             let saved_state = load_window_state(app.handle()).ok().flatten();
 
             let window = tauri::WebviewWindowBuilder::from_config(

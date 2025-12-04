@@ -1,49 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { cn } from '@/lib/utils'
-import { useAuth, usePocketBase } from '@/lib/usePocketbase'
+import { usePocketBase } from '@/lib/usePocketbase'
 import { useRouter } from 'vue-router'
-import type { AuthMethodsList } from 'pocketbase'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { onOpenUrl } from '@tauri-apps/plugin-deep-link'
+import type { AuthRecord } from 'backend-api'
 
-const auth = useAuth()
 const router = useRouter()
 const pb = usePocketBase()
-// TODO: Implement OTP with email
-// const email = ref('')
-const authMethods = ref<AuthMethodsList>()
-
-const isDev = ref(import.meta.env.DEV)
-
-auth.listAuthMethods().then((methods) => (authMethods.value = methods))
-
-const onLoginWithOAuth = async (provider: string) => {
-  await auth.authWithOAuth2(provider)
-  router.push('/')
-}
 
 const AuthWithBrowser = async () => {
-  // throw Error('Not implemented')
-  await onOpenUrl(async (urls) => {
-    console.log('deep link:', urls)
 
-    // get authcode id from param
-    const authCodeId = ''
-    const authCode = await pb.collection('_authCode').getOne(authCodeId)
-
-    pb.authStore.save(authCode.token)
-
-    await pb.collection('users').authRefresh()
-
-    if (!pb.authStore.isValid) {
-      throw Error('token is not valid')
-    }
+  await openUrl(`${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:8090'}/auth/app`)
+  const unlist = await onOpenUrl(async (urls) => {
+    urls.forEach(async (url) => {
+      const urlObj = new URL(url)
+      const token = urlObj.searchParams.get('token')
+      if (token) {
+        const data = await pb.send<{ record: AuthRecord, token: string }>('/api/get-app-token', {
+          method: 'POST',
+          body: { token },
+        })
+        pb.authStore.save(data.token, data.record)
+        unlist()
+        router.push('/')
+      }
+    })
   })
-
-  await openUrl(
-    `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:8090'}/auth/login?isApp=true`,
-  )
 }
 </script>
 
@@ -53,27 +36,11 @@ const AuthWithBrowser = async () => {
       <h1 class="w-full text-center text-3xl">Запускалка</h1>
       <div class="flex flex-col gap-6">
         <div class="flex flex-col gap-3">
-          <template v-if="authMethods && authMethods.oauth2.enabled">
-            <button
-              class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-              v-for="provider in authMethods.oauth2.providers"
-              :key="provider.name"
-              :disabled="auth.loading.value"
-              @click="onLoginWithOAuth(provider.name)"
-            >
-              Login with {{ provider.displayName }}
-            </button>
-            <button
-              v-if="isDev"
-              class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-              :disabled="auth.loading.value"
-              @click="AuthWithBrowser"
-            >
-              Auth with browser
-            </button>
-          </template>
+          <button
+            class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            type="button" @click="AuthWithBrowser">
+            Auth with browser
+          </button>
         </div>
       </div>
     </div>

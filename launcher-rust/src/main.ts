@@ -1,12 +1,13 @@
 import './assets/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
+import DevApp from './DevApp.vue'
 import router from './router'
 import { createPinia } from 'pinia'
 import * as Sentry from '@sentry/vue'
 import { createSentryPiniaPlugin } from '@sentry/vue'
 
-const app = createApp(App)
+const app = createApp(import.meta.env.DEV ? DevApp : App)
 
 Sentry.init({
   app,
