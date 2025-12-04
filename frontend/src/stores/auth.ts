@@ -23,6 +23,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function genAuthToken(): Promise<string> {
+    const token = Math.random().toString(36).substring(2, 15)
+    await pb.collection('_authCode').create({
+      user: user.value?.id,
+      token: token,
+    })
+    return token
+  }
+
   function setAuthData(authUser: UsersRecord | null, authToken: string): void {
     user.value = authUser
     token.value = authToken
@@ -96,22 +105,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function refreshToken(): Promise<boolean> {
-    if (!pb.authStore.isValid) {
-      logout()
-      return false
-    }
-
-    try {
-      const authData = await pb.collection('users').authRefresh()
-      setAuthData(authData.record, authData.token)
-      return true
-    } catch {
-      logout()
-      return false
-    }
-  }
-
   function $reset(): void {
     user.value = null
     token.value = ''
@@ -128,12 +121,12 @@ export const useAuthStore = defineStore('auth', () => {
     authMethods,
     isAuthenticated,
     getAuthMethods,
+    genAuthToken,
     clearError,
     login,
     authenticateWithOAuth2Code,
     logout,
     refreshAuth,
-    refreshToken,
     $reset,
   }
 })

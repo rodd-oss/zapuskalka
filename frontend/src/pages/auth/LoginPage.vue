@@ -1,39 +1,36 @@
 <script setup lang="ts">
-import * as z from 'zod'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@stores/auth'
-import type { AuthFormField, ButtonProps, FormSubmitEvent } from '@nuxt/ui'
-import { computed, onMounted } from 'vue'
+import type { ButtonProps } from '@nuxt/ui'
+import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
-  isApp?: boolean | string
+  isApp?: boolean
 }>()
 
 const router = useRouter()
 const auth = useAuthStore()
-const toast = useToast()
+// const toast = useToast()
 
-const isAppMode = computed(() => props.isApp === true || props.isApp === 'true')
-const appDeepLink = computed(
-  () => `zapuskalka://auth?token=${auth.token}&user=${JSON.stringify(auth.user)}`,
-)
+const isAppMode = computed(() => props.isApp)
+const appDeepLink = ref('')
 
-const fields: AuthFormField[] = [
-  {
-    name: 'email',
-    type: 'email',
-    label: 'Email',
-    placeholder: 'Enter your email',
-    required: true,
-  },
-  {
-    name: 'password',
-    label: 'Password',
-    type: 'password',
-    placeholder: 'Enter your password',
-    required: true,
-  },
-]
+// const fields: AuthFormField[] = [
+//   {
+//     name: 'email',
+//     type: 'email',
+//     label: 'Email',
+//     placeholder: 'Enter your email',
+//     required: true,
+//   },
+//   {
+//     name: 'password',
+//     label: 'Password',
+//     type: 'password',
+//     placeholder: 'Enter your password',
+//     required: true,
+//   },
+// ]
 
 const providers = computed<ButtonProps[]>(() => {
   if (auth.authMethods?.oauth2.enabled) {
@@ -51,32 +48,34 @@ const providers = computed<ButtonProps[]>(() => {
   return []
 })
 
-const schema = z.object({
-  email: z.email('Invalid email'),
-  password: z.string('Password is required').min(8, 'Must be at least 8 characters'),
-})
+// const schema = z.object({
+//   email: z.email('Invalid email'),
+//   password: z.string('Password is required').min(8, 'Must be at least 8 characters'),
+// })
 
-type Schema = z.output<typeof schema>
+// type Schema = z.output<typeof schema>
 
-async function onSubmit(payload: FormSubmitEvent<Schema>): Promise<void> {
-  const success = await auth.login(payload.data.email, payload.data.password)
+// async function onSubmit(payload: FormSubmitEvent<Schema>): Promise<void> {
+//   const success = await auth.login(payload.data.email, payload.data.password)
 
-  if (success) {
-    const redirectTo = (router.currentRoute.value.query.redirect as string) || '/'
-    router.push(redirectTo)
-  } else {
-    toast.add({
-      title: 'Login Failed',
-      description: auth.error || 'An unknown error occurred during login.',
-      icon: 'i-lucide-alert-circle',
-      color: 'error',
-    })
-  }
-}
+//   if (success) {
+//     const redirectTo = (router.currentRoute.value.query.redirect as string) || '/'
+//     router.push(redirectTo)
+//   } else {
+//     toast.add({
+//       title: 'Login Failed',
+//       description: auth.error || 'An unknown error occurred during login.',
+//       icon: 'i-lucide-alert-circle',
+//       color: 'error',
+//     })
+//   }
+// }
 
-onMounted(() => {
+onMounted(async () => {
   if (auth.isAuthenticated) {
     if (isAppMode.value) {
+      const token = await auth.genAuthToken()
+      appDeepLink.value = `zapuskalka://auth?token=${token}`
       window.location.href = appDeepLink.value
     } else {
       router.push('/')
