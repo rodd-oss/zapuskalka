@@ -58,7 +58,7 @@ const router = createRouter({
 
 router.beforeEach(async (to: RouteLocationNormalized) => {
   if (to.meta.requiresAuth) {
-    const authStore = await useAuthStore()
+    const authStore = useAuthStore()
     if (!authStore.isAuthenticated) {
       return {
         name: 'login',
