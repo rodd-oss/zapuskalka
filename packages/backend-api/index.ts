@@ -7,5 +7,5 @@ export const newApiClient = (
   lang?: string,
 ) => new PocketBase(baseURL, authStore, lang) as TypedPocketBase;
 
-export type { AuthRecord } from "pocketbase";
+export type { AuthRecord, AuthMethodsList } from "pocketbase";
 export * from "./pocketbase-types";
