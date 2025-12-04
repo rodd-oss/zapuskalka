@@ -29,7 +29,7 @@ const AuthWithBrowser = async () => {
       const urlObj = new URL(url)
       const token = urlObj.searchParams.get('token')
       if (token) {
-        const data = await pb.send<{ record: AuthRecord, token: string }>('/api/get-app-token', {
+        const data = await pb.send<{ record: AuthRecord; token: string }>('/api/get-app-token', {
           method: 'POST',
           body: { token },
         })
@@ -51,15 +51,21 @@ const AuthWithBrowser = async () => {
           <template v-if="authMethods && isDev">
             <button
               class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-              type="button" v-for="provider in authMethods.oauth2.providers" :key="provider.name"
-              :disabled="auth.loading.value" @click="onLoginWithOAuth(provider.name)">
+              type="button"
+              v-for="provider in authMethods.oauth2.providers"
+              :key="provider.name"
+              :disabled="auth.loading.value"
+              @click="onLoginWithOAuth(provider.name)"
+            >
               Login with {{ provider.displayName }}
             </button>
           </template>
 
           <button
             class="cursor-pointer rounded border p-2 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-            type="button" @click="AuthWithBrowser">
+            type="button"
+            @click="AuthWithBrowser"
+          >
             Auth with browser
           </button>
         </div>
