@@ -27,7 +27,7 @@ struct PackingProgress {
 #[tauri::command]
 async fn archive_and_compress_folder(
     folder_path: String,
-    app: tauri::AppHandle,
+    progress_channel: tauri::ipc::Channel<PackingProgress>,
 ) -> Result<String, String> {
     let source_path = Path::new(&folder_path);
 
@@ -66,17 +66,12 @@ async fn archive_and_compress_folder(
     let writer = BufWriter::new(gz_encoder);
     let tracker = TrackingWriter::new(writer, |buf| {
         packed_bytes += buf.len();
-        let res = app
-            .clone()
-            .emit_to(
-                EventTarget::Any,
-                "packing-progress",
-                &PackingProgress {
-                    packed_bytes: Some(packed_bytes),
-                    total_bytes: None,
-                },
-            )
-            .map_err(|e| format!("Failed to emit packing progress event: {}", e));
+        let res = progress_channel
+            .send(PackingProgress {
+                packed_bytes: Some(packed_bytes),
+                total_bytes: None,
+            })
+            .map_err(|e| format!("Failed to send packing progress info: {}", e));
         if let Err(err) = res {
             eprintln!("{}", err);
         }
@@ -110,15 +105,12 @@ async fn archive_and_compress_folder(
         }
     }
 
-    app.emit_to(
-        EventTarget::Any,
-        "packing-progress",
-        &PackingProgress {
+    progress_channel
+        .send(PackingProgress {
             packed_bytes: None,
             total_bytes: Some(total_bytes),
-        },
-    )
-    .map_err(|e| format!("Failed to emit packing progress event: {}", e))?;
+        })
+        .map_err(|e| format!("Failed to emit packing progress event: {}", e))?;
 
     for entry in all_entries {
         let entry_path = entry.path();
