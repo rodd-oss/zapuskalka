@@ -11,7 +11,6 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     LogicalPosition, LogicalSize, Manager,
 };
-use tauri::{Emitter, EventTarget};
 
 use crate::tracking_writer::TrackingWriter;
 
