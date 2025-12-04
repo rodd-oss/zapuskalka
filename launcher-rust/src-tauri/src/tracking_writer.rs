@@ -25,5 +25,3 @@ impl<T: Write, F: FnMut(&[u8])> Write for TrackingWriter<T, F> {
         self.target.flush()
     }
 }
-
-// impl<T: Write, F: FnMut(&[u8])> IntoInner<T> for TrackingWriter<T, F> {}
