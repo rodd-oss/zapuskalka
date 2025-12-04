@@ -50,7 +50,7 @@ const router = createRouter({
           name: 'app-auth',
           component: Login,
           props: { isApp: true },
-        }
+        },
       ],
     },
   ],
