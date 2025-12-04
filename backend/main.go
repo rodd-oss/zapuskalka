@@ -19,6 +19,30 @@ func main() {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./web/dist"), true))
+		se.Router.POST("/api/get-app-token", func(e *core.RequestEvent) error {
+			data := struct {
+				Token string `json:"token" form:"token"`
+			}{}
+
+			if err := e.BindBody(&data); err != nil {
+				return e.BadRequestError("Failed to read request data", err)
+			}
+
+			record, err := e.App.FindFirstRecordByData("_authCode", "token", data.Token)
+			if err != nil {
+				return e.BadRequestError("Token not found", err)
+			}
+
+			user, err := e.App.FindRecordById("users", record.GetString("user"))
+			if err != nil {
+				return e.BadRequestError("Failed to get current user", err)
+			}
+
+			e.App.Delete(record)
+
+			return apis.RecordAuthResponse(e, user, "app", nil)
+
+		})
 
 		return se.Next()
 	})
