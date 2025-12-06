@@ -10,7 +10,7 @@ on:
 
 jobs:
   check-frontend:
-    name: Check frontend
+    name: Check Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
