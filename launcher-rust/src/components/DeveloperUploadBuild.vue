@@ -241,9 +241,17 @@ const resetState = (open: boolean) => {
                 v-if="currentStage === Stage.Packing || currentStage === Stage.Uploading"
                 class="mt-4 w-full max-w-md"
               >
-                <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                  <span v-if="currentStage === Stage.Packing">Packing...</span>
-                  <span v-if="currentStage === Stage.Uploading">Uploading...</span>
+                <div class="mb-2 flex items-center justify-between">
+                  <div class="text-sm text-gray-700 dark:text-gray-300">
+                    <span v-if="currentStage === Stage.Packing">Packing...</span>
+                    <span v-if="currentStage === Stage.Uploading">Uploading...</span>
+                  </div>
+                  <span
+                    v-if="stageProgress !== 0.0"
+                    class="text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    {{ stageProgress.toFixed(0) }}%
+                  </span>
                 </div>
                 <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
