@@ -3,6 +3,7 @@ import type { RouteLocationNormalized } from 'vue-router'
 import Home from '@pages/HomePage.vue'
 import Login from '@pages/auth/LoginPage.vue'
 import OAuthCallback from '@pages/auth/OAuthCallbackPage.vue'
+import { useAuthStore } from '@stores/auth'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -33,7 +34,6 @@ const router = createRouter({
           path: 'login',
           name: 'login',
           component: Login,
-          props: (route) => ({ isApp: route.query.isApp === 'true' }),
         },
         {
           path: 'oauth-callback',
@@ -45,25 +45,20 @@ const router = createRouter({
             state: route.query.state || '',
           }),
         },
+        {
+          path: 'app',
+          name: 'app-auth',
+          component: Login,
+          props: { isApp: true },
+        },
       ],
     },
   ],
 })
 
-// Lazy import to avoid circular dependencies and ensure store is only created once
-let authStoreInstance: ReturnType<typeof import('@stores/auth').useAuthStore> | null = null
-
-async function getAuthStore() {
-  if (!authStoreInstance) {
-    const { useAuthStore } = await import('@stores/auth')
-    authStoreInstance = useAuthStore()
-  }
-  return authStoreInstance
-}
-
 router.beforeEach(async (to: RouteLocationNormalized) => {
   if (to.meta.requiresAuth) {
-    const authStore = await getAuthStore()
+    const authStore = useAuthStore()
     if (!authStore.isAuthenticated) {
       return {
         name: 'login',

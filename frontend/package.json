@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "frontend",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
-    "check":"run-p check:lsp check:lint check:format",
+    "check": "run-p check:lsp check:lint check:format",
     "check:lsp": "vue-tsc --noEmit",
     "check:lint": "eslint .",
     "check:format": "prettier --check ./src",

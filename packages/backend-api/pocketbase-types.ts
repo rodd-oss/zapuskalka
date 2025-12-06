@@ -51,7 +51,6 @@ export type AuthSystemFields<T = unknown> = {
 export type AuthcodeRecord = {
 	created: IsoAutoDateString
 	id: string
-	token: string
 	updated: IsoAutoDateString
 	user: RecordIdString
 }

@@ -23,6 +23,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function genAuthCode(): Promise<string> {
+    if (user.value == null) {
+      throw Error('User undefined. Should not call this function if not authenticated.')
+    }
+
+    const authCode = await pb.collection('_authCode').create({
+      user: user.value.id,
+    })
+    return authCode.id
+  }
+
   function setAuthData(authUser: UsersRecord | null, authToken: string): void {
     user.value = authUser
     token.value = authToken
@@ -96,22 +107,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function refreshToken(): Promise<boolean> {
-    if (!pb.authStore.isValid) {
-      logout()
-      return false
-    }
-
-    try {
-      const authData = await pb.collection('users').authRefresh()
-      setAuthData(authData.record, authData.token)
-      return true
-    } catch {
-      logout()
-      return false
-    }
-  }
-
   function $reset(): void {
     user.value = null
     token.value = ''
@@ -128,12 +123,12 @@ export const useAuthStore = defineStore('auth', () => {
     authMethods,
     isAuthenticated,
     getAuthMethods,
+    genAuthCode,
     clearError,
     login,
     authenticateWithOAuth2Code,
     logout,
     refreshAuth,
-    refreshToken,
     $reset,
   }
 })
