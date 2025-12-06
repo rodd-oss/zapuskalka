@@ -211,9 +211,6 @@ async fn upload_file_as_form_data(
         .and_then(|n| n.to_str())
         .ok_or_else(|| "Invalid filename".to_string())?;
 
-    let mut read_bytes = 0_u64;
-    let total_bytes: u64;
-
     // Open file
     let file = tokio::fs::File::open(file_path)
         .await
@@ -223,7 +220,9 @@ async fn upload_file_as_form_data(
         .metadata()
         .await
         .map_err(|e| format!("Failed to get file metadata: {}", e))?;
-    total_bytes = file_meta.len();
+
+    let mut read_bytes = 0_u64;
+    let total_bytes = file_meta.len();
 
     let progress_channel_clone = progress_channel.clone();
     let tracker = TrackingTokioStream::new(file, move |read_len| {
