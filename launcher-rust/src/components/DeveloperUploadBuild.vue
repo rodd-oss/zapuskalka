@@ -19,7 +19,11 @@ import {
   type Create,
 } from 'backend-api'
 import { remove } from '@tauri-apps/plugin-fs'
-import { listen, type Event } from '@tauri-apps/api/event'
+
+interface PackingProgressEventData {
+  packed_bytes: number | null
+  total_bytes: number | null
+}
 
 enum Stage {
   FillingForm,
@@ -74,6 +78,11 @@ const uploadBuildHandler = async () => {
     // Step 1: Archive and compress the folder using Rust
     archivePath = await invoke<string>('archive_and_compress_folder', {
       folderPath: dirPath.value,
+      progressChannel: new Channel<PackingProgressEventData>((progress) => {
+        if (progress.total_bytes !== null) totalSizeToPack.value = progress.total_bytes
+        else if (progress.packed_bytes !== null)
+          stageProgress.value = (progress.packed_bytes / totalSizeToPack.value) * 100.0
+      }),
     })
 
     const data: Create<Collections.AppBuilds> = {
@@ -160,17 +169,6 @@ const resetState = (open: boolean) => {
     currentStage.value = Stage.FillingForm
   }
 }
-
-interface PackingProgressEventData {
-  packed_bytes: number | null
-  total_bytes: number | null
-}
-
-listen('packing-progress', (ev: Event<PackingProgressEventData>) => {
-  if (ev.payload.total_bytes !== null) totalSizeToPack.value = ev.payload.total_bytes
-  else if (ev.payload.packed_bytes !== null)
-    stageProgress.value = (ev.payload.packed_bytes / totalSizeToPack.value) * 100.0
-})
 </script>
 
 <template>
