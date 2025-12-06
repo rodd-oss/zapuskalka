@@ -79,8 +79,8 @@ onMounted(async () => {
     }
 
     if (oauth.isApp) {
-      const token = await auth.genAuthToken()
-      appDeepLink.value = `zapuskalka://auth?token=${token}`
+      const authCode = await auth.genAuthCode()
+      appDeepLink.value = `zapuskalka://auth?authCode=${authCode}`
       window.location.href = appDeepLink.value
     } else {
       setTimeout(() => {

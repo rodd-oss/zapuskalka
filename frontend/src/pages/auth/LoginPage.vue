@@ -74,8 +74,8 @@ const providers = computed<ButtonProps[]>(() => {
 onMounted(async () => {
   if (auth.isAuthenticated) {
     if (isAppMode.value) {
-      const token = await auth.genAuthToken()
-      appDeepLink.value = `zapuskalka://auth?token=${token}`
+      const authCode = await auth.genAuthCode()
+      appDeepLink.value = `zapuskalka://auth?authCode=${authCode}`
       window.location.href = appDeepLink.value
     } else {
       router.push('/')

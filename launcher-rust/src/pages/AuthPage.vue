@@ -27,11 +27,11 @@ const AuthWithBrowser = async () => {
   const unlist = await onOpenUrl(async (urls) => {
     urls.forEach(async (url) => {
       const urlObj = new URL(url)
-      const token = urlObj.searchParams.get('token')
-      if (token) {
+      const authCode = urlObj.searchParams.get('authCode')
+      if (authCode) {
         const data = await pb.send<{ record: AuthRecord; token: string }>('/api/get-app-token', {
           method: 'POST',
-          body: { token },
+          body: { authCode },
         })
         pb.authStore.save(data.token, data.record)
         unlist()

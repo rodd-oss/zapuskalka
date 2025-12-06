@@ -23,13 +23,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function genAuthToken(): Promise<string> {
-    const token = Math.random().toString(36).substring(2, 15)
-    await pb.collection('_authCode').create({
-      user: user.value?.id,
-      token: token,
+  async function genAuthCode(): Promise<string> {
+    if (user.value == null) {
+      throw Error('User undefined. Should not call this function if not authenticated.')
+    }
+
+    const authCode = await pb.collection('_authCode').create({
+      user: user.value.id,
     })
-    return token
+    return authCode.id
   }
 
   function setAuthData(authUser: UsersRecord | null, authToken: string): void {
@@ -121,7 +123,7 @@ export const useAuthStore = defineStore('auth', () => {
     authMethods,
     isAuthenticated,
     getAuthMethods,
-    genAuthToken,
+    genAuthCode,
     clearError,
     login,
     authenticateWithOAuth2Code,
