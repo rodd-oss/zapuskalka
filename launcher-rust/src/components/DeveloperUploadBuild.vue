@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Dialog } from '@ark-ui/vue/dialog'
 import { X } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import SelectOs from './SelectOs.vue'
 import SelectArch from './SelectArch.vue'
 import EntrypointField from './EntrypointField.vue'
 import DirectoryUpload from './DirectoryUpload.vue'
 import { usePocketBase } from '@/lib/usePocketbase'
+
+const METER_UPDATE_INTERVAL = 750
 
 import { Channel, invoke } from '@tauri-apps/api/core'
 import {
@@ -19,10 +21,12 @@ import {
   type Create,
 } from 'backend-api'
 import { remove } from '@tauri-apps/plugin-fs'
+import { DeltaMeter } from '@/lib/DeltaMeter'
+import { humanReadableByteSize } from '@/lib/utils'
 
-interface PackingProgressEventData {
-  packed_bytes: number | null
-  total_bytes: number | null
+interface ProgressEventData {
+  current_bytes: number
+  total_bytes: number
 }
 
 enum Stage {
@@ -40,11 +44,22 @@ const arch = ref<keyof typeof AppBuildsArchOptions>()
 const entrypoint = ref<string>('')
 
 const pb = usePocketBase()
-const totalSizeToPack = ref(0)
 const currentStage = ref(Stage.FillingForm)
 const stageProgress = ref(0)
+const progressDetails = ref('')
+const progressMeter = ref<DeltaMeter | null>(null)
 const error = ref<string | null>(null)
 const success = ref(false)
+
+watch(progressMeter, (newValue, oldValue) => {
+  oldValue?.stop()
+  newValue?.reset()
+})
+
+onUnmounted(() => {
+  // stop inner timer
+  progressMeter.value = null
+})
 
 const formIsValid = computed<boolean>(() => {
   if (os.value == undefined || arch.value == undefined || dirPath.value == undefined) {
@@ -76,14 +91,16 @@ const uploadBuildHandler = async () => {
     stageProgress.value = 0
 
     // Step 1: Archive and compress the folder using Rust
+    progressMeter.value = new DeltaMeter(METER_UPDATE_INTERVAL)
     archivePath = await invoke<string>('archive_and_compress_folder', {
       folderPath: dirPath.value,
-      progressChannel: new Channel<PackingProgressEventData>((progress) => {
-        if (progress.total_bytes !== null) totalSizeToPack.value = progress.total_bytes
-        else if (progress.packed_bytes !== null)
-          stageProgress.value = (progress.packed_bytes / totalSizeToPack.value) * 100.0
+      progressChannel: new Channel<ProgressEventData>((progress) => {
+        progressMeter.value?.sample(progress.current_bytes)
+        stageProgress.value = (progress.current_bytes / progress.total_bytes) * 100.0
+        progressDetails.value = `${humanReadableByteSize(progressMeter.value?.avg ?? 0)}/s`
       }),
     })
+    progressMeter.value = null
 
     const data: Create<Collections.AppBuilds> = {
       app: props.app.id,
@@ -108,27 +125,22 @@ const uploadBuildHandler = async () => {
 
     const url = `${pb.baseURL}/api/collections/app_builds/records/${buildRecord.id}`
 
-    interface ProgressPayload {
-      progress: number
-      total: number
-      transfer_speed: number
-    }
-
-    const onProgress = new Channel<ProgressPayload>()
-    onProgress.onmessage = ({ progress, total, transfer_speed }: ProgressPayload) => {
-      stageProgress.value = total > 0 ? Math.round((progress / total) * 100) : 0
-      console.log(`speed ${transfer_speed} Uploaded ${progress} of ${total} bytes`)
-    }
-
     // TODO: migrate to one-shot build creation from rust side
     // Use custom Rust function that properly creates multipart/form-data with "files" field
     // This ensures correct boundary and field name for PocketBase
+    progressMeter.value = new DeltaMeter(METER_UPDATE_INTERVAL)
     await invoke('upload_file_as_form_data', {
       url,
       filePath: archivePath,
       authToken: pb.authStore.token || null,
-      progressChannel: onProgress,
+      progressChannel: new Channel<ProgressEventData>((progress) => {
+        progressMeter.value?.sample(progress.current_bytes)
+        stageProgress.value = (progress.current_bytes / progress.total_bytes) * 100.0
+        progressDetails.value = `${humanReadableByteSize(progressMeter.value?.avg ?? 0)}/s`
+      }),
     })
+    progressMeter.value = null
+    progressDetails.value = ''
 
     success.value = true
     stageProgress.value = 100
@@ -229,9 +241,17 @@ const resetState = (open: boolean) => {
                 v-if="currentStage === Stage.Packing || currentStage === Stage.Uploading"
                 class="mt-4 w-full max-w-md"
               >
-                <div class="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                  <span v-if="currentStage === Stage.Packing">Packing...</span>
-                  <span v-if="currentStage === Stage.Uploading">Uploading...</span>
+                <div class="mb-2 flex items-center justify-between">
+                  <div class="text-sm text-gray-700 dark:text-gray-300">
+                    <span v-if="currentStage === Stage.Packing">Packing...</span>
+                    <span v-if="currentStage === Stage.Uploading">Uploading...</span>
+                  </div>
+                  <span
+                    v-if="stageProgress !== 0.0"
+                    class="text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    {{ stageProgress.toFixed(0) }}%
+                  </span>
                 </div>
                 <div class="h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
                   <div
@@ -239,6 +259,7 @@ const resetState = (open: boolean) => {
                     :style="{ width: `${stageProgress}%` }"
                   ></div>
                 </div>
+                <small class="text-gray-500">{{ progressDetails }}</small>
               </div>
 
               <!-- Success message -->
