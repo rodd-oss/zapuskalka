@@ -17,12 +17,8 @@ const assets = ref({
     name: 'Mac',
     link: '',
   },
-  deb: {
-    name: 'Linux .deb',
-    link: '',
-  },
-  rpm: {
-    name: 'Linux .rpm',
+  AppImage: {
+    name: 'Linux',
     link: '',
   },
 })
