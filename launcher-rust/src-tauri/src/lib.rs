@@ -5,6 +5,7 @@ use std::collections::VecDeque;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::time::Duration;
 use tar::{Archive, Builder};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -12,9 +13,11 @@ use tauri::{
     LogicalPosition, LogicalSize, Manager,
 };
 
+use crate::rate_meter::RateMeter;
 use crate::tracking_tokio_stream::TrackingTokioStream;
 use crate::tracking_writer::TrackingWriter;
 
+mod rate_meter;
 mod tracking_tokio_stream;
 mod tracking_writer;
 
@@ -22,6 +25,7 @@ mod tracking_writer;
 struct ProgressCallbackData {
     current_bytes: u64,
     total_bytes: u64,
+    delta_per_second: u64,
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -29,6 +33,7 @@ struct ProgressCallbackData {
 async fn archive_and_compress_folder(
     folder_path: String,
     progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
 ) -> Result<String, String> {
     let source_path = Path::new(&folder_path);
 
@@ -92,12 +97,18 @@ async fn archive_and_compress_folder(
     let gz_encoder = GzEncoder::new(output_file, Compression::default());
     let writer = BufWriter::new(gz_encoder);
     let progress_channel_clone = progress_channel.clone();
+    let mut packing_speed_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(1.0),
+    ));
     let tracker = TrackingWriter::new(writer, move |buf| {
-        packed_bytes += buf.len() as u64;
+        let delta = buf.len() as u64;
+        packing_speed_rate.add_value(delta);
+        packed_bytes += delta;
         let res = progress_channel_clone
             .send(ProgressCallbackData {
                 current_bytes: packed_bytes,
                 total_bytes,
+                delta_per_second: packing_speed_rate.get_rate() as u64,
             })
             .map_err(|e| format!("Failed to send packing progress info: {}", e));
         if let Err(err) = res {
@@ -112,6 +123,7 @@ async fn archive_and_compress_folder(
         .send(ProgressCallbackData {
             current_bytes: 0,
             total_bytes,
+            delta_per_second: 0,
         })
         .map_err(|e| format!("Failed to emit packing progress event: {}", e))?;
 
@@ -192,6 +204,7 @@ async fn upload_file_as_form_data(
     file_path: String,
     auth_token: Option<String>,
     progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
 ) -> Result<(), String> {
     let file_path = Path::new(&file_path);
 
@@ -225,13 +238,18 @@ async fn upload_file_as_form_data(
     let total_bytes = file_meta.len();
 
     let progress_channel_clone = progress_channel.clone();
+    let mut uploading_speed_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(0.0),
+    ));
     let tracker = TrackingTokioStream::new(file, move |read_len| {
         read_bytes += read_len;
+        uploading_speed_rate.add_value(read_len);
 
         let res = progress_channel_clone
             .send(ProgressCallbackData {
                 current_bytes: read_bytes,
                 total_bytes,
+                delta_per_second: uploading_speed_rate.get_rate() as u64,
             })
             .map_err(|e| format!("Failed to send update progress to channel: {}", e));
         if let Err(e) = res {
@@ -271,6 +289,7 @@ async fn upload_file_as_form_data(
     let _ = progress_channel.send(ProgressCallbackData {
         current_bytes: file_size,
         total_bytes: file_size,
+        delta_per_second: 0,
     });
 
     // Check response status

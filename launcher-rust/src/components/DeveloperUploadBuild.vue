@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Dialog } from '@ark-ui/vue/dialog'
 import { X } from 'lucide-vue-next'
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import SelectOs from './SelectOs.vue'
 import SelectArch from './SelectArch.vue'
 import EntrypointField from './EntrypointField.vue'
@@ -21,12 +21,12 @@ import {
   type Create,
 } from 'backend-api'
 import { remove } from '@tauri-apps/plugin-fs'
-import { DeltaMeter } from '@/lib/DeltaMeter'
 import { humanReadableByteSize } from '@/lib/utils'
 
 interface ProgressEventData {
   current_bytes: number
   total_bytes: number
+  delta_per_second: number
 }
 
 enum Stage {
@@ -47,19 +47,8 @@ const pb = usePocketBase()
 const currentStage = ref(Stage.FillingForm)
 const stageProgress = ref(0)
 const progressDetails = ref('')
-const progressMeter = ref<DeltaMeter | null>(null)
 const error = ref<string | null>(null)
 const success = ref(false)
-
-watch(progressMeter, (newValue, oldValue) => {
-  oldValue?.stop()
-  newValue?.reset()
-})
-
-onUnmounted(() => {
-  // stop inner timer
-  progressMeter.value = null
-})
 
 const formIsValid = computed<boolean>(() => {
   if (os.value == undefined || arch.value == undefined || dirPath.value == undefined) {
@@ -91,16 +80,14 @@ const uploadBuildHandler = async () => {
     stageProgress.value = 0
 
     // Step 1: Archive and compress the folder using Rust
-    progressMeter.value = new DeltaMeter(METER_UPDATE_INTERVAL)
     archivePath = await invoke<string>('archive_and_compress_folder', {
       folderPath: dirPath.value,
       progressChannel: new Channel<ProgressEventData>((progress) => {
-        progressMeter.value?.sample(progress.current_bytes)
         stageProgress.value = (progress.current_bytes / progress.total_bytes) * 100.0
-        progressDetails.value = `${humanReadableByteSize(progressMeter.value?.avg ?? 0)}/s`
+        progressDetails.value = `${humanReadableByteSize(progress.delta_per_second)}/s`
       }),
+      speed_update_interval: METER_UPDATE_INTERVAL,
     })
-    progressMeter.value = null
 
     const data: Create<Collections.AppBuilds> = {
       app: props.app.id,
@@ -128,18 +115,16 @@ const uploadBuildHandler = async () => {
     // TODO: migrate to one-shot build creation from rust side
     // Use custom Rust function that properly creates multipart/form-data with "files" field
     // This ensures correct boundary and field name for PocketBase
-    progressMeter.value = new DeltaMeter(METER_UPDATE_INTERVAL)
     await invoke('upload_file_as_form_data', {
       url,
       filePath: archivePath,
       authToken: pb.authStore.token || null,
       progressChannel: new Channel<ProgressEventData>((progress) => {
-        progressMeter.value?.sample(progress.current_bytes)
         stageProgress.value = (progress.current_bytes / progress.total_bytes) * 100.0
-        progressDetails.value = `${humanReadableByteSize(progressMeter.value?.avg ?? 0)}/s`
+        progressDetails.value = `${humanReadableByteSize(progress.delta_per_second)}/s`
       }),
+      speed_update_interval: METER_UPDATE_INTERVAL,
     })
-    progressMeter.value = null
     progressDetails.value = ''
 
     success.value = true
