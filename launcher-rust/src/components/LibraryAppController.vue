@@ -18,8 +18,10 @@ import {
 } from '@tauri-apps/plugin-fs'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { onMounted } from 'vue'
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
 import { EllipsisVertical } from 'lucide-vue-next'
+
+const METER_UPDATE_INTERVAL = 750
 
 const safeJsonParse = <T,>(str: string) => {
   try {
@@ -40,6 +42,12 @@ const ZAppConfig = z.object({
 })
 
 type AppConfig = z.infer<typeof ZAppConfig>
+
+interface ProgressEventData {
+  current_bytes: number
+  total_bytes: number
+  delta_per_second: number
+}
 
 const { build, app } = defineProps<{ build: AppBuildsResponse; app: AppsResponse }>()
 
@@ -186,6 +194,11 @@ const downloadAndExtractBuild = async (
     return invoke('extract_archive', {
       archivePath,
       destinationPath: installDir,
+      progressChannel: new Channel<ProgressEventData>((progress) => {
+        const pct = progress.current_bytes / progress.total_bytes
+        onProgress?.(50 + pct * 45)
+      }),
+      speed_update_interval: METER_UPDATE_INTERVAL,
     })
   })
   await Promise.all(extractions)

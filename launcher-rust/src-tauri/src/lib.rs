@@ -14,10 +14,12 @@ use tauri::{
 };
 
 use crate::rate_meter::RateMeter;
+use crate::tracking_reader::TrackingReader;
 use crate::tracking_tokio_stream::TrackingTokioStream;
 use crate::tracking_writer::TrackingWriter;
 
 mod rate_meter;
+mod tracking_reader;
 mod tracking_tokio_stream;
 mod tracking_writer;
 
@@ -174,7 +176,12 @@ async fn read_file_bytes(file_path: String) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-async fn extract_archive(archive_path: String, destination_path: String) -> Result<(), String> {
+async fn extract_archive(
+    archive_path: String,
+    destination_path: String,
+    progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
+) -> Result<(), String> {
     let archive_path = Path::new(&archive_path);
     if !archive_path.exists() {
         return Err(format!(
@@ -188,7 +195,33 @@ async fn extract_archive(archive_path: String, destination_path: String) -> Resu
         .map_err(|e| format!("Failed to create destination directory: {}", e))?;
 
     let file = File::open(archive_path).map_err(|e| format!("Failed to open archive: {}", e))?;
-    let decoder = GzDecoder::new(file);
+
+    let mut read_bytes = 0_u64;
+    let total_bytes = file
+        .metadata()
+        .map_err(|e| format!("Failed to get file metadata: {}", e))?
+        .len();
+
+    let mut extract_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(1.0),
+    ));
+    let tracker = TrackingReader::new(file, |buf| {
+        let buf_len = buf.len() as u64;
+        read_bytes += buf_len;
+        extract_rate.add_value(buf_len);
+
+        let res = progress_channel
+            .send(ProgressCallbackData {
+                current_bytes: read_bytes,
+                total_bytes,
+                delta_per_second: extract_rate.get_rate() as u64,
+            })
+            .map_err(|e| format!("Failed to emit extracting progress info: {}", e));
+        if let Err(e) = res {
+            eprintln!("{}", e);
+        }
+    });
+    let decoder = GzDecoder::new(tracker);
     let mut archive = Archive::new(decoder);
 
     archive
