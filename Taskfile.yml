@@ -19,12 +19,12 @@ tasks:
       - go build -o dist/main.bin .
 
   build-frontend:
-    dir: ./frontend
+    dir: ./apps/frontend
     cmds:
       - bun run build
 
   build-launcher:
-    dir: ./launcher-rust
+    dir: ./apps/launcher-rust
     cmds:
       - bun tauri build
 
@@ -44,13 +44,13 @@ tasks:
 
   dev-frontend:
     desc: Run frontend server
-    dir: ./frontend
+    dir: ./apps/frontend
     cmds:
       - bun run dev
 
   dev-launcher:
     desc: Run launcher
-    dir: ./launcher-rust
+    dir: ./apps/launcher-rust
     cmds:
       - bun run tauri dev
 
@@ -59,6 +59,6 @@ tasks:
       - bun run scripts/typegen-watcher.ts
 
   sign-launcher:
-    dir: ./launcher-rust
+    dir: ./apps/launcher-rust
     cmds:
       - bunx tauri signer generate -w ~/.tauri/zapuskalka.key

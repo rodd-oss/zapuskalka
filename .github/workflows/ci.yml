@@ -21,15 +21,15 @@ jobs:
         run: bun install
 
       - name: Check LSP
-        working-directory: frontend
+        working-directory: apps/frontend
         run: bun run check:lsp
 
       - name: Check Lint
-        working-directory: frontend
+        working-directory: apps/frontend
         run: bun run check:lint
 
       - name: Check Format
-        working-directory: frontend
+        working-directory: apps/frontend
         run: bun run check:format
 
   check-launcher-ui:
@@ -44,15 +44,15 @@ jobs:
         run: bun install
 
       - name: Check LSP
-        working-directory: launcher-rust
+        working-directory: apps/launcher-rust
         run: bun run check:lsp
 
       - name: Check Lint
-        working-directory: launcher-rust
+        working-directory: apps/launcher-rust
         run: bun run check:lint
 
       - name: Check Format
-        working-directory: launcher-rust
+        working-directory: apps/launcher-rust
         run: bun run check:format
 
   check-backend:
@@ -64,7 +64,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: "1.25"
 
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -123,7 +123,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: "./launcher-rust/src-tauri -> target"
+          workspaces: "./apps/launcher-rust/src-tauri -> target"
 
       - name: Check LSP (cargo check)
         working-directory: launcher-rust/src-tauri

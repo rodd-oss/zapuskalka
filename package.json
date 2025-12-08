@@ -4,9 +4,8 @@
   "type": "module",
   "private": true,
   "workspaces": [
-    "launcher-rust",
+    "apps/**",
     "packages/**",
-    "frontend",
     "!packages/**/test/**",
     "!packages/**/template/**"
   ],

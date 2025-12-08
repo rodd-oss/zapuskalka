@@ -19,7 +19,7 @@ func main() {
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// serves static files from the provided public dir (if exists)
-		se.Router.GET("/{path...}", apis.Static(os.DirFS("./web/dist"), true))
+		se.Router.GET("/{path...}", apis.Static(os.DirFS("./dist"), true))
 		se.Router.POST("/api/get-app-token", func(e *core.RequestEvent) error {
 			data := struct {
 				AuthCode string `json:"authCode" form:"authCode"`

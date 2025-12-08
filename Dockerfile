@@ -3,19 +3,26 @@
 #####################################
 FROM golang:1.25-alpine AS build-backend
 WORKDIR /app
-COPY ./backend ./
+COPY backend/go.mod backend/go.sum ./
 RUN go mod download
+COPY ./backend ./
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o dist/main.bin .
 
 #####################################
 # FRONTEND #
 #####################################
 # FROM node:lts-alpine AS build-frontend
-# WORKDIR /app/frontend
-# COPY ./frontend/package*.json ./
-# RUN npm ci
-# COPY ./frontend ./
-# RUN npm run build
+FROM oven/bun:1 AS build-frontend
+WORKDIR /app
+COPY package.json bun.lock bunfig.toml ./
+COPY apps/frontend/package.json ./apps/frontend/
+COPY packages/backend-api/package.json ./packages/backend-api/
+RUN bun install --filter "frontend" --filter './packages/*'
+COPY ./apps/frontend ./apps/frontend/
+COPY ./packages ./packages/
+COPY ./tsconfig.json ./
+WORKDIR /app/apps/frontend
+RUN bun run build
 
 #####################################
 # FINAL IMAGE #
@@ -26,7 +33,7 @@ WORKDIR /app
 COPY --from=build-backend /app/dist/main.bin ./
 # COPY --from=build-backend /app/migrations ./migrations
 # Copy frontend build
-# COPY --from=build-frontend /app/frontend/dist ./dist
+COPY --from=build-frontend /app/apps/frontend/dist ./dist
 
 EXPOSE 8090
 
