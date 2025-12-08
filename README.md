@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="launcher-rust/app-icon.png" alt="Zapuskalka Logo" width="128" height="128">
+  <img src="apps/launcher-rust/app-icon.png" alt="Zapuskalka Logo" width="128" height="128">
   
   # Zapuskalka
   
