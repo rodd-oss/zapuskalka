@@ -22,6 +22,8 @@ COPY ./apps/frontend ./apps/frontend/
 COPY ./packages ./packages/
 COPY ./tsconfig.json ./
 WORKDIR /app/apps/frontend
+ARG VITE_GIT_SHORT_LINK
+ENV VITE_GIT_SHORT_LINK=$VITE_GIT_SHORT_LINK
 RUN bun run build
 
 #####################################
