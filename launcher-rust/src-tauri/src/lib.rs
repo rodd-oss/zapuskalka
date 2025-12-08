@@ -3,8 +3,9 @@ use flate2::{read::GzDecoder, write::GzEncoder};
 use serde::Serialize;
 use std::collections::VecDeque;
 use std::fs::File;
-use std::io::{BufWriter, Read};
+use std::io::BufWriter;
 use std::path::Path;
+use std::time::Duration;
 use tar::{Archive, Builder};
 use tauri::{
     menu::{Menu, MenuItem},
@@ -12,21 +13,29 @@ use tauri::{
     LogicalPosition, LogicalSize, Manager,
 };
 
+use crate::rate_meter::RateMeter;
+use crate::tracking_reader::TrackingReader;
+use crate::tracking_tokio_stream::TrackingTokioStream;
 use crate::tracking_writer::TrackingWriter;
 
+mod rate_meter;
+mod tracking_reader;
+mod tracking_tokio_stream;
 mod tracking_writer;
 
 #[derive(Serialize)]
-struct PackingProgress {
-    packed_bytes: Option<usize>,
-    total_bytes: Option<usize>,
+struct ProgressCallbackData {
+    current_bytes: u64,
+    total_bytes: u64,
+    delta_per_second: u64,
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 async fn archive_and_compress_folder(
     folder_path: String,
-    progress_channel: tauri::ipc::Channel<PackingProgress>,
+    progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
 ) -> Result<String, String> {
     let source_path = Path::new(&folder_path);
 
@@ -57,28 +66,10 @@ async fn archive_and_compress_folder(
     let output_file =
         File::create(&output_path).map_err(|e| format!("Failed to create output file: {}", e))?;
 
-    let mut total_bytes = 0_usize;
-    let mut packed_bytes = 0_usize;
+    let mut total_bytes = 0_u64;
+    let mut packed_bytes = 0_u64;
 
-    // Create gzip encoder
-    let gz_encoder = GzEncoder::new(output_file, Compression::default());
-    let writer = BufWriter::new(gz_encoder);
-    let tracker = TrackingWriter::new(writer, |buf| {
-        packed_bytes += buf.len();
-        let res = progress_channel
-            .send(PackingProgress {
-                packed_bytes: Some(packed_bytes),
-                total_bytes: None,
-            })
-            .map_err(|e| format!("Failed to send packing progress info: {}", e));
-        if let Err(err) = res {
-            eprintln!("{}", err);
-        }
-    });
-
-    // Create tar archive builder
-    let mut tar_builder = Builder::new(tracker);
-
+    // Find all files
     let mut to_visit = VecDeque::new();
     let mut all_entries = vec![];
 
@@ -98,16 +89,43 @@ async fn archive_and_compress_folder(
                 let meta = entry
                     .metadata()
                     .map_err(|e| format!("Failed to get file metadata: {}", e))?;
-                total_bytes += meta.len() as usize;
+                total_bytes += meta.len();
                 all_entries.push(entry);
             }
         }
     }
 
+    // Create gzip encoder
+    let gz_encoder = GzEncoder::new(output_file, Compression::default());
+    let writer = BufWriter::new(gz_encoder);
+    let progress_channel_clone = progress_channel.clone();
+    let mut packing_speed_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(1.0),
+    ));
+    let tracker = TrackingWriter::new(writer, move |buf| {
+        let delta = buf.len() as u64;
+        packing_speed_rate.add_value(delta);
+        packed_bytes += delta;
+        let res = progress_channel_clone
+            .send(ProgressCallbackData {
+                current_bytes: packed_bytes,
+                total_bytes,
+                delta_per_second: packing_speed_rate.get_rate() as u64,
+            })
+            .map_err(|e| format!("Failed to send packing progress info: {}", e));
+        if let Err(err) = res {
+            eprintln!("{}", err);
+        }
+    });
+
+    // Create tar archive builder
+    let mut tar_builder = Builder::new(tracker);
+
     progress_channel
-        .send(PackingProgress {
-            packed_bytes: None,
-            total_bytes: Some(total_bytes),
+        .send(ProgressCallbackData {
+            current_bytes: 0,
+            total_bytes,
+            delta_per_second: 0,
         })
         .map_err(|e| format!("Failed to emit packing progress event: {}", e))?;
 
@@ -158,7 +176,12 @@ async fn read_file_bytes(file_path: String) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-async fn extract_archive(archive_path: String, destination_path: String) -> Result<(), String> {
+async fn extract_archive(
+    archive_path: String,
+    destination_path: String,
+    progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
+) -> Result<(), String> {
     let archive_path = Path::new(&archive_path);
     if !archive_path.exists() {
         return Err(format!(
@@ -172,7 +195,33 @@ async fn extract_archive(archive_path: String, destination_path: String) -> Resu
         .map_err(|e| format!("Failed to create destination directory: {}", e))?;
 
     let file = File::open(archive_path).map_err(|e| format!("Failed to open archive: {}", e))?;
-    let decoder = GzDecoder::new(file);
+
+    let mut read_bytes = 0_u64;
+    let total_bytes = file
+        .metadata()
+        .map_err(|e| format!("Failed to get file metadata: {}", e))?
+        .len();
+
+    let mut extract_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(1.0),
+    ));
+    let tracker = TrackingReader::new(file, |buf| {
+        let buf_len = buf.len() as u64;
+        read_bytes += buf_len;
+        extract_rate.add_value(buf_len);
+
+        let res = progress_channel
+            .send(ProgressCallbackData {
+                current_bytes: read_bytes,
+                total_bytes,
+                delta_per_second: extract_rate.get_rate() as u64,
+            })
+            .map_err(|e| format!("Failed to emit extracting progress info: {}", e));
+        if let Err(e) = res {
+            eprintln!("{}", e);
+        }
+    });
+    let decoder = GzDecoder::new(tracker);
     let mut archive = Archive::new(decoder);
 
     archive
@@ -182,22 +231,14 @@ async fn extract_archive(archive_path: String, destination_path: String) -> Resu
     Ok(())
 }
 
-#[derive(serde::Serialize, Clone)]
-struct UploadProgress {
-    progress: u64,
-    total: u64,
-    transfer_speed: f64,
-}
-
 #[tauri::command]
 async fn upload_file_as_form_data(
     url: String,
     file_path: String,
     auth_token: Option<String>,
-    progress_channel: tauri::ipc::Channel<UploadProgress>,
+    progress_channel: tauri::ipc::Channel<ProgressCallbackData>,
+    speed_update_interval: Option<f64>,
 ) -> Result<(), String> {
-    use std::time::Instant;
-
     let file_path = Path::new(&file_path);
 
     // Check if file exists
@@ -217,19 +258,44 @@ async fn upload_file_as_form_data(
         .ok_or_else(|| "Invalid filename".to_string())?;
 
     // Open file
-    let mut file = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let file = tokio::fs::File::open(file_path)
+        .await
+        .map_err(|e| format!("Failed to open file: {}", e))?;
+
+    let file_meta = file
+        .metadata()
+        .await
+        .map_err(|e| format!("Failed to get file metadata: {}", e))?;
+
+    let mut read_bytes = 0_u64;
+    let total_bytes = file_meta.len();
+
+    let progress_channel_clone = progress_channel.clone();
+    let mut uploading_speed_rate = RateMeter::new(Duration::from_secs_f64(
+        speed_update_interval.unwrap_or(0.0),
+    ));
+    let tracker = TrackingTokioStream::new(file, move |read_len| {
+        read_bytes += read_len;
+        uploading_speed_rate.add_value(read_len);
+
+        let res = progress_channel_clone
+            .send(ProgressCallbackData {
+                current_bytes: read_bytes,
+                total_bytes,
+                delta_per_second: uploading_speed_rate.get_rate() as u64,
+            })
+            .map_err(|e| format!("Failed to send update progress to channel: {}", e));
+        if let Err(e) = res {
+            eprintln!("{}", e);
+        }
+    });
 
     // Create multipart form
     let mut form = reqwest::multipart::Form::new();
 
-    // Read file into memory (for small files) or use streaming for large files
-    // For now, we'll read into memory. For very large files, consider streaming
-    let mut file_data = Vec::new();
-    file.read_to_end(&mut file_data)
-        .map_err(|e| format!("Failed to read file: {}", e))?;
-
-    // Create a part with the file data
-    let part = reqwest::multipart::Part::bytes(file_data)
+    // Create a part with the file stream
+    let part_body = reqwest::Body::wrap_stream(tracker);
+    let part = reqwest::multipart::Part::stream_with_length(part_body, file_size)
         .file_name(filename.to_string())
         .mime_str("application/gzip")
         .map_err(|e| format!("Failed to create multipart part: {}", e))?;
@@ -247,25 +313,16 @@ async fn upload_file_as_form_data(
     }
 
     // Send request with progress tracking
-    let start_time = Instant::now();
     let response = request
         .send()
         .await
         .map_err(|e| format!("Failed to send request: {}", e))?;
 
-    // Calculate progress (we've already sent everything, but we can report completion)
-    let elapsed = start_time.elapsed().as_secs_f64();
-    let transfer_speed = if elapsed > 0.0 {
-        file_size as f64 / elapsed
-    } else {
-        0.0
-    };
-
     // Send progress update
-    let _ = progress_channel.send(UploadProgress {
-        progress: file_size,
-        total: file_size,
-        transfer_speed,
+    let _ = progress_channel.send(ProgressCallbackData {
+        current_bytes: file_size,
+        total_bytes: file_size,
+        delta_per_second: 0,
     });
 
     // Check response status

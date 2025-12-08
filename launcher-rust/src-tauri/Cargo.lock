@@ -7,6 +7,7 @@ name = "Zapuskalka"
 version = "0.3.4"
 dependencies = [
  "flate2",
+ "futures-core",
  "os_info",
  "reqwest",
  "sentry",
@@ -27,6 +28,7 @@ dependencies = [
  "tauri-plugin-updater",
  "tauri-plugin-upload",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

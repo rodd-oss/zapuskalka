@@ -36,6 +36,8 @@ os_info = "3"
 tauri-plugin-deep-link = "2"
 sentry = "0.42"
 tauri-plugin-sentry = "0.5"
+futures-core = "0.3.31"
+tokio-util = "0.7.17"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"
