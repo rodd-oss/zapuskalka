@@ -126,15 +126,15 @@ jobs:
           workspaces: "./apps/launcher-rust/src-tauri -> target"
 
       - name: Check LSP (cargo check)
-        working-directory: launcher-rust/src-tauri
+        working-directory: apps/launcher-rust/src-tauri
         run: cargo check --all-targets
 
       - name: Check Lint (clippy)
-        working-directory: launcher-rust/src-tauri
+        working-directory: apps/launcher-rust/src-tauri
         run: cargo clippy --all-targets -- -D warnings
 
       - name: Check Format
-        working-directory: launcher-rust/src-tauri
+        working-directory: apps/launcher-rust/src-tauri
         run: cargo fmt --all -- --check
 
   # build:
