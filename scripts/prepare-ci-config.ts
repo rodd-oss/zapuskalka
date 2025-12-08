@@ -17,7 +17,13 @@ interface TauriConfig {
 
 async function prepareCiConfig() {
   const rootDir = join(import.meta.dir, "..");
-  const tauriConfPath = join(rootDir, "launcher-rust", "src-tauri", "tauri.conf.json");
+  const tauriConfPath = join(
+    rootDir,
+    "apps",
+    "launcher-rust",
+    "src-tauri",
+    "tauri.conf.json",
+  );
 
   const file = Bun.file(tauriConfPath);
   const config = (await file.json()) as TauriConfig;
@@ -36,4 +42,3 @@ prepareCiConfig().catch((error) => {
   console.error("Error with prepare config for CI:", error);
   process.exit(1);
 });
-
