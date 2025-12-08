@@ -24,6 +24,8 @@ COPY ./tsconfig.json ./
 WORKDIR /app/apps/frontend
 ARG VITE_GIT_SHORT_LINK
 ENV VITE_GIT_SHORT_LINK=$VITE_GIT_SHORT_LINK
+ARG VITE_BACKEND_URL
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
 RUN bun run build
 
 #####################################
