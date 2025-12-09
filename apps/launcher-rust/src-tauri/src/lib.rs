@@ -356,8 +356,8 @@ async fn launch_app(
     app_data_path: State<'_, states::DataDirPath>,
     apps_running: State<'_, Mutex<states::AppsRunningStatus>>,
 ) -> Result<u32, String> {
-    let app_data_path = &app_data_path.inner().0;
-    let app_json_path = app_data_path.join(format!("apps/{}.json", app_id));
+    let data_dir_path = &app_data_path.inner().0;
+    let app_json_path = data_dir_path.join(format!("apps/{}.json", app_id));
 
     let file =
         File::open(app_json_path).map_err(|e| format!("Failed to open app json file: {}", e))?;
