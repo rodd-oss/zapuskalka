@@ -3,22 +3,26 @@ use flate2::{read::GzDecoder, write::GzEncoder};
 use serde::Serialize;
 use std::collections::VecDeque;
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufReader, BufWriter};
 use std::path::Path;
 use std::time::Duration;
 use tar::{Archive, Builder};
+use tauri::State;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     LogicalPosition, LogicalSize, Manager,
 };
+use tokio::process::Command;
 
 use crate::rate_meter::RateMeter;
 use crate::tracking_reader::TrackingReader;
 use crate::tracking_tokio_stream::TrackingTokioStream;
 use crate::tracking_writer::TrackingWriter;
 
+mod models;
 mod rate_meter;
+mod states;
 mod tracking_reader;
 mod tracking_tokio_stream;
 mod tracking_writer;
@@ -341,6 +345,39 @@ async fn upload_file_as_form_data(
     Ok(())
 }
 
+// TODO: for now we return PID of launched program, but application can spawn actual program
+//       and then terminate entrypoint program. Ideally we should track all children spawned
+//       by entrypoint. When we will do that here we should return not PID, but some key
+//       which can be used to query/wait when application terminated.
+#[tauri::command]
+async fn launch_app(
+    app_id: String,
+    app_data_path: State<'_, states::DataDirPath>,
+) -> Result<u32, String> {
+    let app_data_path = &app_data_path.inner().0;
+    let app_json_path = app_data_path.join(format!("apps/{}.json", app_id));
+
+    let file =
+        File::open(app_json_path).map_err(|e| format!("Failed to open app json file: {}", e))?;
+    let reader = BufReader::new(file);
+    let app_info = serde_json::from_reader::<_, models::InstalledAppInfo>(reader)
+        .map_err(|e| format!("Failed to parse app json: {}", e))?;
+
+    let entrypoint_path = app_info.install_dir.join(app_info.entrypoint);
+    if !entrypoint_path.exists() {
+        return Err("entrypoint doesn't exists".to_string());
+    }
+
+    let app_child = Command::new(entrypoint_path)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn app process: {}", e))?;
+
+    match app_child.id() {
+        Some(id) => Ok(id),
+        None => Err("Process terminated too quickly".to_string()),
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 struct WindowState {
     width: f64,
@@ -599,6 +636,8 @@ pub fn run() {
                 .build(app)
                 .map_err(|e| format!("Failed to create tray icon: {}", e))?;
 
+            app.manage(states::DataDirPath(app.path().app_data_dir()?));
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
@@ -606,7 +645,8 @@ pub fn run() {
             archive_and_compress_folder,
             read_file_bytes,
             extract_archive,
-            upload_file_as_form_data
+            upload_file_as_form_data,
+            launch_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

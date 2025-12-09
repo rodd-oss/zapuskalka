@@ -318,9 +318,11 @@ const launch = async () => {
     throw new Error('State error. Should not call if config is not loaded')
   }
 
-  const entrypointPath = await path.join(config.value.installDir, config.value.entrypoint)
-
-  await openPath(entrypointPath)
+  try {
+    await invoke('launch_app', { appId: config.value.id })
+  } catch (e) {
+    actionError.value = `failed launch application (${e})`
+  }
 }
 
 const close = async () => {}
