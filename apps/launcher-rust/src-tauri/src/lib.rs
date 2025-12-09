@@ -1,7 +1,7 @@
 use flate2::Compression;
 use flate2::{read::GzDecoder, write::GzEncoder};
 use serde::Serialize;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::Path;
@@ -14,6 +14,7 @@ use tauri::{
     LogicalPosition, LogicalSize, Manager,
 };
 use tokio::process::Command;
+use tokio::sync::Mutex;
 
 use crate::rate_meter::RateMeter;
 use crate::tracking_reader::TrackingReader;
@@ -353,6 +354,7 @@ async fn upload_file_as_form_data(
 async fn launch_app(
     app_id: String,
     app_data_path: State<'_, states::DataDirPath>,
+    apps_running: State<'_, Mutex<states::AppsRunningStatus>>,
 ) -> Result<u32, String> {
     let app_data_path = &app_data_path.inner().0;
     let app_json_path = app_data_path.join(format!("apps/{}.json", app_id));
@@ -371,11 +373,37 @@ async fn launch_app(
     let app_child = Command::new(entrypoint_path)
         .spawn()
         .map_err(|e| format!("Failed to spawn app process: {}", e))?;
+    let pid = app_child.id().ok_or_else(|| format!("Child not started"))?;
 
-    match app_child.id() {
-        Some(id) => Ok(id),
-        None => Err("Process terminated too quickly".to_string()),
-    }
+    apps_running
+        .lock()
+        .await
+        .app2child
+        .insert(app_id, app_child);
+
+    // TODO: wait for child close and remove it from apps_running.app2child map
+
+    Ok(pid)
+}
+
+#[tauri::command]
+async fn wait_for_app_close(
+    app_id: String,
+    apps_running: State<'_, Mutex<states::AppsRunningStatus>>,
+) -> Result<(), String> {
+    let mut apps_running = apps_running.lock().await;
+    let child = if let Some(v) = apps_running.app2child.get_mut(&app_id) {
+        v
+    } else {
+        return Ok(());
+    };
+
+    child
+        .wait()
+        .await
+        .map_err(|e| format!("Failed to wait for child process: {}", e))?;
+
+    Ok(())
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -637,6 +665,9 @@ pub fn run() {
                 .map_err(|e| format!("Failed to create tray icon: {}", e))?;
 
             app.manage(states::DataDirPath(app.path().app_data_dir()?));
+            app.manage(Mutex::new(states::AppsRunningStatus {
+                app2child: HashMap::new(),
+            }));
 
             Ok(())
         })
@@ -647,6 +678,7 @@ pub fn run() {
             extract_archive,
             upload_file_as_form_data,
             launch_app,
+            wait_for_app_close,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

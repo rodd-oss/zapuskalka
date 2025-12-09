@@ -322,7 +322,12 @@ const launch = async () => {
     await invoke('launch_app', { appId: config.value.id })
   } catch (e) {
     actionError.value = `failed launch application (${e})`
+    return
   }
+
+  state.value = 'running'
+  await invoke('wait_for_app_close', { appId: config.value.id })
+  state.value = 'ready'
 }
 
 const close = async () => {}
