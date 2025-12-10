@@ -15,6 +15,7 @@ export enum Collections {
 	AppBranches = "app_branches",
 	AppBuilds = "app_builds",
 	Apps = "apps",
+	AvBuildChecks = "av_build_checks",
 	Publishers = "publishers",
 	Users = "users",
 }
@@ -161,6 +162,24 @@ export type AppsRecord = {
 	updated: IsoAutoDateString
 }
 
+export enum AvBuildChecksStatusOptions {
+	"pending" = "pending",
+	"scanning" = "scanning",
+	"clean" = "clean",
+	"infected" = "infected",
+	"error" = "error",
+}
+export type AvBuildChecksRecord = {
+	build: RecordIdString
+	created: IsoAutoDateString
+	id: string
+	log?: string
+	scan_time?: IsoDateString
+	status: AvBuildChecksStatusOptions
+	updated: IsoAutoDateString
+	virus_name?: string
+}
+
 export type PublishersRecord = {
 	created: IsoAutoDateString
 	id: string
@@ -193,6 +212,7 @@ export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> &
 export type AppBranchesResponse<Texpand = unknown> = Required<AppBranchesRecord> & BaseSystemFields<Texpand>
 export type AppBuildsResponse<Texpand = unknown> = Required<AppBuildsRecord> & BaseSystemFields<Texpand>
 export type AppsResponse<Texpand = unknown> = Required<AppsRecord> & BaseSystemFields<Texpand>
+export type AvBuildChecksResponse<Texpand = unknown> = Required<AvBuildChecksRecord> & BaseSystemFields<Texpand>
 export type PublishersResponse<Texpand = unknown> = Required<PublishersRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
 
@@ -208,6 +228,7 @@ export type CollectionRecords = {
 	app_branches: AppBranchesRecord
 	app_builds: AppBuildsRecord
 	apps: AppsRecord
+	av_build_checks: AvBuildChecksRecord
 	publishers: PublishersRecord
 	users: UsersRecord
 }
@@ -222,6 +243,7 @@ export type CollectionResponses = {
 	app_branches: AppBranchesResponse
 	app_builds: AppBuildsResponse
 	apps: AppsResponse
+	av_build_checks: AvBuildChecksResponse
 	publishers: PublishersResponse
 	users: UsersResponse
 }
