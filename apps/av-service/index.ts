@@ -1,8 +1,6 @@
 import { newApiClient, type TypedPocketBase } from "backend-api";
 import type { AppBuildsResponse, AvBuildChecksResponse } from "backend-api";
 import { $ } from "bun";
-import EventSource from 'eventsource';
-(global as any).EventSource = EventSource;
 
 const POCKETBASE_URL = Bun.env.POCKETBASE_URL ?? "http://localhost:8090";
 const POCKETBASE_SUPERUSER_EMAIL = Bun.env.POCKETBASE_SUPERUSER_EMAIL;
@@ -236,24 +234,7 @@ async function startLongPolling(pb: TypedPocketBase): Promise<void> {
   logger.info(`Long polling started (interval: ${pollInterval}ms)`);
 }
 
-// --- Subscription to new builds ---
-async function subscribeToNewBuilds(pb: TypedPocketBase): Promise<void> {
-  try {
-    await pb.collection("app_builds").subscribe("*", (data) => {
-      if (data.action === "create") {
-        const buildId = data.record.id;
-        logger.debug("New build received:", buildId);
-        // Create AV check for this build
-        createAvBuildCheck(pb, buildId);
-      }
-    });
 
-    logger.info("Subscribed to app_builds collection");
-  } catch (error) {
-    logger.error("Failed to subscribe to app_builds collection:", error);
-    throw error;
-  }
-}
 
 // --- Queue processing ---
 async function processQueue(pb: TypedPocketBase): Promise<void> {
@@ -487,7 +468,6 @@ async function startScanner(): Promise<void> {
     await authenticate(pb);
     await ensureWorkDir();
     await reprocessStuckOrFailedChecks(pb);
-    await subscribeToNewBuilds(pb);
     await startLongPolling(pb);
     logger.info("AV Scanner started successfully");
   } catch (error) {
