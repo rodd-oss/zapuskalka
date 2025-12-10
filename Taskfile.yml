@@ -32,6 +32,7 @@ tasks:
     desc: Run backend and launcher together
     deps:
       - dev-backend
+      - dev-av-service
       - dev-frontend
       - dev-launcher
       - dev-typegen
@@ -41,6 +42,12 @@ tasks:
     dir: ./backend
     cmds:
       - go run -tags automigrate . serve
+
+  dev-av-service:
+    desc: Run av service
+    cmds:
+      - docker build -f av.Dockerfile --platform linux/amd64 -t av-scanner:latest .
+      - docker run --platform linux/amd64 --rm -d --name av-scanner --env-file apps/av-service/.env -e POCKETBASE_URL=http://host.docker.internal:8090 av-scanner:latest
 
   dev-frontend:
     desc: Run frontend server
