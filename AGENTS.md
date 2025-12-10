@@ -1,32 +1,31 @@
 # AGENTS.md
 
+Instructions for agentic coding assistants operating in this repository.
+
+After making changes, run lint and typecheck commands for the affected project.
+
 ## Build Commands
 
-**Frontend (Vue/Nuxt):**
-- `bun run dev` - Start dev server
-- `bun run build` - Build for production  
-- `bun run check` - Run type-check, lint, and format
-- `bun run lint` - Lint and fix code
-- `bun run format` - Format code with Prettier
+**Frontend (Vue):** `bun run dev`, `build`, `check`, `lint`, `format`. `check:lsp` (type-check), `check:lint`, `check:format`.
+**Launcher (Tauri/Rust):** `bun run tauri dev`, `tauri build`, `check`, `format` (Prettier + Tailwind plugin).
+**Backend (Go):** `task build-backend`, `dev-backend`, `go build ./...`, `go fmt ./...`, `go vet ./...`.
+**Launcher Core (Rust):** `cargo check --all-targets`, `cargo clippy --all-targets -- -D warnings`, `cargo fmt --all -- --check`.
+**All Projects:** `task build`, `task dev`.
 
-**Launcher (Tauri/Rust):**
-- `bun run tauri dev` - Start dev server
-- `bun run tauri build` - Build desktop app
-- `bun run check` - Run type-check, lint, and format
+## Testing
 
-**Backend (Go):**
-- `task build-backend` - Build backend
-- `task dev-backend` - Run with automigrate
-
-**All Projects:**
-- `task build` - Build all components
-- `task dev` - Start all dev servers
+**Frontend:** No test framework yet. When added: `bun test` (all), `bun test path/to/test.spec.ts` (single).
+**Backend:** `go test ./...` (all), `go test ./path/to/package` (package).
+**Launcher Core:** `cargo test` (all), `cargo test test_name` (single).
 
 ## Code Style Guidelines
 
-**Formatting:** No semicolons, single quotes, 100 char width (Prettier)
-**TypeScript:** Strict mode, no non-null assertions (`@typescript-eslint/no-non-null-assertion`)
-**Vue:** Use `<script setup lang="ts">` with explicit imports
-**Naming:** PascalCase for components, camelCase for variables/functions
-**Error Handling:** Use try/catch with proper error logging
-**Imports:** Group external libs first, then internal modules with `@/` prefix
+**Formatting:** No semicolons, single quotes, 100 char width (Prettier). Go: `gofmt`.
+**TypeScript:** Strict mode, no non-null assertions (`@typescript-eslint/no-non-null-assertion`).
+**Vue:** `<script setup lang="ts">` with explicit imports. PascalCase component names.
+**Naming:** PascalCase components, camelCase variables/functions, SCREAMING_SNAKE_CASE constants.
+**Error Handling:** try/catch with proper logging. Avoid silent failures.
+**Imports:** External libs first, internal modules with `@/` prefix. Aliases: `@/`, `@pages`, `@components`, `@stores`, `@lib`.
+**Tailwind:** Use Tailwind CSS with `prettier-plugin-tailwindcss` sorting.
+**Go:** `go fmt`, `go vet`. Standard Go naming conventions.
+**Rust:** `cargo fmt`, `clippy`. Rust naming conventions (snake_case).
