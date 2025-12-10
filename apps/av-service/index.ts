@@ -65,11 +65,25 @@ async function ensureWorkDir(): Promise<void> {
   }
 }
 
+// --- Check if build has files ---
+async function buildHasFiles(
+  pb: TypedPocketBase,
+  buildId: string,
+): Promise<boolean> {
+  try {
+    const build = (await pb.collection("app_builds").getOne(buildId)) as AppBuildsResponse;
+    return !!(build.files && build.files.length > 0);
+  } catch (error) {
+    logger.error(`Failed to fetch build ${buildId}:`, error);
+    return false;
+  }
+}
+
 // --- AV check creation ---
 async function createAvBuildCheck(
   pb: TypedPocketBase,
   buildId: string,
-): Promise<void> {
+): Promise<boolean> {
   try {
     // Check if av_build_checks already exists for this build
     const existing = (await pb.collection("av_build_checks").getFullList({
@@ -80,7 +94,14 @@ async function createAvBuildCheck(
       // Queue existing check ID
       scanQueue.add(existing[0]!.id);
       processQueue(pb);
-      return;
+      return true;
+    }
+
+    // Check if build has files before creating check
+    const hasFiles = await buildHasFiles(pb, buildId);
+    if (!hasFiles) {
+      logger.debug(`Build ${buildId} has no files, skipping AV check creation`);
+      return false;
     }
 
     // Create new av_build_checks record
@@ -91,8 +112,10 @@ async function createAvBuildCheck(
     logger.debug(`Created AV check ${record.id} for build ${buildId}`);
     scanQueue.add(record.id);
     processQueue(pb);
+    return true;
   } catch (error) {
     logger.error(`Failed to create AV check for build ${buildId}:`, error);
+    return false;
   }
 }
 
@@ -158,8 +181,11 @@ async function fetchAndQueueOneUncheckedBuild(
       for (const build of builds) {
         if (!checkedBuildIds.has(build.id)) {
           // Create AV check for this build (function handles atomicity)
-          await createAvBuildCheck(pb, build.id);
-          return true; // Successfully queued one build
+          const checkCreated = await createAvBuildCheck(pb, build.id);
+          if (checkCreated) {
+            return true; // Successfully queued one build
+          }
+          // Check was not created (likely no files), continue to next build
         }
       }
 
