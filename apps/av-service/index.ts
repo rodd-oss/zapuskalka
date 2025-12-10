@@ -375,7 +375,7 @@ async function scanBuildFile(
   try {
     // Do not throw on non-zero exit codes; inspect exitCode manually.
     const result =
-      await $`${CLAMSCAN_PATH} --quiet --infected --no-summary ${localPath}`.nothrow();
+      await $`${CLAMSCAN_PATH} --infected ${localPath}`.nothrow();
 
     const output = result.stderr.toString() + result.stdout.toString();
     const exitCode = result.exitCode;
