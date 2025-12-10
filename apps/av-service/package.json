@@ -10,7 +10,11 @@
     "type-check": "bun tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/eventsource": "^1.1.0"
+  },
+  "dependencies": {
+    "eventsource": "^1.1.0"
   },
   "peerDependencies": {
     "typescript": "^5"
