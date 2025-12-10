@@ -9,7 +9,8 @@ const CLAMSCAN_PATH = Bun.env.CLAMSCAN_PATH ?? "clamscan";
 const WORK_DIR = Bun.env.WORK_DIR ?? "/tmp/zapuskalka-av-scans";
 const MAX_RETRIES = parseInt(Bun.env.MAX_RETRIES ?? "3", 10) || 3;
 const LOG_LEVEL = Bun.env.LOG_LEVEL ?? "info";
-const POLL_INTERVAL_MS = parseInt(Bun.env.POLL_INTERVAL_MS ?? "30000", 10) || 30000;
+const POLL_INTERVAL_MS =
+  parseInt(Bun.env.POLL_INTERVAL_MS ?? "3000", 10) || 3000;
 
 const logger = {
   debug: (...args: unknown[]) =>
@@ -69,7 +70,9 @@ async function buildHasFiles(
   buildId: string,
 ): Promise<boolean> {
   try {
-    const build = (await pb.collection("app_builds").getOne(buildId)) as AppBuildsResponse;
+    const build = (await pb
+      .collection("app_builds")
+      .getOne(buildId)) as AppBuildsResponse;
     return !!(build.files && build.files.length > 0);
   } catch (error) {
     logger.error(`Failed to fetch build ${buildId}:`, error);
@@ -153,11 +156,9 @@ async function fetchAndQueueOneUncheckedBuild(
   try {
     // Get all av_build_checks to know which builds are already checked
     // We only need the build IDs
-    const existingChecks = (await pb
-      .collection("av_build_checks")
-      .getFullList({
-        fields: "build",
-      })) as Pick<AvBuildChecksResponse, "build">[];
+    const existingChecks = (await pb.collection("av_build_checks").getFullList({
+      fields: "build",
+    })) as Pick<AvBuildChecksResponse, "build">[];
     const checkedBuildIds = new Set(existingChecks.map((check) => check.build));
 
     // Fetch builds in batches, oldest first to process backlog
@@ -204,7 +205,7 @@ async function fetchAndQueueOneUncheckedBuild(
 
 async function startLongPolling(pb: TypedPocketBase): Promise<void> {
   const pollInterval = POLL_INTERVAL_MS;
-  
+
   async function poll() {
     // Only poll if queue is empty and not processing
     if (scanQueue.size > 0 || isProcessing) {
@@ -213,7 +214,7 @@ async function startLongPolling(pb: TypedPocketBase): Promise<void> {
       setTimeout(poll, pollInterval);
       return;
     }
-    
+
     try {
       const queued = await fetchAndQueueOneUncheckedBuild(pb);
       if (queued) {
@@ -233,8 +234,6 @@ async function startLongPolling(pb: TypedPocketBase): Promise<void> {
   setTimeout(poll, 1000);
   logger.info(`Long polling started (interval: ${pollInterval}ms)`);
 }
-
-
 
 // --- Queue processing ---
 async function processQueue(pb: TypedPocketBase): Promise<void> {
@@ -374,28 +373,37 @@ async function scanBuildFile(
 
   // Run clamscan
   try {
+    // Do not throw on non-zero exit codes; inspect exitCode manually.
     const result =
-      await $`${CLAMSCAN_PATH} --quiet --infected --no-summary ${localPath}`;
-    const output = result.stderr.toString() + result.stdout.toString();
+      await $`${CLAMSCAN_PATH} --quiet --infected --no-summary ${localPath}`.nothrow();
 
-    // clamscan exit codes: 0=clean, 1=infected, 2=error
-    if (result.exitCode === 1) {
-      // Extract virus name from output (format: "localPath: VirusName FOUND")
+    const output = result.stderr.toString() + result.stdout.toString();
+    const exitCode = result.exitCode;
+
+    // clamscan exit codes: 0=clean, 1=infected, 2=error (and >2 = error as well)
+    if (exitCode === 1) {
+      // Virus detected
       const match = output.match(/: (.+) FOUND/);
       return {
         infected: true,
         virusName: match?.[1] || "Unknown",
-        log: output.trim(),
+        log: output.trim() || "Infected",
       };
-    } else if (result.exitCode === 0) {
+    }
+
+    if (exitCode === 0) {
+      // Clean
       return {
         infected: false,
         virusName: "",
         log: output.trim() || "Clean",
       };
-    } else {
-      throw new Error(`ClamAV error (exit ${result.exitCode}): ${output}`);
     }
+
+    // Any other exit code means real execution error
+    throw new Error(
+      `ClamAV error (exit ${exitCode}): ${output || "no output"}`,
+    );
   } finally {
     // Delete local file
     try {
