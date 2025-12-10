@@ -4,12 +4,12 @@ Real-time antivirus scanning service for Zapuskalka build artifacts using ClamAV
 
 ## Overview
 
-This service continuously monitors the `av_build_checks` collection in PocketBase and scans associated build files for viruses. It runs as a standalone Docker container and requires superuser access to the PocketBase backend.
+This service continuously monitors the `app_builds` collection in PocketBase, creates AV check records for new builds, and scans associated files for viruses using ClamAV. It runs as a standalone Docker container and requires superuser access to the PocketBase backend.
 
 ## Features
 
-- **Real-time scanning:** Subscribes to new `av_build_checks` records via PocketBase real-time API.
-- **Batch processing:** Scans existing pending records on startup.
+- **Real-time scanning:** Subscribes to new `app_builds` records via PocketBase real-time API.
+- **Batch processing:** Scans existing builds without AV checks on startup.
 - **Retry logic:** Automatic retry for failed downloads (configurable attempts).
 - **Cleanup:** Temporary files deleted immediately after scanning.
 - **Comprehensive logging:** Scan results stored in `av_build_checks` records.
@@ -84,14 +84,16 @@ docker run --rm -e POCKETBASE_URL=http://localhost:8090 -e POCKETBASE_SUPERUSER_
 
 ## Architecture
 
-1. **Authentication:** Superuser login via `pb.admins.authWithPassword()`.
-2. **Subscription:** Real-time subscription to `av_build_checks` collection.
-3. **Processing:** For each pending build:
+1. **Authentication:** Superuser login via `pb.collection("_superusers").authWithPassword()`.
+2. **Build Discovery:** On startup, finds all `app_builds` records without corresponding `av_build_checks` records.
+3. **Subscription:** Real-time subscription to `app_builds` collection for new builds.
+4. **Check Creation:** Creates `av_build_checks` records with `status="pending"` for discovered and new builds.
+5. **Processing:** For each pending AV check:
    - Download all files to temporary directory.
    - Run `clamscan` on each file.
    - Update status (`clean`, `infected`, `error`).
    - Delete temporary files.
-4. **Error Handling:** Failed scans are logged and marked as `error`.
+6. **Error Handling:** Failed scans are logged and marked as `error`.
 
 ## Monitoring
 
@@ -104,11 +106,13 @@ Scan results are stored in `av_build_checks` records with timestamps and detaile
 
 ## Integration with Backend
 
-The backend should create an `av_build_checks` record with `status="pending"` whenever a new build is uploaded. The scanner will automatically pick it up.
+The scanner automatically creates `av_build_checks` records for new `app_builds` records. The backend does not need to create them manually, but if it does, the scanner will detect existing records and process them.
 
-Example PocketBase hook (pseudo-code):
+Example PocketBase hook (optional – scanner handles this automatically):
 ```javascript
 onRecordCreate('app_builds', (record) => {
+  // Optional: create av_build_checks record
+  // Scanner will handle duplicates gracefully
   create('av_build_checks', {
     build: record.id,
     status: 'pending'

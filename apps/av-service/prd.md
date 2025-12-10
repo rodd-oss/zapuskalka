@@ -35,25 +35,30 @@ The service interacts with two PocketBase collections:
 ## Architecture
 
 ### Components
-1. **Auth Manager:** Authenticates as PocketBase superuser using `pb.admins.authWithPassword()`.
-2. **Subscription Handler:** Subscribes to `av_build_checks` collection for new records with `status="pending"`.
-3. **Build Processor:** For each pending build:
+1. **Auth Manager:** Authenticates as PocketBase superuser using `pb.collection("_superusers").authWithPassword()`.
+2. **Build Discovery:** On startup, finds all `app_builds` records that don't have a corresponding `av_build_checks` record.
+3. **Subscription Handler:** Subscribes to `app_builds` collection for new build uploads.
+4. **Check Creator:** Creates `av_build_checks` records with `status="pending"` for newly discovered builds.
+5. **Build Processor:** For each pending AV check:
    - Updates status to `"scanning"`
    - Downloads all files from `app_builds.files` to temporary directory
    - Runs `clamscan` on each file via Bun shell
    - Records results (status, virus_name, scan_time, log)
    - Deletes temporary files
-4. **Initial Scanner:** On startup, scans all existing `pending` records.
 
 ### Flow
 ```
-Start → Superuser Auth → Subscribe to av_build_checks
+Start → Superuser Auth → Find builds without AV checks
         ↓
-   Scan existing pending
+   Create av_build_checks (pending) → Subscribe to app_builds
         ↓
-   Wait for new records
+   Wait for new builds
         ↓
-On new pending record:
+On new app_builds record:
+  1. Create av_build_checks record (pending)
+  2. Queue check for processing
+        ↓
+Process AV check:
   1. Update status → "scanning"
   2. For each file in build.files:
      a. Download to /tmp
@@ -76,12 +81,13 @@ On new pending record:
 - **Container:** Docker (based on `oven/bun:alpine` + `clamav/clamav:stable`)
 
 ### Key Functions
-1. `authenticateSuperuser()`: Logs in with env credentials.
-2. `subscribeToPendingBuilds()`: Sets up real-time subscription.
-3. `processBuild(buildId)`: Main scanning logic.
-4. `downloadFile(url, path)`: Downloads build artifact.
-5. `scanFile(path)`: Executes clamscan and parses results.
-6. `updateCheckRecord(recordId, data)`: Updates av_build_checks.
+1. `authenticate()`: Logs in with superuser credentials.
+2. `scanExistingBuildsWithoutChecks()`: Finds and queues builds missing AV checks.
+3. `subscribeToNewBuilds()`: Subscribes to new app_builds records.
+4. `createAvBuildCheck(buildId)`: Creates av_build_checks record (or queues existing).
+5. `processBuildCheck(recordId)`: Main scanning logic.
+6. `scanBuildFile(buildId, fileName)`: Downloads, scans, and returns result.
+7. `markAsClean() / markAsInfected() / markAsError()`: Update av_build_checks status.
 
 ### Error Handling
 - **Network failures:** Retry downloads (max 3 attempts) with exponential backoff.
@@ -148,13 +154,12 @@ bun run index.ts
 
 ### Manual Testing
 ```bash
-# Create test build with dummy file
+# Create test build with dummy file (scanner will auto-create AV check)
 pb create app_builds '{"files": ["test.exe"]}'
 
-# Create pending av_build_checks record
-pb create av_build_checks '{"build": "build_id", "status": "pending"}'
-
-# Run scanner and verify results
+# Wait for scanner to process (check logs)
+# Verify av_build_checks record was created and updated
+pb list av_build_checks --filter 'build = "BUILD_ID"'
 ```
 
 ## Monitoring

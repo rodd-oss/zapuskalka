@@ -39,8 +39,8 @@ class AVScanner {
     try {
       await this.authenticate();
       await this.ensureWorkDir();
-      await this.scanExistingPending();
-      await this.subscribeToNewChecks();
+      await this.scanExistingBuildsWithoutChecks();
+      await this.subscribeToNewBuilds();
       logger.info("AV Scanner started successfully");
     } catch (error) {
       logger.error("Failed to start AV Scanner:", error);
@@ -73,37 +73,93 @@ class AVScanner {
     }
   }
 
-  private async scanExistingPending() {
+  private async scanExistingBuildsWithoutChecks() {
     try {
-      const records = (await this.pb.collection("av_build_checks").getFullList({
-        filter: 'status = "pending"',
-      })) as AvBuildChecksResponse[];
+      // Get all av_build_checks to find which builds already have checks
+      const existingChecks = (await this.pb
+        .collection("av_build_checks")
+        .getFullList()) as AvBuildChecksResponse[];
+      const checkedBuildIds = new Set(existingChecks.map((check) => check.build));
 
-      logger.info(`Found ${records.length} existing pending checks`);
+      // Get all app_builds that don't have checks
+      const allBuilds = (await this.pb
+        .collection("app_builds")
+        .getFullList()) as AppBuildsResponse[];
+      const buildsWithoutChecks = allBuilds.filter(
+        (build) => !checkedBuildIds.has(build.id),
+      );
 
-      for (const record of records) {
-        this.scanQueue.add(record.id);
+      logger.info(
+        `Found ${buildsWithoutChecks.length} builds without AV checks (total builds: ${allBuilds.length})`,
+      );
+
+      // Create av_build_checks records for each missing build
+      for (const build of buildsWithoutChecks) {
+        await this.createAvBuildCheck(build.id);
       }
 
-      this.processQueue();
+      // Also queue any existing checks that are still in scanning or error state
+      // (e.g., from previous scanner crashes or transient failures)
+      const stuckOrFailedChecks = existingChecks.filter(
+        (check) => check.status === "scanning" || check.status === "error",
+      );
+      if (stuckOrFailedChecks.length > 0) {
+        logger.info(
+          `Found ${stuckOrFailedChecks.length} checks in scanning/error state, queuing for reprocessing`,
+        );
+        for (const check of stuckOrFailedChecks) {
+          this.scanQueue.add(check.id);
+        }
+        this.processQueue();
+      }
     } catch (error) {
-      logger.error("Failed to fetch pending checks:", error);
+      logger.error("Failed to scan existing builds without checks:", error);
     }
   }
 
-  private async subscribeToNewChecks() {
+  private async createAvBuildCheck(buildId: string) {
     try {
-      await this.pb.collection("av_build_checks").subscribe("*", (data) => {
-        if (data.action === "create" && data.record.status === "pending") {
-          logger.debug("New pending check received:", data.record.id);
-          this.scanQueue.add(data.record.id);
-          this.processQueue();
+      // Check if av_build_checks already exists for this build
+      const existing = (await this.pb
+        .collection("av_build_checks")
+        .getFullList({
+          filter: `build = '${buildId}'`,
+        })) as AvBuildChecksResponse[];
+      if (existing.length > 0) {
+        logger.debug(`AV check already exists for build ${buildId}`);
+        // Queue existing check ID
+        this.scanQueue.add(existing[0]!.id);
+        this.processQueue();
+        return;
+      }
+
+      // Create new av_build_checks record
+      const record = (await this.pb.collection("av_build_checks").create({
+        build: buildId,
+        status: "pending",
+      })) as AvBuildChecksResponse;
+      logger.debug(`Created AV check ${record.id} for build ${buildId}`);
+      this.scanQueue.add(record.id);
+      this.processQueue();
+    } catch (error) {
+      logger.error(`Failed to create AV check for build ${buildId}:`, error);
+    }
+  }
+
+  private async subscribeToNewBuilds() {
+    try {
+      await this.pb.collection("app_builds").subscribe("*", (data) => {
+        if (data.action === "create") {
+          const buildId = data.record.id;
+          logger.debug("New build received:", buildId);
+          // Create AV check for this build
+          this.createAvBuildCheck(buildId);
         }
       });
 
-      logger.info("Subscribed to av_build_checks collection");
+      logger.info("Subscribed to app_builds collection");
     } catch (error) {
-      logger.error("Failed to subscribe to collection:", error);
+      logger.error("Failed to subscribe to app_builds collection:", error);
       throw error;
     }
   }
