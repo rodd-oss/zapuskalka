@@ -11,6 +11,7 @@ const CLAMSCAN_PATH = Bun.env.CLAMSCAN_PATH ?? "clamscan";
 const WORK_DIR = Bun.env.WORK_DIR ?? "/tmp/zapuskalka-av-scans";
 const MAX_RETRIES = parseInt(Bun.env.MAX_RETRIES ?? "3", 10) || 3;
 const LOG_LEVEL = Bun.env.LOG_LEVEL ?? "info";
+const POLL_INTERVAL_MS = parseInt(Bun.env.POLL_INTERVAL_MS ?? "30000", 10) || 30000;
 
 const logger = {
   debug: (...args: unknown[]) =>
@@ -95,35 +96,17 @@ async function createAvBuildCheck(
   }
 }
 
-// --- Scan existing builds without checks ---
-async function scanExistingBuildsWithoutChecks(
+// --- Reprocess stuck or failed checks ---
+async function reprocessStuckOrFailedChecks(
   pb: TypedPocketBase,
 ): Promise<void> {
   try {
-    // Get all av_build_checks to find which builds already have checks
+    // Get all av_build_checks to find stuck/failed ones
     const existingChecks = (await pb
       .collection("av_build_checks")
       .getFullList()) as AvBuildChecksResponse[];
-    const checkedBuildIds = new Set(existingChecks.map((check) => check.build));
 
-    // Get all app_builds that don't have checks
-    const allBuilds = (await pb
-      .collection("app_builds")
-      .getFullList()) as AppBuildsResponse[];
-    const buildsWithoutChecks = allBuilds.filter(
-      (build) => !checkedBuildIds.has(build.id),
-    );
-
-    logger.info(
-      `Found ${buildsWithoutChecks.length} builds without AV checks (total builds: ${allBuilds.length})`,
-    );
-
-    // Create av_build_checks records for each missing build
-    for (const build of buildsWithoutChecks) {
-      await createAvBuildCheck(pb, build.id);
-    }
-
-    // Also queue any existing checks that are still in scanning or error state
+    // Queue any existing checks that are still in scanning or error state
     // (e.g., from previous scanner crashes or transient failures)
     const stuckOrFailedChecks = existingChecks.filter(
       (check) => check.status === "scanning" || check.status === "error",
@@ -138,8 +121,93 @@ async function scanExistingBuildsWithoutChecks(
       processQueue(pb);
     }
   } catch (error) {
-    logger.error("Failed to scan existing builds without checks:", error);
+    logger.error("Failed to reprocess stuck/failed checks:", error);
   }
+}
+
+// --- Long polling for unchecked builds ---
+async function fetchAndQueueOneUncheckedBuild(
+  pb: TypedPocketBase,
+): Promise<boolean> {
+  try {
+    // Get all av_build_checks to know which builds are already checked
+    // We only need the build IDs
+    const existingChecks = (await pb
+      .collection("av_build_checks")
+      .getFullList({
+        fields: "build",
+      })) as Pick<AvBuildChecksResponse, "build">[];
+    const checkedBuildIds = new Set(existingChecks.map((check) => check.build));
+
+    // Fetch builds in batches, oldest first to process backlog
+    const pageSize = 10;
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const result = await pb.collection("app_builds").getList(page, pageSize, {
+        sort: "created", // oldest first
+      });
+
+      const builds = result.items as AppBuildsResponse[];
+      if (builds.length === 0) {
+        return false; // No builds at all
+      }
+
+      // Find first build without a check
+      for (const build of builds) {
+        if (!checkedBuildIds.has(build.id)) {
+          // Create AV check for this build (function handles atomicity)
+          await createAvBuildCheck(pb, build.id);
+          return true; // Successfully queued one build
+        }
+      }
+
+      // Check if we've reached the end
+      if (builds.length < pageSize) {
+        hasMore = false;
+      } else {
+        page++;
+      }
+    }
+
+    return false; // No unchecked builds found
+  } catch (error) {
+    logger.error("Failed to fetch unchecked builds:", error);
+    return false;
+  }
+}
+
+async function startLongPolling(pb: TypedPocketBase): Promise<void> {
+  const pollInterval = POLL_INTERVAL_MS;
+  
+  async function poll() {
+    // Only poll if queue is empty and not processing
+    if (scanQueue.size > 0 || isProcessing) {
+      logger.debug("Long poll skipped: queue not empty or processing");
+      // Schedule next poll anyway
+      setTimeout(poll, pollInterval);
+      return;
+    }
+    
+    try {
+      const queued = await fetchAndQueueOneUncheckedBuild(pb);
+      if (queued) {
+        logger.debug("Long poll: queued one unchecked build");
+      } else {
+        logger.debug("Long poll: no unchecked builds found");
+      }
+    } catch (error) {
+      logger.error("Long poll error:", error);
+    } finally {
+      // Schedule next poll
+      setTimeout(poll, pollInterval);
+    }
+  }
+
+  // Start first poll after a short delay
+  setTimeout(poll, 1000);
+  logger.info(`Long polling started (interval: ${pollInterval}ms)`);
 }
 
 // --- Subscription to new builds ---
@@ -163,7 +231,20 @@ async function subscribeToNewBuilds(pb: TypedPocketBase): Promise<void> {
 
 // --- Queue processing ---
 async function processQueue(pb: TypedPocketBase): Promise<void> {
-  if (isProcessing || scanQueue.size === 0) return;
+  if (isProcessing || scanQueue.size === 0) {
+    // Queue is empty and not processing - try to fetch more work
+    if (scanQueue.size === 0 && !isProcessing) {
+      try {
+        const queued = await fetchAndQueueOneUncheckedBuild(pb);
+        if (queued) {
+          logger.debug("Immediate poll: queued one unchecked build");
+        }
+      } catch (error) {
+        logger.error("Immediate poll error:", error);
+      }
+    }
+    return;
+  }
 
   isProcessing = true;
   const recordId = scanQueue.values().next().value!;
@@ -379,8 +460,9 @@ async function startScanner(): Promise<void> {
   try {
     await authenticate(pb);
     await ensureWorkDir();
-    await scanExistingBuildsWithoutChecks(pb);
+    await reprocessStuckOrFailedChecks(pb);
     await subscribeToNewBuilds(pb);
+    await startLongPolling(pb);
     logger.info("AV Scanner started successfully");
   } catch (error) {
     logger.error("Failed to start AV Scanner:", error);
