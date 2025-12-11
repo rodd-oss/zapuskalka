@@ -83,7 +83,10 @@ const uploadBuildHandler = async () => {
     archivePath = await invoke<string>('archive_and_compress_folder', {
       folderPath: dirPath.value,
       progressChannel: new Channel<ProgressEventData>((progress) => {
-        stageProgress.value = (progress.current_bytes / progress.total_bytes) * 100.0
+        // quick fix for issue https://github.com/rodd-oss/zapuskalka/issues/35
+        const pct = (progress.current_bytes / progress.total_bytes) * 100.0
+        // clamp pct because current_bytes oveflows total_bytes (read issue comments)
+        stageProgress.value = Math.max(0.0, Math.min(pct, 100.0))
         progressDetails.value = `${humanReadableByteSize(progress.delta_per_second)}/s`
       }),
       speed_update_interval: METER_UPDATE_INTERVAL,
