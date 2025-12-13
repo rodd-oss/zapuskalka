@@ -95,8 +95,11 @@ impl ProcessMonitor {
 
         tokio::select! {
             res = child.wait() => {
-                if let Err(e) = res {
-                    eprintln!("{}", e);
+                match res {
+                    Ok(_) => {
+                        _ = tx.send(ProcessEvent::Terminated(pid));
+                    }
+                    Err(e) => eprintln!("{}", e),
                 }
             }
 
