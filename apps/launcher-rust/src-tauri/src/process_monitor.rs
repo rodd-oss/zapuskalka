@@ -89,7 +89,7 @@ impl ProcessMonitor {
         let pid = if let Some(v) = child.id() {
             v
         } else {
-            eprintln!("Enable to get child PID");
+            eprintln!("Unable to get child PID");
             return;
         };
 
