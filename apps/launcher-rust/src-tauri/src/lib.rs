@@ -1,24 +1,33 @@
 use flate2::Compression;
 use flate2::{read::GzDecoder, write::GzEncoder};
 use serde::Serialize;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 use std::fs::File;
-use std::io::BufWriter;
+use std::io::{BufReader, BufWriter};
 use std::path::Path;
+use std::sync::Arc;
 use std::time::Duration;
 use tar::{Archive, Builder};
+use tauri::async_runtime::spawn;
+use tauri::State;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     LogicalPosition, LogicalSize, Manager,
 };
+use tokio::process::Command;
+use tokio::sync::Mutex;
 
+use crate::process_monitor::{ProcessEvent, ProcessMonitor};
 use crate::rate_meter::RateMeter;
 use crate::tracking_reader::TrackingReader;
 use crate::tracking_tokio_stream::TrackingTokioStream;
 use crate::tracking_writer::TrackingWriter;
 
+mod models;
+mod process_monitor;
 mod rate_meter;
+mod states;
 mod tracking_reader;
 mod tracking_tokio_stream;
 mod tracking_writer;
@@ -341,6 +350,102 @@ async fn upload_file_as_form_data(
     Ok(())
 }
 
+// TODO: for now we return PID of launched program, but application can spawn actual program
+//       and then terminate entrypoint program. Ideally we should track all children spawned
+//       by entrypoint. When we will do that here we should return not PID, but some key
+//       which can be used to query/wait when application terminated.
+#[tauri::command]
+async fn launch_app(
+    app_id: String,
+    app_data_path: State<'_, states::DataDirPath>,
+    app_pid_map: State<'_, states::AppPidMap>,
+    proc_mon: State<'_, states::ProcessMonitorInstance>,
+) -> Result<u32, String> {
+    let data_dir_path = &app_data_path.inner().0;
+    let app_json_path = data_dir_path.join(format!("apps/{}.json", app_id));
+
+    let file =
+        File::open(app_json_path).map_err(|e| format!("Failed to open app json file: {}", e))?;
+    let reader = BufReader::new(file);
+    let app_info = serde_json::from_reader::<_, models::InstalledAppInfo>(reader)
+        .map_err(|e| format!("Failed to parse app json: {}", e))?;
+
+    let entrypoint_path = app_info.install_dir.join(app_info.entrypoint);
+    if !entrypoint_path.exists() {
+        return Err("entrypoint doesn't exists".to_string());
+    }
+
+    let app_child = Command::new(entrypoint_path)
+        .spawn()
+        .map_err(|e| format!("Failed to spawn app process: {}", e))?;
+    let pid = app_child
+        .id()
+        .ok_or_else(|| "Child not started".to_string())?;
+
+    let mut app_pid_map = app_pid_map.lock().await;
+    app_pid_map.appid2pid.insert(app_id.clone(), pid);
+    app_pid_map.pid2appid.insert(pid, app_id.clone());
+    proc_mon.lock().await.add(app_child).await;
+
+    Ok(pid)
+}
+
+#[tauri::command]
+async fn is_app_running(
+    app_id: String,
+    app_pid_map: State<'_, states::AppPidMap>,
+) -> Result<bool, String> {
+    Ok(app_pid_map.lock().await.appid2pid.contains_key(&app_id))
+}
+
+#[tauri::command]
+async fn wait_for_app_close(
+    app_id: String,
+    app_pid_map: State<'_, states::AppPidMap>,
+    proc_mon_rx: State<'_, states::ProcessMonitorReceiver>,
+) -> Result<(), String> {
+    let pid = {
+        if let Some(v) = app_pid_map.lock().await.appid2pid.get(&app_id) {
+            *v
+        } else {
+            return Err("Process not running".to_string());
+        }
+    };
+
+    let mut rx = { proc_mon_rx.lock().await.resubscribe() };
+    while let Ok(ev) = rx.recv().await {
+        match ev {
+            ProcessEvent::Terminated(terminated_pid) => {
+                if terminated_pid == pid {
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn terminate_app(
+    app_id: String,
+    app_pid_map: State<'_, states::AppPidMap>,
+    proc_mon: State<'_, states::ProcessMonitorInstance>,
+) -> Result<(), String> {
+    let pid = if let Some(v) = app_pid_map.lock().await.appid2pid.get(&app_id) {
+        *v
+    } else {
+        return Err("Application not running".to_string());
+    };
+
+    proc_mon
+        .lock()
+        .await
+        .terminate(pid)
+        .await
+        .map_err(|e| format!("Failed terminate process: {:?}", e))
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 struct WindowState {
     width: f64,
@@ -599,6 +704,35 @@ pub fn run() {
                 .build(app)
                 .map_err(|e| format!("Failed to create tray icon: {}", e))?;
 
+            app.manage(states::DataDirPath(app.path().app_data_dir()?));
+            app.manage(Arc::new(Mutex::new(states::AppPidMapInner {
+                appid2pid: HashMap::new(),
+                pid2appid: HashMap::new(),
+            })));
+
+            let (proc_mon, proc_mon_rx) = ProcessMonitor::new();
+            let mut proc_mon_rx_for_listener = proc_mon_rx.resubscribe();
+            app.manage(Arc::new(Mutex::new(proc_mon)));
+            app.manage(Arc::new(Mutex::new(proc_mon_rx)));
+
+            // Remove entry from App2Pid state on app termination
+            let app_handle_for_procmon_listener = app.handle().clone();
+            spawn(async move {
+                while let Ok(ev) = proc_mon_rx_for_listener.recv().await {
+                    match ev {
+                        ProcessEvent::Terminated(pid) => {
+                            let app_pid_map_state =
+                                app_handle_for_procmon_listener.state::<states::AppPidMap>();
+                            let mut app_pid_map = app_pid_map_state.lock().await;
+                            let appid = app_pid_map.pid2appid.remove(&pid);
+                            if let Some(appid) = appid {
+                                app_pid_map.appid2pid.remove(&appid);
+                            }
+                        }
+                    }
+                }
+            });
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
@@ -606,7 +740,11 @@ pub fn run() {
             archive_and_compress_folder,
             read_file_bytes,
             extract_archive,
-            upload_file_as_form_data
+            upload_file_as_form_data,
+            launch_app,
+            is_app_running,
+            wait_for_app_close,
+            terminate_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

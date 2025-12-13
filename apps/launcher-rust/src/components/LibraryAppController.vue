@@ -128,6 +128,12 @@ const calculateState = async () => {
 
   saveAppConfig(config.value)
   state.value = 'ready'
+
+  if (await invoke('is_app_running', { appId: config.value.id })) {
+    state.value = 'running'
+    await invoke('wait_for_app_close', { appId: config.value.id })
+    state.value = 'ready'
+  }
 }
 
 onMounted(calculateState)
@@ -318,12 +324,21 @@ const launch = async () => {
     throw new Error('State error. Should not call if config is not loaded')
   }
 
-  const entrypointPath = await path.join(config.value.installDir, config.value.entrypoint)
+  try {
+    await invoke('launch_app', { appId: config.value.id })
+  } catch (e) {
+    actionError.value = `failed launch application (${e})`
+    return
+  }
 
-  await openPath(entrypointPath)
+  state.value = 'running'
+  await invoke('wait_for_app_close', { appId: config.value.id })
+  state.value = 'ready'
 }
 
-const close = async () => {}
+const close = async () => {
+  await invoke('terminate_app', { appId: config.value?.id })
+}
 
 const openLocalFiles = async () => {
   if (config.value == undefined) {
