@@ -30,6 +30,24 @@ func escapeTypeScriptString(s string) string {
 	return s
 }
 
+func sanitizeEnumKey(value string) string {
+	if value == "" {
+		return "Empty"
+	}
+
+	key := pascalCase(value)
+
+	if len(key) > 0 && key[0] >= '0' && key[0] <= '9' {
+		key = "_" + key
+	}
+
+	if key == "" {
+		return "Value"
+	}
+
+	return key
+}
+
 func hashContent(content string) string {
 	h := sha256.Sum256([]byte(content))
 	return fmt.Sprintf("%x", h)

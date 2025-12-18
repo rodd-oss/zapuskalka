@@ -105,6 +105,35 @@ func (g *TypeGenerator) writeSelectValues(w *TSWriter, collections []*core.Colle
 
 			baseName := pascalCase(coll.Name) + pascalCase(field.GetName())
 
+			keyToValue := make(map[string]string)
+			keyCount := make(map[string]int)
+			type enumPair struct {
+				key   string
+				value string
+			}
+			enumPairs := []enumPair{}
+
+			for _, v := range selectField.Values {
+				key := sanitizeEnumKey(v)
+				originalKey := key
+
+				if _, exists := keyToValue[key]; exists {
+					keyCount[originalKey]++
+					key = fmt.Sprintf("%s_%d", originalKey, keyCount[originalKey]+1)
+				}
+
+				keyToValue[key] = v
+				enumPairs = append(enumPairs, enumPair{key: key, value: v})
+			}
+
+			w.Line("export const " + baseName + "Value = {")
+			w.Indent()
+			for _, pair := range enumPairs {
+				w.Linef("%s: \"%s\",", pair.key, escapeTypeScriptString(pair.value))
+			}
+			w.EndBlockAsConst()
+			w.BlankLine()
+
 			var values strings.Builder
 			for i, v := range selectField.Values {
 				if i > 0 {
@@ -112,9 +141,9 @@ func (g *TypeGenerator) writeSelectValues(w *TSWriter, collections []*core.Colle
 				}
 				values.WriteString("\"" + escapeTypeScriptString(v) + "\"")
 			}
-
 			w.ExportConstAs(baseName+"Values", "["+values.String()+"]")
-			w.ExportType(baseName+"Options", "typeof "+baseName+"Values[number]")
+
+			w.ExportType(baseName+"Options", "typeof "+baseName+"Value[keyof typeof "+baseName+"Value]")
 			w.BlankLine()
 		}
 	}
