@@ -126,7 +126,7 @@ func (g *TypeGenerator) writeSelectValues(w *TSWriter, collections []*core.Colle
 				enumPairs = append(enumPairs, enumPair{key: key, value: v})
 			}
 
-			w.Line("export const " + baseName + "Value = {")
+			w.Line("export const " + baseName + "Values = {")
 			w.Indent()
 			for _, pair := range enumPairs {
 				w.Linef("%s: \"%s\",", pair.key, escapeTypeScriptString(pair.value))
@@ -141,9 +141,8 @@ func (g *TypeGenerator) writeSelectValues(w *TSWriter, collections []*core.Colle
 				}
 				values.WriteString("\"" + escapeTypeScriptString(v) + "\"")
 			}
-			w.ExportConstAs(baseName+"Values", "["+values.String()+"]")
 
-			w.ExportType(baseName+"Options", "typeof "+baseName+"Value[keyof typeof "+baseName+"Value]")
+			w.ExportType(baseName+"Options", "typeof "+baseName+"Values[keyof typeof "+baseName+"Values]")
 			w.BlankLine()
 		}
 	}
