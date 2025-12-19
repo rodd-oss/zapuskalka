@@ -2,10 +2,10 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { ClientResponseError, type AuthMethodsList } from 'pocketbase'
 import { pb } from '@/lib/pocketbase'
-import type { UsersRecord } from 'backend-api'
+import type { UsersResponse } from 'backend-api'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<UsersRecord | null>(null)
+  const user = ref<UsersResponse | null>(null)
   const token = ref<string>('')
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
     return authCode.id
   }
 
-  function setAuthData(authUser: UsersRecord | null, authToken: string): void {
+  function setAuthData(authUser: UsersResponse | null, authToken: string): void {
     user.value = authUser
     token.value = authToken
   }
