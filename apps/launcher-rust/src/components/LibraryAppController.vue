@@ -53,7 +53,7 @@ const { build, app } = defineProps<{ build: AppBuildsResponse; app: AppsResponse
 
 const pb = usePocketBase()
 
-const files = build.files.map((filename) => {
+const files = (build.files ?? []).map((filename) => {
   return {
     URL: pb.files.getURL(build, filename),
     name: filename,

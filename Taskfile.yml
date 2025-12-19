@@ -35,7 +35,6 @@ tasks:
       - dev-av-service
       - dev-frontend
       - dev-launcher
-      - dev-typegen
 
   dev-backend:
     desc: Run backend server

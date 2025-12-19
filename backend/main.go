@@ -12,6 +12,7 @@ import (
 
 	// enable once you have at least one migration
 	_ "zapuskalka-backend/migrations"
+	"zapuskalka-backend/typegen"
 )
 
 func main() {
@@ -51,6 +52,13 @@ func main() {
 
 		return se.Next()
 	})
+
+	if app.IsDev() {
+		typegen.MustRegister(app, typegen.Config{
+			OutputDir:         "../packages/backend-api",
+			GenerateOnStartup: true,
+		})
+	}
 
 	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
 		// enable auto creation of migration files when making collection changes in the Dashboard

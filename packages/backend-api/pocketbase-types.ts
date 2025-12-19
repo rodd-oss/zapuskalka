@@ -1,315 +1,646 @@
 /**
-* This file was @generated using pocketbase-typegen
-*/
+ * PocketBase TypeScript Types
+ * Auto-generated - DO NOT EDIT
+ */
 
-import type PocketBase from 'pocketbase'
-import type { RecordService } from 'pocketbase'
+import PocketBase, {
+    RecordService,
+    type ListResult,
+    type RecordSubscription,
+    type UnsubscribeFunc,
+    type RecordOptions,
+    type RecordListOptions,
+    type RecordFullListOptions,
+    type RecordSubscribeOptions,
+} from 'pocketbase';
 
-export enum Collections {
-	Authcode = "_authCode",
-	Authorigins = "_authOrigins",
-	Externalauths = "_externalAuths",
-	Mfas = "_mfas",
-	Otps = "_otps",
-	Superusers = "_superusers",
-	AppBranches = "app_branches",
-	AppBuilds = "app_builds",
-	Apps = "apps",
-	AvBuildChecks = "av_build_checks",
-	Publishers = "publishers",
-	Users = "users",
-}
+export type RecordIdString = string & { readonly __recordId: unique symbol };
+export type AutodateString = string & { readonly __autodate: unique symbol };
+export type HTMLString = string & { readonly __html: unique symbol };
+export type Email = string & { readonly __email: unique symbol };
+export type URL = string & { readonly __url: unique symbol };
 
-// Alias types for improved usability
-export type IsoDateString = string
-export type IsoAutoDateString = string & { readonly autodate: unique symbol }
-export type RecordIdString = string
-export type FileNameString = string & { readonly filename: unique symbol }
-export type HTMLString = string
+export interface GeoPoint {
+    lat: number;
+    lon: number;
+};
 
-type ExpandType<T> = unknown extends T
-	? T extends unknown
-		? { expand?: unknown }
-		: { expand: T }
-	: { expand: T }
+export interface BaseSystemFields {
+    id: RecordIdString;
+    created: AutodateString;
+    updated: AutodateString;
+};
 
-// System fields
-export type BaseSystemFields<T = unknown> = {
-	id: RecordIdString
-	collectionId: string
-	collectionName: Collections
-} & ExpandType<T>
+export interface AuthSystemFields {
+    email: Email;
+    emailVisibility: boolean;
+    verified: boolean;
+};
 
-export type AuthSystemFields<T = unknown> = {
-	email: string
-	emailVisibility: boolean
-	username: string
-	verified: boolean
-} & BaseSystemFields<T>
+export type SystemFields = keyof BaseSystemFields | 'collectionId' | 'collectionName' | 'expand';
 
-// Record types for each collection
+export type RecordCreate<T> = Omit<T, SystemFields> & { id?: string };
+export type RecordUpdate<T> = Partial<Omit<T, SystemFields>>;
 
-export type AuthcodeRecord = {
-	created: IsoAutoDateString
-	id: string
-	updated: IsoAutoDateString
-	user: RecordIdString
-}
+export const Collections = {
+    Authcode: "_authCode",
+    Authorigins: "_authOrigins",
+    Externalauths: "_externalAuths",
+    Mfas: "_mfas",
+    Otps: "_otps",
+    Superusers: "_superusers",
+    AppBranches: "app_branches",
+    AppBuilds: "app_builds",
+    Apps: "apps",
+    AvBuildChecks: "av_build_checks",
+    Publishers: "publishers",
+    Users: "users",
+} as const;
 
-export type AuthoriginsRecord = {
-	collectionRef: string
-	created: IsoAutoDateString
-	fingerprint: string
-	id: string
-	recordRef: string
-	updated: IsoAutoDateString
-}
+export type Collections = typeof Collections[keyof typeof Collections];
 
-export type ExternalauthsRecord = {
-	collectionRef: string
-	created: IsoAutoDateString
-	id: string
-	provider: string
-	providerId: string
-	recordRef: string
-	updated: IsoAutoDateString
-}
+export const AppBuildsOsValues = {
+    Windows: "windows",
+    Linux: "linux",
+    Macos: "macos",
+} as const;
 
-export type MfasRecord = {
-	collectionRef: string
-	created: IsoAutoDateString
-	id: string
-	method: string
-	recordRef: string
-	updated: IsoAutoDateString
-}
+export type AppBuildsOsOptions = typeof AppBuildsOsValues[keyof typeof AppBuildsOsValues];
 
-export type OtpsRecord = {
-	collectionRef: string
-	created: IsoAutoDateString
-	id: string
-	password: string
-	recordRef: string
-	sentTo?: string
-	updated: IsoAutoDateString
-}
+export const AppBuildsArchValues = {
+    X8664: "x86_64",
+    Arm: "arm",
+    Aarch64: "aarch64",
+    Universal: "universal",
+    X86: "x86",
+    Mips: "mips",
+    Mips64: "mips64",
+    Powerpc: "powerpc",
+    Powerpc64: "powerpc64",
+    Riscv64: "riscv64",
+    S390x: "s390x",
+    Sparc64: "sparc64",
+} as const;
 
-export type SuperusersRecord = {
-	created: IsoAutoDateString
-	email: string
-	emailVisibility?: boolean
-	id: string
-	password: string
-	tokenKey: string
-	updated: IsoAutoDateString
-	verified?: boolean
-}
+export type AppBuildsArchOptions = typeof AppBuildsArchValues[keyof typeof AppBuildsArchValues];
 
-export type AppBranchesRecord = {
-	app: RecordIdString
-	created: IsoAutoDateString
-	id: string
-	name: string
-	updated: IsoAutoDateString
-}
+export const AppBuildsInstallRulesValues = {
+    DirectCopy: "direct_copy",
+    Untar: "untar",
+    Ungzip: "ungzip",
+    Unzip: "unzip",
+} as const;
 
-export enum AppBuildsOsOptions {
-	"windows" = "windows",
-	"linux" = "linux",
-	"macos" = "macos",
-}
+export type AppBuildsInstallRulesOptions = typeof AppBuildsInstallRulesValues[keyof typeof AppBuildsInstallRulesValues];
 
-export enum AppBuildsArchOptions {
-	"x86_64" = "x86_64",
-	"arm" = "arm",
-	"aarch64" = "aarch64",
-	"universal" = "universal",
-	"x86" = "x86",
-	"mips" = "mips",
-	"mips64" = "mips64",
-	"powerpc" = "powerpc",
-	"powerpc64" = "powerpc64",
-	"riscv64" = "riscv64",
-	"s390x" = "s390x",
-	"sparc64" = "sparc64",
-}
+export const AvBuildChecksStatusValues = {
+    Pending: "pending",
+    Scanning: "scanning",
+    Clean: "clean",
+    Infected: "infected",
+    Error: "error",
+} as const;
 
-export enum AppBuildsInstallRulesOptions {
-	"direct_copy" = "direct_copy",
-	"untar" = "untar",
-	"ungzip" = "ungzip",
-	"unzip" = "unzip",
-}
-export type AppBuildsRecord = {
-	app: RecordIdString
-	arch: AppBuildsArchOptions
-	branch: RecordIdString
-	created: IsoAutoDateString
-	entrypoint: string
-	files?: FileNameString[]
-	id: string
-	install_rules: AppBuildsInstallRulesOptions[]
-	os: AppBuildsOsOptions
-	updated: IsoAutoDateString
-}
+export type AvBuildChecksStatusOptions = typeof AvBuildChecksStatusValues[keyof typeof AvBuildChecksStatusValues];
 
-export type AppsRecord = {
-	created: IsoAutoDateString
-	default_branch?: RecordIdString
-	id: string
-	publisher: RecordIdString
-	title: string
-	updated: IsoAutoDateString
-}
+export interface AuthcodeRecord {
+    user: RecordIdString;
+};
 
-export enum AvBuildChecksStatusOptions {
-	"pending" = "pending",
-	"scanning" = "scanning",
-	"clean" = "clean",
-	"infected" = "infected",
-	"error" = "error",
-}
-export type AvBuildChecksRecord = {
-	build: RecordIdString
-	created: IsoAutoDateString
-	id: string
-	log?: string
-	scan_time?: IsoDateString
-	status: AvBuildChecksStatusOptions
-	updated: IsoAutoDateString
-	virus_name?: string
-}
+export interface AuthoriginsRecord {
+    collectionRef: string;
+    recordRef: string;
+    fingerprint: string;
+};
 
-export type PublishersRecord = {
-	created: IsoAutoDateString
-	id: string
-	owner: RecordIdString
-	title: string
-	updated: IsoAutoDateString
-	users?: RecordIdString[]
-}
+export interface ExternalauthsRecord {
+    collectionRef: string;
+    recordRef: string;
+    provider: string;
+    providerId: string;
+};
 
-export type UsersRecord = {
-	avatar?: FileNameString
-	created: IsoAutoDateString
-	email: string
-	emailVisibility?: boolean
-	id: string
-	name?: string
-	password: string
-	tokenKey: string
-	updated: IsoAutoDateString
-	verified?: boolean
-}
+export interface MfasRecord {
+    collectionRef: string;
+    recordRef: string;
+    method: string;
+};
 
-// Response types include system fields and match responses from the PocketBase API
-export type AuthcodeResponse<Texpand = unknown> = Required<AuthcodeRecord> & BaseSystemFields<Texpand>
-export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>
-export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>
-export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
-export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
-export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
-export type AppBranchesResponse<Texpand = unknown> = Required<AppBranchesRecord> & BaseSystemFields<Texpand>
-export type AppBuildsResponse<Texpand = unknown> = Required<AppBuildsRecord> & BaseSystemFields<Texpand>
-export type AppsResponse<Texpand = unknown> = Required<AppsRecord> & BaseSystemFields<Texpand>
-export type AvBuildChecksResponse<Texpand = unknown> = Required<AvBuildChecksRecord> & BaseSystemFields<Texpand>
-export type PublishersResponse<Texpand = unknown> = Required<PublishersRecord> & BaseSystemFields<Texpand>
-export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
+export interface OtpsRecord {
+    collectionRef: string;
+    recordRef: string;
+    sentTo?: string;
+};
 
-// Types containing all Records and Responses, useful for creating typing helper functions
+export interface SuperusersRecord {
+};
+
+export interface AppBranchesRecord {
+    app: RecordIdString;
+    name: string;
+};
+
+export interface AppBuildsRecord {
+    files?: string[];
+    branch: RecordIdString;
+    app: RecordIdString;
+    os: AppBuildsOsOptions;
+    arch: AppBuildsArchOptions;
+    install_rules: AppBuildsInstallRulesOptions[];
+    entrypoint: string;
+};
+
+export interface AppsRecord {
+    title: string;
+    publisher: RecordIdString;
+    default_branch?: RecordIdString;
+};
+
+export interface AvBuildChecksRecord {
+    build: RecordIdString;
+    status: AvBuildChecksStatusOptions;
+    virus_name?: string;
+    scan_time?: string;
+    log?: string;
+};
+
+export interface PublishersRecord {
+    title: string;
+    users?: RecordIdString[];
+    owner: RecordIdString;
+};
+
+export interface UsersRecord {
+    name?: string;
+    avatar?: string;
+};
+
+export interface AuthcodeResponse<Expand = {}> extends AuthcodeRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "_authCode";
+    expand?: Expand;
+};
+
+export interface AuthoriginsResponse<Expand = {}> extends AuthoriginsRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "_authOrigins";
+    expand?: Expand;
+};
+
+export interface ExternalauthsResponse<Expand = {}> extends ExternalauthsRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "_externalAuths";
+    expand?: Expand;
+};
+
+export interface MfasResponse<Expand = {}> extends MfasRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "_mfas";
+    expand?: Expand;
+};
+
+export interface OtpsResponse<Expand = {}> extends OtpsRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "_otps";
+    expand?: Expand;
+};
+
+export interface SuperusersResponse<Expand = {}> extends SuperusersRecord, BaseSystemFields, AuthSystemFields {
+    collectionId: string;
+    collectionName: "_superusers";
+    expand?: Expand;
+};
+
+export interface AppBranchesResponse<Expand = {}> extends AppBranchesRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "app_branches";
+    expand?: Expand;
+};
+
+export interface AppBuildsResponse<Expand = {}> extends AppBuildsRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "app_builds";
+    expand?: Expand;
+};
+
+export interface AppsResponse<Expand = {}> extends AppsRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "apps";
+    expand?: Expand;
+};
+
+export interface AvBuildChecksResponse<Expand = {}> extends AvBuildChecksRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "av_build_checks";
+    expand?: Expand;
+};
+
+export interface PublishersResponse<Expand = {}> extends PublishersRecord, BaseSystemFields {
+    collectionId: string;
+    collectionName: "publishers";
+    expand?: Expand;
+};
+
+export interface UsersResponse<Expand = {}> extends UsersRecord, BaseSystemFields, AuthSystemFields {
+    collectionId: string;
+    collectionName: "users";
+    expand?: Expand;
+};
+
+export type AuthcodeRelations = {
+    user: { response: UsersResponse; isMulti: false; collection: "users" };
+};
+
+export type AuthcodeBackRelations = {};
+
+export type AuthoriginsRelations = {};
+
+export type AuthoriginsBackRelations = {};
+
+export type ExternalauthsRelations = {};
+
+export type ExternalauthsBackRelations = {};
+
+export type MfasRelations = {};
+
+export type MfasBackRelations = {};
+
+export type OtpsRelations = {};
+
+export type OtpsBackRelations = {};
+
+export type SuperusersRelations = {};
+
+export type SuperusersBackRelations = {};
+
+export type AppBranchesRelations = {
+    app: { response: AppsResponse; isMulti: false; collection: "apps" };
+};
+
+export type AppBranchesBackRelations = {
+    "app_builds_via_branch": { response: AppBuildsResponse; isMulti: true; collection: "app_builds" };
+    "apps_via_default_branch": { response: AppsResponse; isMulti: true; collection: "apps" };
+};
+
+export type AppBuildsRelations = {
+    branch: { response: AppBranchesResponse; isMulti: false; collection: "app_branches" };
+    app: { response: AppsResponse; isMulti: false; collection: "apps" };
+};
+
+export type AppBuildsBackRelations = {
+    "av_build_checks_via_build": { response: AvBuildChecksResponse; isMulti: true; collection: "av_build_checks" };
+};
+
+export type AppsRelations = {
+    publisher: { response: PublishersResponse; isMulti: false; collection: "publishers" };
+    default_branch: { response: AppBranchesResponse; isMulti: false; collection: "app_branches" };
+};
+
+export type AppsBackRelations = {
+    "app_branches_via_app": { response: AppBranchesResponse; isMulti: true; collection: "app_branches" };
+    "app_builds_via_app": { response: AppBuildsResponse; isMulti: true; collection: "app_builds" };
+};
+
+export type AvBuildChecksRelations = {
+    build: { response: AppBuildsResponse; isMulti: false; collection: "app_builds" };
+};
+
+export type AvBuildChecksBackRelations = {};
+
+export type PublishersRelations = {
+    users: { response: UsersResponse; isMulti: true; collection: "users" };
+    owner: { response: UsersResponse; isMulti: false; collection: "users" };
+};
+
+export type PublishersBackRelations = {
+    "apps_via_publisher": { response: AppsResponse; isMulti: true; collection: "apps" };
+};
+
+export type UsersRelations = {};
+
+export type UsersBackRelations = {
+    "_authCode_via_user": { response: AuthcodeResponse; isMulti: true; collection: "_authCode" };
+    "publishers_via_owner": { response: PublishersResponse; isMulti: true; collection: "publishers" };
+    "publishers_via_users": { response: PublishersResponse; isMulti: true; collection: "publishers" };
+};
+
+export type AuthcodeCreate = AuthcodeRecord & { id?: string };
+
+export type AuthoriginsCreate = AuthoriginsRecord & { id?: string };
+
+export type ExternalauthsCreate = ExternalauthsRecord & { id?: string };
+
+export type MfasCreate = MfasRecord & { id?: string };
+
+export type OtpsCreate = OtpsRecord & { id?: string };
+
+export type SuperusersCreate = SuperusersRecord & {
+    id?: string;
+    email: string;
+    password: string;
+    passwordConfirm?: string;
+};
+
+export type AppBranchesCreate = AppBranchesRecord & { id?: string };
+
+export type AppBuildsCreate = AppBuildsRecord & { id?: string };
+
+export type AppsCreate = AppsRecord & { id?: string };
+
+export type AvBuildChecksCreate = AvBuildChecksRecord & { id?: string };
+
+export type PublishersCreate = PublishersRecord & { id?: string };
+
+export type UsersCreate = UsersRecord & {
+    id?: string;
+    email: string;
+    password: string;
+    passwordConfirm?: string;
+};
+
+export type AuthcodeUpdate = Partial<AuthcodeRecord>;
+
+export type AuthoriginsUpdate = Partial<AuthoriginsRecord>;
+
+export type ExternalauthsUpdate = Partial<ExternalauthsRecord>;
+
+export type MfasUpdate = Partial<MfasRecord>;
+
+export type OtpsUpdate = Partial<OtpsRecord>;
+
+export type SuperusersUpdate = Partial<SuperusersRecord> & {
+    email?: string;
+    password?: string;
+    passwordConfirm?: string;
+    oldPassword?: string;
+};
+
+export type AppBranchesUpdate = Partial<AppBranchesRecord>;
+
+export type AppBuildsUpdate = Partial<AppBuildsRecord>;
+
+export type AppsUpdate = Partial<AppsRecord>;
+
+export type AvBuildChecksUpdate = Partial<AvBuildChecksRecord>;
+
+export type PublishersUpdate = Partial<PublishersRecord>;
+
+export type UsersUpdate = Partial<UsersRecord> & {
+    email?: string;
+    password?: string;
+    passwordConfirm?: string;
+    oldPassword?: string;
+};
+
+export type AllResponses = AuthcodeResponse | AuthoriginsResponse | ExternalauthsResponse | MfasResponse | OtpsResponse | SuperusersResponse | AppBranchesResponse | AppBuildsResponse | AppsResponse | AvBuildChecksResponse | PublishersResponse | UsersResponse;
+
+export type CollectionNames = "_authCode" | "_authOrigins" | "_externalAuths" | "_mfas" | "_otps" | "_superusers" | "app_branches" | "app_builds" | "apps" | "av_build_checks" | "publishers" | "users";
 
 export type CollectionRecords = {
-	_authCode: AuthcodeRecord
-	_authOrigins: AuthoriginsRecord
-	_externalAuths: ExternalauthsRecord
-	_mfas: MfasRecord
-	_otps: OtpsRecord
-	_superusers: SuperusersRecord
-	app_branches: AppBranchesRecord
-	app_builds: AppBuildsRecord
-	apps: AppsRecord
-	av_build_checks: AvBuildChecksRecord
-	publishers: PublishersRecord
-	users: UsersRecord
-}
+    "_authCode": AuthcodeRecord;
+    "_authOrigins": AuthoriginsRecord;
+    "_externalAuths": ExternalauthsRecord;
+    "_mfas": MfasRecord;
+    "_otps": OtpsRecord;
+    "_superusers": SuperusersRecord;
+    "app_branches": AppBranchesRecord;
+    "app_builds": AppBuildsRecord;
+    "apps": AppsRecord;
+    "av_build_checks": AvBuildChecksRecord;
+    "publishers": PublishersRecord;
+    "users": UsersRecord;
+};
 
 export type CollectionResponses = {
-	_authCode: AuthcodeResponse
-	_authOrigins: AuthoriginsResponse
-	_externalAuths: ExternalauthsResponse
-	_mfas: MfasResponse
-	_otps: OtpsResponse
-	_superusers: SuperusersResponse
-	app_branches: AppBranchesResponse
-	app_builds: AppBuildsResponse
-	apps: AppsResponse
-	av_build_checks: AvBuildChecksResponse
-	publishers: PublishersResponse
-	users: UsersResponse
+    "_authCode": AuthcodeResponse;
+    "_authOrigins": AuthoriginsResponse;
+    "_externalAuths": ExternalauthsResponse;
+    "_mfas": MfasResponse;
+    "_otps": OtpsResponse;
+    "_superusers": SuperusersResponse;
+    "app_branches": AppBranchesResponse;
+    "app_builds": AppBuildsResponse;
+    "apps": AppsResponse;
+    "av_build_checks": AvBuildChecksResponse;
+    "publishers": PublishersResponse;
+    "users": UsersResponse;
+};
+
+export type CollectionCreates = {
+    "_authCode": AuthcodeCreate;
+    "_authOrigins": AuthoriginsCreate;
+    "_externalAuths": ExternalauthsCreate;
+    "_mfas": MfasCreate;
+    "_otps": OtpsCreate;
+    "_superusers": SuperusersCreate;
+    "app_branches": AppBranchesCreate;
+    "app_builds": AppBuildsCreate;
+    "apps": AppsCreate;
+    "av_build_checks": AvBuildChecksCreate;
+    "publishers": PublishersCreate;
+    "users": UsersCreate;
+};
+
+export type CollectionUpdates = {
+    "_authCode": AuthcodeUpdate;
+    "_authOrigins": AuthoriginsUpdate;
+    "_externalAuths": ExternalauthsUpdate;
+    "_mfas": MfasUpdate;
+    "_otps": OtpsUpdate;
+    "_superusers": SuperusersUpdate;
+    "app_branches": AppBranchesUpdate;
+    "app_builds": AppBuildsUpdate;
+    "apps": AppsUpdate;
+    "av_build_checks": AvBuildChecksUpdate;
+    "publishers": PublishersUpdate;
+    "users": UsersUpdate;
+};
+
+export type CollectionRelations = {
+    "_authCode": AuthcodeRelations;
+    "_authOrigins": AuthoriginsRelations;
+    "_externalAuths": ExternalauthsRelations;
+    "_mfas": MfasRelations;
+    "_otps": OtpsRelations;
+    "_superusers": SuperusersRelations;
+    "app_branches": AppBranchesRelations;
+    "app_builds": AppBuildsRelations;
+    "apps": AppsRelations;
+    "av_build_checks": AvBuildChecksRelations;
+    "publishers": PublishersRelations;
+    "users": UsersRelations;
+};
+
+export type CollectionBackRelations = {
+    "_authCode": AuthcodeBackRelations;
+    "_authOrigins": AuthoriginsBackRelations;
+    "_externalAuths": ExternalauthsBackRelations;
+    "_mfas": MfasBackRelations;
+    "_otps": OtpsBackRelations;
+    "_superusers": SuperusersBackRelations;
+    "app_branches": AppBranchesBackRelations;
+    "app_builds": AppBuildsBackRelations;
+    "apps": AppsBackRelations;
+    "av_build_checks": AvBuildChecksBackRelations;
+    "publishers": PublishersBackRelations;
+    "users": UsersBackRelations;
+};
+
+type Split<S extends string, D extends string = ","> = 
+    string extends S ? string[] :
+    S extends "" ? [] :
+    S extends `${infer T}${D}${infer U}` ? [T, ...Split<U, D>] : [S];
+
+type TrimLeft<S extends string> = S extends ` ${infer R}` ? TrimLeft<R> : S;
+type TrimRight<S extends string> = S extends `${infer L} ` ? TrimRight<L> : S;
+type Trim<S extends string> = TrimLeft<TrimRight<S>>;
+
+type SplitPath<S extends string> = 
+    S extends `${infer Head}.${infer Tail}` ? [Head, ...SplitPath<Tail>] : [S];
+
+type GetFirstPathSegment<S extends string> = 
+    S extends `${infer Head}.${infer _Tail}` ? Head : S;
+
+type GetRelationInfo<C extends Collections, F extends string> = 
+    Trim<F> extends keyof CollectionRelations[C] 
+        ? CollectionRelations[C][Trim<F>]
+        : Trim<F> extends keyof CollectionBackRelations[C]
+            ? CollectionBackRelations[C][Trim<F>]
+            : { response: unknown; isMulti: false; collection: never };
+
+type ResolveSimpleExpandField<C extends Collections, F extends string> = 
+    GetRelationInfo<C, F> extends { response: infer R; isMulti: infer M }
+        ? M extends true ? R[] : R
+        : unknown;
+
+type WithNestedExpand<T, NestedExpand> = 
+    T extends object 
+        ? Omit<T, 'expand'> & { expand?: NestedExpand }
+        : T;
+
+type ResolveNestedExpand<C extends Collections, Path extends string[]> =
+    Path extends [infer First extends string, ...infer Rest extends string[]]
+        ? GetRelationInfo<C, First> extends { response: infer R; isMulti: infer M; collection: infer NC }
+            ? Rest extends []
+                ? M extends true ? R[] : R
+                : NC extends Collections
+                    ? M extends true
+                        ? WithNestedExpand<R, ResolveNestedExpand<NC, Rest>>[]
+                        : WithNestedExpand<R, ResolveNestedExpand<NC, Rest>>
+                    : unknown
+            : unknown
+        : {};
+
+type ResolveExpandField<C extends Collections, F extends string> = 
+    F extends `${infer _Head}.${infer _Tail}`
+        ? ResolveNestedExpand<C, SplitPath<Trim<F>>>
+        : ResolveSimpleExpandField<C, F>;
+
+type BuildExpandFromList<C extends Collections, L extends string[]> = 
+    L extends [] ? {} :
+    L extends [infer First extends string, ...infer Rest extends string[]] 
+        ? { [K in Trim<GetFirstPathSegment<First>>]?: ResolveExpandField<C, First> } & BuildExpandFromList<C, Rest>
+        : {};
+
+type InferExpand<C extends Collections, E extends string> = 
+    E extends "" ? {} : 
+    BuildExpandFromList<C, Split<E, ",">>;
+
+export function isAuthcodeResponse(record: AllResponses): record is AuthcodeResponse {
+    return record.collectionName === "_authCode";
 }
 
-// Utility types for create/update operations
-
-type ProcessCreateAndUpdateFields<T> = Omit<{
-	// Omit AutoDate fields
-	[K in keyof T as Extract<T[K], IsoAutoDateString> extends never ? K : never]: 
-		// Convert FileNameString to File
-		T[K] extends infer U ? 
-			U extends (FileNameString | FileNameString[]) ? 
-				U extends any[] ? File[] : File 
-			: U
-		: never
-}, 'id'>
-
-// Create type for Auth collections
-export type CreateAuth<T> = {
-	id?: RecordIdString
-	email: string
-	emailVisibility?: boolean
-	password: string
-	passwordConfirm: string
-	verified?: boolean
-} & ProcessCreateAndUpdateFields<T>
-
-// Create type for Base collections
-export type CreateBase<T> = {
-	id?: RecordIdString
-} & ProcessCreateAndUpdateFields<T>
-
-// Update type for Auth collections
-export type UpdateAuth<T> = Partial<
-	Omit<ProcessCreateAndUpdateFields<T>, keyof AuthSystemFields>
-> & {
-	email?: string
-	emailVisibility?: boolean
-	oldPassword?: string
-	password?: string
-	passwordConfirm?: string
-	verified?: boolean
+export function isAuthoriginsResponse(record: AllResponses): record is AuthoriginsResponse {
+    return record.collectionName === "_authOrigins";
 }
 
-// Update type for Base collections
-export type UpdateBase<T> = Partial<
-	Omit<ProcessCreateAndUpdateFields<T>, keyof BaseSystemFields>
->
+export function isExternalauthsResponse(record: AllResponses): record is ExternalauthsResponse {
+    return record.collectionName === "_externalAuths";
+}
 
-// Get the correct create type for any collection
-export type Create<T extends keyof CollectionResponses> =
-	CollectionResponses[T] extends AuthSystemFields
-		? CreateAuth<CollectionRecords[T]>
-		: CreateBase<CollectionRecords[T]>
+export function isMfasResponse(record: AllResponses): record is MfasResponse {
+    return record.collectionName === "_mfas";
+}
 
-// Get the correct update type for any collection
-export type Update<T extends keyof CollectionResponses> =
-	CollectionResponses[T] extends AuthSystemFields
-		? UpdateAuth<CollectionRecords[T]>
-		: UpdateBase<CollectionRecords[T]>
+export function isOtpsResponse(record: AllResponses): record is OtpsResponse {
+    return record.collectionName === "_otps";
+}
 
-// Type for usage with type asserted PocketBase instance
-// https://github.com/pocketbase/js-sdk#specify-typescript-definitions
+export function isSuperusersResponse(record: AllResponses): record is SuperusersResponse {
+    return record.collectionName === "_superusers";
+}
 
-export type TypedPocketBase = {
-	collection<T extends keyof CollectionResponses>(
-		idOrName: T
-	): RecordService<CollectionResponses[T]>
-} & PocketBase
+export function isAppBranchesResponse(record: AllResponses): record is AppBranchesResponse {
+    return record.collectionName === "app_branches";
+}
+
+export function isAppBuildsResponse(record: AllResponses): record is AppBuildsResponse {
+    return record.collectionName === "app_builds";
+}
+
+export function isAppsResponse(record: AllResponses): record is AppsResponse {
+    return record.collectionName === "apps";
+}
+
+export function isAvBuildChecksResponse(record: AllResponses): record is AvBuildChecksResponse {
+    return record.collectionName === "av_build_checks";
+}
+
+export function isPublishersResponse(record: AllResponses): record is PublishersResponse {
+    return record.collectionName === "publishers";
+}
+
+export function isUsersResponse(record: AllResponses): record is UsersResponse {
+    return record.collectionName === "users";
+}
+
+export type RecordOptionsWithExpand<E extends string = ""> = Omit<RecordOptions, 'expand'> & { expand?: E };
+export type RecordListOptionsWithExpand<E extends string = ""> = Omit<RecordListOptions, 'expand'> & { expand?: E };
+export type RecordFullListOptionsWithExpand<E extends string = ""> = Omit<RecordFullListOptions, 'expand'> & { expand?: E };
+export type RecordSubscribeOptionsWithExpand<E extends string = ""> = Omit<RecordSubscribeOptions, 'expand'> & { expand?: E };
+
+export type WithExpand<T, E> = Omit<T, 'expand'> & { expand?: E };
+
+export interface TypedRecordService<C extends Collections> {
+    getOne<E extends string = "">(
+        id: string,
+        options?: RecordOptionsWithExpand<E>
+    ): Promise<WithExpand<CollectionResponses[C], InferExpand<C, E>>>;
+
+    getList<E extends string = "">(
+        page?: number,
+        perPage?: number,
+        options?: RecordListOptionsWithExpand<E>
+    ): Promise<ListResult<WithExpand<CollectionResponses[C], InferExpand<C, E>>>>;
+
+    getFirstListItem<E extends string = "">(
+        filter: string,
+        options?: RecordListOptionsWithExpand<E>
+    ): Promise<WithExpand<CollectionResponses[C], InferExpand<C, E>>>;
+
+    getFullList<E extends string = "">(
+        options?: RecordFullListOptionsWithExpand<E>
+    ): Promise<WithExpand<CollectionResponses[C], InferExpand<C, E>>[]>;
+
+    create<E extends string = "">(
+        bodyOrRecord: C extends keyof CollectionCreates ? CollectionCreates[C] | FormData : FormData,
+        options?: RecordOptionsWithExpand<E>
+    ): Promise<WithExpand<CollectionResponses[C], InferExpand<C, E>>>;
+
+    update<E extends string = "">(
+        id: string,
+        bodyOrRecord: C extends keyof CollectionUpdates ? CollectionUpdates[C] | FormData : FormData,
+        options?: RecordOptionsWithExpand<E>
+    ): Promise<WithExpand<CollectionResponses[C], InferExpand<C, E>>>;
+
+    subscribe<E extends string = "">(
+        topic: string,
+        callback: (data: RecordSubscription<WithExpand<CollectionResponses[C], InferExpand<C, E>>>) => void,
+        options?: RecordSubscribeOptionsWithExpand<E>
+    ): Promise<UnsubscribeFunc>;
+};
+
+export interface TypedPocketBase extends PocketBase {
+    collection<C extends Collections>(idOrName: C): TypedRecordService<C> & RecordService<CollectionResponses[C]>;
+    collection(idOrName: string): RecordService;
+};

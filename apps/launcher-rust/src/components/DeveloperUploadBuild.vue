@@ -13,12 +13,11 @@ const METER_UPDATE_INTERVAL = 750
 import { Channel, invoke } from '@tauri-apps/api/core'
 import {
   type AppBranchesResponse,
-  AppBuildsArchOptions,
-  AppBuildsInstallRulesOptions,
-  AppBuildsOsOptions,
+  type AppBuildsArchOptions,
+  type AppBuildsOsOptions,
   type AppsResponse,
-  Collections,
-  type Create,
+  type AppBuildsCreate,
+  AppBuildsInstallRulesValues,
 } from 'backend-api'
 import { remove } from '@tauri-apps/plugin-fs'
 import { humanReadableByteSize } from '@/lib/utils'
@@ -39,8 +38,8 @@ enum Stage {
 const props = defineProps<{ app: AppsResponse; branch: AppBranchesResponse }>()
 
 const dirPath = ref<string>()
-const os = ref<keyof typeof AppBuildsOsOptions>()
-const arch = ref<keyof typeof AppBuildsArchOptions>()
+const os = ref<AppBuildsOsOptions>()
+const arch = ref<AppBuildsArchOptions>()
 const entrypoint = ref<string>('')
 
 const pb = usePocketBase()
@@ -92,15 +91,15 @@ const uploadBuildHandler = async () => {
       speed_update_interval: METER_UPDATE_INTERVAL,
     })
 
-    const data: Create<Collections.AppBuilds> = {
+    const data: AppBuildsCreate = {
       app: props.app.id,
       branch: props.branch.id,
-      os: AppBuildsOsOptions[os.value],
-      arch: AppBuildsArchOptions[arch.value],
+      os: os.value,
+      arch: arch.value,
       install_rules: [
-        AppBuildsInstallRulesOptions.direct_copy,
-        AppBuildsInstallRulesOptions.untar,
-        AppBuildsInstallRulesOptions.ungzip,
+        AppBuildsInstallRulesValues.DirectCopy,
+        AppBuildsInstallRulesValues.Untar,
+        AppBuildsInstallRulesValues.Ungzip,
       ],
       entrypoint: entrypoint.value,
     }

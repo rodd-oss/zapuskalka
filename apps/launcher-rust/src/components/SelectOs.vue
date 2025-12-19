@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { AppBuildsOsOptions } from 'backend-api'
+import { AppBuildsOsValues, type AppBuildsOsOptions } from 'backend-api'
 
 import { Select, createListCollection } from '@ark-ui/vue/select'
 import { ChevronDownIcon } from 'lucide-vue-next'
 import { computed } from 'vue'
 
-const items: AppBuildsOsOptions[] = Object.values(AppBuildsOsOptions)
+const items: AppBuildsOsOptions[] = Object.values(AppBuildsOsValues)
 const collection = createListCollection({ items })
 
-const selected = defineModel<keyof typeof AppBuildsOsOptions>()
+const selected = defineModel<AppBuildsOsOptions>()
 
 const value = computed({
   get: () => (selected.value ? [selected.value] : []),
-  set: (val: string[]) => (selected.value = val[0] as keyof typeof AppBuildsOsOptions),
+  set: (val: string[]) => (selected.value = val[0] as AppBuildsOsOptions),
 })
 </script>
 

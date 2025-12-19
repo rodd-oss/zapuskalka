@@ -52,7 +52,7 @@ watch(selectedBranchId, async (newBranchId) => {
     return
   }
 
-  const archs: (keyof typeof AppBuildsArchOptions)[] = [arch()]
+  const archs: AppBuildsArchOptions[] = [arch()]
   if (os() == 'macos') {
     archs.push('universal')
   }
@@ -95,7 +95,9 @@ const fetchAppInfo = async (id: string | string[] | undefined) => {
       throw new Error('publisher undefined')
     }
 
-    selectedBranchesIds.value = [app.value.default_branch]
+    if (app.value.default_branch != undefined) {
+      selectedBranchesIds.value = [app.value.default_branch]
+    }
 
     branches.value = await pb.collection('app_branches').getFullList({
       filter: `app="${app.value.id}"`,
@@ -122,7 +124,11 @@ const isPublisher = computed(() => {
     return false
   }
 
-  return publisher.value.users.includes(auth.user.value.id)
+  if (publisher.value.users == undefined) {
+    return false
+  }
+
+  return publisher.value.users.includes(auth.user.value.id) ?? false
 })
 </script>
 <template>

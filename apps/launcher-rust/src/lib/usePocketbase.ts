@@ -1,10 +1,10 @@
 import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { newApiClient, type UsersRecord } from 'backend-api'
+import { newApiClient, type UsersResponse } from 'backend-api'
 
 const apiClient = newApiClient(import.meta.env.VITE_BACKEND_URL || 'http://localhost:8090')
 
-const user = ref<UsersRecord | null>(apiClient.authStore.record as unknown as UsersRecord)
+const user = ref<UsersResponse | null>(apiClient.authStore.record as unknown as UsersResponse)
 
 const authStore = reactive({
   isSuperuser: apiClient.authStore.isSuperuser,
@@ -17,7 +17,7 @@ const unsub = apiClient.authStore.onChange((newToken, newRecord) => {
   authStore.isSuperuser = apiClient.authStore.isSuperuser
   authStore.isValid = apiClient.authStore.isValid
   authStore.record = newRecord
-  user.value = newRecord as unknown as UsersRecord
+  user.value = newRecord as unknown as UsersResponse
   authStore.token = newToken
 })
 
