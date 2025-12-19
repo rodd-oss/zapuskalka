@@ -52,7 +52,7 @@ watch(selectedBranchId, async (newBranchId) => {
     return
   }
 
-  const archs: (AppBuildsArchOptions)[] = [arch()]
+  const archs: AppBuildsArchOptions[] = [arch()]
   if (os() == 'macos') {
     archs.push('universal')
   }
