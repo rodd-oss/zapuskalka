@@ -5,12 +5,11 @@ import { usePocketBase } from '@/lib/usePocketbase'
 import { ref } from 'vue'
 import {
   type AppBranchesResponse,
-  AppBuildsArchOptions,
-  AppBuildsInstallRulesOptions,
-  AppBuildsOsOptions,
+  AppBuildsArchValues,
+  AppBuildsInstallRulesValues,
+  AppBuildsOsValues,
   type AppsResponse,
-  Collections,
-  type Create,
+  type AppBuildsCreate,
 } from 'backend-api'
 
 const pb = usePocketBase()
@@ -44,15 +43,15 @@ const selectFolder = async () => {
       folderPath: appRootFolder,
     })
 
-    const data: Create<Collections.AppBuilds> = {
+    const data: AppBuildsCreate = {
       app: props.app.id,
       branch: props.branch.id,
-      os: AppBuildsOsOptions.macos,
-      arch: AppBuildsArchOptions.universal,
+      os: AppBuildsOsValues.Macos,
+      arch: AppBuildsArchValues.Universal,
       install_rules: [
-        AppBuildsInstallRulesOptions.direct_copy,
-        AppBuildsInstallRulesOptions.untar,
-        AppBuildsInstallRulesOptions.ungzip,
+        AppBuildsInstallRulesValues.DirectCopy,
+        AppBuildsInstallRulesValues.Untar,
+        AppBuildsInstallRulesValues.Ungzip,
       ],
       entrypoint: 'gigabah.app',
     }
