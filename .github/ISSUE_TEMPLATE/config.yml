@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/rodd-oss/zapuskalka/security/advisories/new
+    about: Report security vulnerabilities privately. Do not open a public issue.
+  - name: Latest release
+    url: https://github.com/rodd-oss/zapuskalka/releases/latest
+    about: Download the latest launcher release.
