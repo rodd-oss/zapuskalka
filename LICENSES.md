@@ -6,24 +6,17 @@ Zapuskalka release assets combine the launcher with third-party components. They
 distributed subject to the licenses and notices applicable to their respective components.
 No repository-wide MIT license is granted for the binaries in this distribution repository.
 
-## Zapuskalka launcher source
+## Zapuskalka launcher
 
-The corresponding source code for the MPL-covered Zapuskalka launcher is provided with each
-release as:
-
-```text
-zapuskalka-launcher-source-<version>.tar.gz
-```
-
-That source archive includes the Mozilla Public License 2.0 text in `LICENSE`. The MPL 2.0
-applies to the covered source files as stated there. The archive is the public source offer for
-the matching release and does not include the private backend or web frontend.
+Zapuskalka is proprietary software. Copyright (c) 2025-2026 RoddTech. All rights reserved.
+The launcher's source code is not published, and no source offer accompanies these releases.
 
 ## Legacy source
 
-The source of the pre-Rust legacy version remains available in the read-only
+The pre-Rust legacy project is preserved in the archived, read-only
 [zapuskalka-archive](https://github.com/rodd-oss/zapuskalka-archive) repository under the
-license included there.
+license included there. That license covers only the archived legacy code; the current
+product is proprietary and is not covered by it.
 
 ## Third-party software
 

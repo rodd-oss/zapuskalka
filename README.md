@@ -29,8 +29,7 @@ Do not report security vulnerabilities in public issues. Follow
 This repository is the public distribution point for Zapuskalka. Product source code is not
 stored on the `main` branch.
 
-Each release provides the corresponding MPL-licensed launcher source as a separate
-`zapuskalka-launcher-source-<version>.tar.gz` asset. See [LICENSES.md](LICENSES.md) for details.
+Zapuskalka is proprietary software. See [LICENSES.md](LICENSES.md) for details.
 
 The pre-Rust legacy project is preserved in the archived
 [zapuskalka-archive](https://github.com/rodd-oss/zapuskalka-archive) repository.
